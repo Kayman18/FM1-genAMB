@@ -80,12 +80,12 @@ jobs:
           mkdir -p /tmp/final-repo/source
           cp /tmp/README.md /tmp/final-repo/README.md
 
+          cp "$ROOT/app/build/amb-17.99.13.fwsc" /tmp/final-repo/genAMB-1.0-RC2-WET2-WEB1.fwsc
+
           # Keep source redistributable: remove generated builds and build-only font files.
           rm -rf "$ROOT/app/build" "$ROOT/firmware-output" "$ROOT/build-toolchain"
           rm -f "$ROOT/base/assets/fonts"/BarlowSemiCondensed-*.ttf
           cp -a "$ROOT"/. /tmp/final-repo/source/
-
-          cp "$ROOT/app/build/amb-17.99.13.fwsc" /tmp/final-repo/genAMB-1.0-RC2-WET2-WEB1.fwsc
 
           (cd "$ROOT/web-editor" && zip -q -9 -r /tmp/final-repo/genAMB-1.0-RC2-WET2-WEB1-Web-Editor.zip .)
           (cd /tmp/final-repo/source && zip -q -9 -r /tmp/final-repo/genAMB-1.0-RC2-WET2-WEB1-Full-Source.zip .)
