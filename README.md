@@ -11,7 +11,7 @@ It will start in PIANO mode (this mode will let you play Rings or the FM synth V
 *  Burst Setting, to simulate Chords strums
 *  Delay on Rings (too costly to add everywhere, may try to add it to FM later)
 *  Global 4 Channel Mixer
-*  Cloud Reverb From MI Clouds
+*  10 Reverb Modes Inspired by the ones on the Valeton GP-05
 
 
 
