@@ -1,0 +1,56 @@
+AMB-1 Full Rings CloudsClean v17.10 - Live Panel 3 VUs + Rings Reverse Delay
+Date: 2026-10-20
+
+Base:
+- v17.9 Button Remap + 1.5 s Rings Delay
+- Bassless mixer, Pad 2 Lite, organic Rings Density, Rings reverb-send pointer fix,
+  one-line button confirmations, battery display, and longer Pad falls/releases preserved.
+
+Change 1 - Panel 3 now copies the live Mixer VU view
+- Removed the static numeric MIX LEVELS summary from Panel 3.
+- Panel 3 now uses the exact same draw_mixer_channel() renderer and live meter values as
+  GLO -> Mixer Panel 4: PAD / RINGS / PAD 2 / REVERB.
+- Same channel colours and displayed level values are used in both places.
+- Panel 3 is display-only; Panel 4 on GLO/Mixer remains the editable Knob 1-4 mixer.
+- Host animation check: two playback screenshots 1.4 s apart changed 24 pixels in the Panel 3
+  meter region; on GLO/Mixer the Panel 4 meter region changed 96 pixels over the same interval.
+  This confirms both areas are driven by live signal state rather than stored level settings.
+
+Change 2 - Rings delay Reverse + Chance
+- Existing delay remains 20..1500 ms, Feedback 0..85%, Mix 0..100%.
+- Rings Delay page now adds Reverse Off/On as Knob 4.
+- Press SEQ once more for a Rings Reverse page with Chance 0..100% on Knob 1.
+- Chance is evaluated once per delay-length cycle:
+    0%   = never reverse
+    25%  = approximately one cycle in four
+    100% = every eligible cycle
+- Reverse reuses the existing 11.025 kHz / 16-bit delay buffer; no second large buffer was added.
+- Reverse playback walks the most recently captured delay-length window backward and preserves
+  the delay's small stereo offset.
+- Feedback follows the reversed wet signal while a reverse cycle is active.
+- Reverse defaults Off; Chance defaults 35%.
+- Project format advanced to 11. v17.9 / format-10 projects migrate with all existing parameters
+  preserved and the new Reverse parameters filled from their defaults.
+
+Focused reverse render validation:
+- Two otherwise-identical 30 s Rings-only renders were made with Reverse Off vs Reverse On/Chance 100%.
+- The renders were sample-identical until the first eligible reverse repeat at 1.320 s, then diverged.
+- Reverse Off peak: 0.03552 FS.
+- Reverse 100% peak: 0.03366 FS.
+- No clipping or numerical instability was observed.
+- Host render load remained about 1.9-2.1% of real time in this focused test.
+
+FM-1 device build:
+- Build passed.
+- app image: 178012 bytes
+- RAM .data+.bss: 67284 / 98304 bytes
+- pool: 317128 / 344064 bytes
+- package identity: FM-1_7171000
+- fwsc package size: 610108 bytes
+
+General repository test note:
+- The broad historical scenario suite still contains pre-existing expectations for old page maps,
+  preset values, transport behavior, and an old standalone amb.c compile path that does not include
+  rings_port.h. Those failures were already stale relative to the current firmware architecture.
+- The current host application build and the FM-1 target build both pass; the focused VU and reverse
+  checks above exercise the newly changed paths directly.

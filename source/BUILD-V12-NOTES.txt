@@ -1,0 +1,25 @@
+AMB-1 Full Rings - v12 Lush Cloud Lite
+
+UI
+- Unchanged from v11.
+- Enlarged top PAGE/BUTTON information panel retained.
+- Rows 1-3 remain display-only.
+- Tall bottom-to-top vertical VU meters retained.
+- Row 4 remains the only encoder-assigned area.
+- Existing HOME/ENV/ARP/LFO/FX/SEQ/GLO page and subpage mappings retained.
+
+Reverb
+- Replaced v11 8-line/6-diffuser cloud with CPU-light 4-line/4-diffuser Lush Cloud Lite.
+- Only 2 tank lines use fractional/interpolated reads.
+- Remaining tank lines and all diffusers use integer delay reads.
+- Entire cloud tank runs at half audio rate (22.05 kHz) with paired-sample input averaging.
+- Modulation sine calculations run at a very slow control rate rather than every audio sample.
+- 4-point normalised Hadamard feedback matrix.
+- Four extra integer output taps retain stereo density.
+- Half-rate operation naturally softens the extreme top end and substantially lowers reverb CPU.
+- Softer internal damping and output smoothing target a smooth lush cloud rather than metallic hall.
+- Size maps nominal decay from roughly 10 s to 40+ s before damping.
+- Space controls remain Reverb / Size / Damping / Mod.
+
+Build
+- Real-hardware behavior must still be verified on an FM-1.

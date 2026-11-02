@@ -1,0 +1,7 @@
+before: Part=110704 FMVoice=144 Follower=72 NaiveSvf=16 StringSynthPart=2104 Reverb=80
+after: Part=110048 FMVoice=144 Follower=72 NaiveSvf=16 StringSynthPart=2104 Reverb=80
+PASS C++ three-model mapping, all legacy IDs, clamping, full three-model modulation span, deferred commit, hysteresis, and 1323-sample fade
+PASS C99 model mapping and clamp endpoints
+PASS all 12 retained-model/polyphony cases: baseline and pending stereo + reverb-send float samples byte-identical, finite, and nonzero
+PASS all four legacy model fallbacks render byte-identically to baseline replacement models at all four polyphony settings
+PASS global Clouds reverb float samples byte-identical to release baseline

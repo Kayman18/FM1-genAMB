@@ -1,0 +1,18 @@
+AMB-1 Full Rings - Clouds Clean Reverb v16
+
+Reverb / artifact fix
+---------------------
+- Keeps the v15 full-rate 44.1 kHz, 32-bit floating Clouds-style reverb tank.
+- Removes the old 2.0x wet-return boost; wet return is now 1.25x.
+- Raises tank input gain from 0.24 to 0.32 so the effect stays clearly audible without overdriving the master output.
+- Makes Reverb a true 0-100% dry/wet control: 0% = dry only, 100% = wet only. v15 still leaked 10% dry at 100%, which could create metallic/phase colour with early reflections.
+- Removes the always-active master tanh stage and uses transparent headroom with a final safety clamp only at converter limits.
+- Restores Clouds' original 0.625 diffusion coefficient and darkens the feedback damping range to reduce glassy/metallic high-frequency ringing.
+- Keeps the approximately 10-20 second tail target and full-rate modulation.
+
+Unchanged
+---------
+- v15/v14 four-row UI, enlarged info panel and vertical VU meters.
+- Mixer/page mappings and all instrument controls.
+- Full Rings integration and deferred model switching.
+- Pad, Drone, Bass, percussion and Rings reverb sends.

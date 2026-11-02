@@ -1,0 +1,17 @@
+genAMB v17.23
+
+- Removed panel title headers across all pages; retained the top page title.
+- Expanded mixer channel boxes and encoder boxes vertically into the freed area.
+- PAD1 page 1: Swell, Bright, Colour, Chorus. Body: Low Body, Character.
+- PAD2 page 1: Swell, Bright, Colour, Width. Body: Low Body, Character.
+- Rings page 1: Density, Burst, Model, Polyphony. Tone: Structure, Brightness.
+- Retains v17.22 splash, slower bursts, Mixer level controls, SEQ octave controls,
+  and the v17.21 pad crash fix. Parameter values and DSP are unchanged from v17.22.
+
+Validation: device build and memory checks passed; host screenshots rendered and
+inspected; package identity, CRCs, decrypted app bytes and slot padding passed.
+This release has not yet been tested on the physical FM-1.
+
+PASS: identity, total length, header/table/payload CRCs, loader, decrypted app bytes and slot padding.
+identity: FM-1_7172300 package bytes: 610108 app bytes: 238808
+SHA256: 6fb05022b1cd2af3702dbecfa23e986dad0cecaf5758dac79dff8282a6e19887

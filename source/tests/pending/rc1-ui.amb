@@ -1,0 +1,21 @@
+wide_layout_tests
+tap ENV
+tap HOME
+expect view 0
+wait 200
+shot Garden.png
+tap HOME
+expect view 32
+wait 200
+shot Root-Note-Div.png
+tap HOME
+expect view 0
+tap GLO
+tap GLO
+expect view 13
+wait 200
+shot Setup.png
+tap LFO
+spin SELECT 1
+wait 200
+shot Shape.png

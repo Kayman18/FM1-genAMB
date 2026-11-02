@@ -1,0 +1,57 @@
+genAMB v17.94 Ambient Effects — FM-1
+Based on v17.93 dual-core performance build. Hardware validation pending.
+
+CHANGES
+Reverb: two additional floating-point input allpasses; variable diffusion density;
+slow 0.13/0.19 Hz modulation of both tank branches; extended decay feedback
+(0.85–0.97); low-frequency damping to reduce buildup. Float reverb buffers retained.
+Space controls diffusion density, not physical room dimensions. Decay extends the
+existing Size control. No shimmer is included.
+Delay: offset stereo taps with separate float allpass diffusers; diffused feedback;
+slow shallow time modulation (approximately 0.13 Hz, up to 0.54 ms storage delay
+variation); darkening and bass reduction on feedback. Existing 20–1500 ms range,
+16-bit/22.05 kHz storage, additive Mix curve, feedback cap 85%, and finite Repeats
+cycle mechanism retained. This is a diffuse stereo delay, not two independent
+cross-fed ping-pong buffers. Finite repeats can leave short diffusion tails.
+Routing: dry Rings uses its existing Rings reverb send. The audible delay return
+has a separate Rev Send, independent of dry Rings send; it still follows Delay Mix
+and the global Reverb level.
+Core split unchanged: Rings and delay on CPU1; pads, reverb and final mix on CPU0.
+
+CONTROLS
+FX / Reverb: Space, Decay, Damping, Motion.
+Global reverb level remains on Mixer.
+Rings button cycle: Rings -> Tone -> Exciter -> Delay -> Delay Ambient -> Rings Seq.
+Delay: Time, Feedback, Mix, Repeats.
+Delay Ambient: Diffusion, Motion, Rev Send.
+New control defaults: Space 65, delay Diffusion 55, Motion 30, Rev Send 65.
+For a first audition: Reverb Space 65 / Decay 80 / Damping 55 / Motion 35;
+delay Mix 30–45 / Feedback 50–65 / Diffusion 55 / Motion 30 / Rev Send 65.
+Set Repeats to 0 for feedback-only ambient trails.
+
+PRESETS
+Project format 16 adds four parameters. Format-15 projects (v17.19–v17.93) migrate
+existing parameters and slots, initializing new controls to defaults. Earlier
+migration paths retained. Downgrading after saving format 16 does not migrate
+backwards and may reset presets in older firmware.
+
+VALIDATION
+Release build and built-in machine-code/MMIO/RAM checks passed.
+Package identity, header/table/payload CRCs, loader, decrypted app bytes and padding passed.
+ASan/UBSan DSP harness passed (leak detection disabled because unsupported by host):
+4 reverb decay/damping corners at maximum Space/Motion, 60 seconds each;
+minimum/maximum delay time at maximum feedback/diffusion/motion, 40 seconds each.
+All outputs finite, bounded, decaying; stereo difference nonzero.
+Host UI navigation, v15 migration sample, save/reboot and 30-second effects stress passed.
+15.4-second max-effects Single/Dual-switch render byte-identical to all-Dual host render.
+Host runs do not measure FM-1 timing or prove hardware multicore stability.
+
+BUILD
+Firmware package: 610108 bytes. Application: 242340 bytes.
+Normal RAM: 92140 / 98304 bytes. Pool: 334040 / 344064 bytes.
+SHA256: b99f6b95f37641ce823b8aedb03d3682a74703d57db4a46ddeacd3d4a7e66e5f
+
+HARDWARE CHECK
+Use Dual, enable the delay, play both pads and Rings, then check Performance.
+Report Audio peak, Dropouts and Faults after playing and changing Rings models.
+The prior v17.93 hardware result does not establish the load of these new effects.

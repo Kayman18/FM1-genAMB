@@ -1,0 +1,41 @@
+genAMB Dual-Core TEST1 v17.91 — experimental hardware test
+
+Based on v17.23. Stable v17.23 and separate Clouds v17.90 remain unchanged.
+CPU0: pads, sequencer/control, final mixing, reverb, display and I/O.
+CPU1: Rings synthesis and Rings delay, into independent L/R/reverb-send buffers.
+Each block is joined before mixing; no extra audio block of latency is added.
+
+Screen indicator next to PAGE:
+  2C   CPU1 acknowledged startup; worker enabled.
+  1C   CPU1 did not acknowledge within 100 ms; single-core fallback.
+  C2!  Worker deadline or stack-canary check failed; CPU1 stopped, Rings muted
+       until reboot. Pads and UI can continue. Do not mistake this for success.
+
+Startup uses the BSP's experimental AC79 secondary-core entry. This is not yet
+confirmed on physical hardware. No hardware speed-up measurement is available.
+The audio wait has a 4 ms deadline from submission; an in-flight Rings block is
+never rerun on CPU0 after timeout because its state could be partially advanced.
+The idle/completion handshake executes entirely in RAM to avoid XIP reads during
+preset saves/flash operations. CPU1 interrupts remain disabled.
+
+Memory: normal RAM 91732/98304 bytes; pool 331304/344064 bytes.
+Separate CPU1 stack: 8192 bytes plus 256-byte canary band, reserved by the linker
+in unused retained RAM below the boot area. Existing CPU0 stacks are unchanged.
+
+Validation:
+- Device build passed, including MMIO boundaries and RAM-code/no-call checks.
+- Package identity, CRCs, decrypted application and slot padding passed.
+- 42.8-second host scenario: pthread worker, forced single-core fallback and
+  v17.23 produced byte-identical PCM WAV files.
+- Seven-model Rings sweep with burst at maximum: threaded output byte-identical
+  to v17.23. Host pthread test checks DSP ownership/summing, not the AC79 startup,
+  memory ordering, hardware timeout, cache behavior or hardware performance.
+- v17.21 noinline pad crash workaround retained.
+
+Hardware check: after flashing, report 2C / 1C / C2!, whether sound starts cleanly,
+and whether switching Rings models, changing presets and saving behave normally.
+Use the separately saved genAMB-v17.23.fwsc to return to the stable build.
+
+PASS: identity, total length, header/table/payload CRCs, loader, decrypted app bytes and slot padding.
+identity: FM-1_7179100 package bytes: 610108 app bytes: 239756
+SHA256: 9e550525a20b23a4a199b7f1a52a63904487b5b3f0cc72f60d8d3c4d94a36174

@@ -1,0 +1,24 @@
+AMB-1 Full Rings - v11 Lush Cloud + Vertical UI
+
+UI
+- Top PAGE/BUTTON information panel doubled from 18 px to 36 px.
+- Rows 1-3 remain display-only.
+- Row 1: Chord / Tempo / Evolve / Motion / Drift status.
+- Row 2: current Preset / Mode / Scale.
+- Row 3: mixer label removed; panel enlarged; PAD/RINGS/DRONE/BASS use true vertical segmented VU meters that fill bottom-to-top.
+- Row 4 remains the only encoder-assigned area.
+- HOME duplicates Garden controls into Row 4 for editing.
+- Existing button/subpage mappings retained.
+
+Reverb
+- Replaced v10 four-line Air Cloud FDN with an eight-line dense cloud FDN.
+- Six gentle input diffusion stages.
+- Slow shallow multi-rate delay modulation.
+- Softer damping inside the feedback loop plus output smoothing.
+- Low-end cleanup before the feedback field.
+- Size maps feedback for approximately 8 s to 40+ s nominal RT60 before damping.
+- Space controls remain Reverb / Size / Damping / Mod.
+
+Build
+- FM-1 PI32 device build passed image/RAM/pool/register/soft-double checks.
+- Real hardware behavior has not yet been verified for this revision.

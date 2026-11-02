@@ -1,0 +1,42 @@
+expect format 22
+classic_migration_tests
+tap SEL
+tap SEL
+expect view 29
+spin SELECT 1
+wait 1800
+setpar 127 0
+setpar 128 0
+wait 180
+shot filter-bypass.png
+expect par127 0
+setpar 127 1
+setpar 128 0
+wait 180
+shot filter-clean.png
+expect par127 1
+setpar 127 2
+setpar 128 0
+wait 180
+shot filter-sem.png
+expect par127 2
+setpar 127 3
+setpar 128 0
+wait 180
+shot filter-juno.png
+expect par127 3
+setpar 127 4
+setpar 128 0
+wait 180
+shot filter-polysix.png
+expect par127 4
+setpar 127 5
+setpar 128 0
+wait 180
+shot filter-cs80.png
+expect par127 5
+tap SAVE
+wait 400
+reboot
+expect format 22
+expect par127 5

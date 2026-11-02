@@ -1,0 +1,32 @@
+AMB-1 Full Rings - Clouds Clean Reverb v15
+
+Reverb change
+-------------
+- Replaces the v12-v14 half-rate custom cloud FDN.
+- Uses the Mutable Instruments Clouds Griesinger/Dattorro reverb topology and exact Clouds delay-line layout.
+- Full 44.1 kHz processing (no 22.05 kHz sample/hold).
+- 32-bit floating delay storage to avoid low-level quantization / bitcrush-like tail artifacts.
+- Four input all-pass diffusers plus two feedback branches, each with two all-pass stages and one long delay.
+- Original Clouds modulation points retained; Rev Mod scales their depth.
+- Size calibrated in a standalone impulse test to roughly 10-20 seconds around the default damping setting.
+- Reverb remains a true dry/wet control: 0 dry, 100 strongly cloud-dominant.
+
+Unchanged
+---------
+- v11-v14 readable four-row UI and vertical meters.
+- Physical button/subpage mappings.
+- Full Rings integration and deferred model switching.
+- Pad, Drone, Bass, modulation and layer reverb sends.
+
+Build checks
+------------
+Device image: 172860 bytes
+Normal RAM: 33188 / 98304 bytes
+Pool RAM: 317128 / 344064 bytes (26936 bytes free)
+Package size: 610108 bytes
+No soft-double routines; register-access check passed.
+
+Host stress test
+----------------
+60-second render at maximum wet/Size/Mod and minimum damping completed without runaway or NaNs.
+Host render cost was about 2.0% of real time on this test machine (host-side proxy only; not an FM-1 CPU reading).

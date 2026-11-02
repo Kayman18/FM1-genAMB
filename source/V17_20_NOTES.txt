@@ -1,0 +1,35 @@
+genAMB v17.20 — v17.19 arithmetic correction and startup diagnostics
+
+STATUS: Hardware red-screen cause not yet isolated. This is a diagnostic/repair
+candidate, not a confirmed fix for the reported device crash.
+
+Based on the exact v17.19 source. Both pads, Rings, global clean reverb, Rings delay,
+LFO waveform page, and all three sequencer octave controls remain. Project format,
+project flash location and saved settings compatibility remain unchanged.
+
+Confirmed defect corrected:
+fastmath.h shifted a negative signed exponent (n << 23). UBSan reported this during
+startup in the original v17.19. The exponent-bit update now uses defined unsigned
+arithmetic. Math accuracy regression tests pass. This finding alone does not prove
+that it caused the FM-1 red screen; the Clouds build also inherited this math code.
+
+Diagnostics:
+The red screen labels VEC, PC, EMU, DBG and RET, displays startup phase and whether
+audio rendering was active, and remains visible for 15 seconds before reboot.
+Please photograph the entire red screen if the crash persists. PC/RET can then be
+mapped against this exact build to identify the faulting code. Existing safe mode
+and update/recovery behavior remain.
+
+Verification:
+Original source rebuilt to the reported v17.19 size/memory figures.
+Original host startup/audio run reproduced the undefined shift, not the red screen.
+Corrected startup/audio run: 69.88 simulated seconds; both pad tone variants and
+LFO page exercised; AddressSanitizer and UndefinedBehaviorSanitizer passed.
+Octave/MIDI/probability regression passed. Full fastmath accuracy tests passed.
+Real pi32v2 release build passed RAM/pool, MMIO, soft-double and instruction checks.
+Package identity/length/header/table/payload CRCs and decrypted app/loader verified.
+Physical FM-1 startup and playback must still be checked.
+
+App: 239608 bytes; package: 610108 bytes; identity FM-1_7172000.
+RAM data/BSS: 88600 / 98304 bytes. Pool: 331304 / 344064 bytes.
+SHA256: d69cf5b500d26668e2ef198c1b04e9c11a8e752d903f9684ef226c4f26bc3fe5

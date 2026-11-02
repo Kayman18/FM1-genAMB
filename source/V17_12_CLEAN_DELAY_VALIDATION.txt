@@ -1,0 +1,47 @@
+AMB-1 Full Rings CloudsClean v17.12 - Clean 1.5s Rings Delay + Transport LEDs
+Date: 2026-10-20
+
+Base:
+- v17.11 UI LED / No Reverse
+- All Pad 1, Pad 2 Lite, Rings organic Density, Rings reverb-send pointer fix,
+  1.5 s delay controls, Reverb/Sends/Mixer navigation, live VUs and UI labels are preserved.
+
+Rings delay cleanup:
+- Root cause of the new metallic/breakup character was found in the v17.11 long-delay path.
+- v17.11 stored the delay at 11.025 kHz / 16-bit and accumulated four full-rate samples at 0.5 each.
+  A steady input therefore wrote about 2x the intended amplitude into the 16-bit delay memory, so strong
+  Rings signals could clip inside the delay buffer before the final output meter showed clipping.
+- v17.12 moves the Rings delay to 22.05 kHz / 16-bit mono storage (2:1 rather than 4:1 decimation).
+- The decimator now averages two samples at 0.5 each, so constant-signal write gain is unity.
+- Full-rate output still uses fractional interpolation and the feedback path retains gentle damping.
+- Delay range remains 20..1500 ms; Feedback remains 0..85%; Mix remains 0..100%.
+- Reverse remains removed.
+
+Memory optimization:
+- 33,088 delay samples are split across normal RAM and .pool rather than requiring one large contiguous RAM array.
+- Normal-RAM delay portion: 26,000 x int16 = 52,000 bytes.
+- Pool delay portion: 7,088 x int16 = 14,176 bytes.
+- Final device memory: RAM .data+.bss 86,128 / 98,304 bytes; pool 331,304 / 344,064 bytes.
+  This leaves ~12 KB headroom in each region.
+
+Focused delay validation:
+- Host build passed.
+- Delay controls set to Time 100 / Feedback 85 / Mix 100.
+- 45-second simulated render passed with output peak -26.2 dBFS in the test scene and no NaNs/runaway.
+- Host render load in that stress scenario: about 2.1% of real time on the host benchmark.
+
+Transport LED behavior:
+- PLAY is OFF while stopped and ON while playing.
+- REC is OFF while thawed and ON while Freeze is active.
+- Existing inverse page-button LEDs remain unchanged: non-piano page buttons are normally ON and the active
+  page button is OFF.
+- Piano-key scale/note LEDs remain unchanged.
+- Focused host LED sequence confirmed PLAY and REC toggle independently with their transport states.
+
+FM-1 device build:
+- Build passed.
+- app image: 177,964 bytes
+- RAM .data+.bss: 86,128 / 98,304 bytes
+- pool: 331,304 / 344,064 bytes
+- package identity: FM-1_700
+- fwsc package size: 610,108 bytes

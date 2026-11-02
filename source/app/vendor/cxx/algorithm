@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: MIT
+ * Minimal freestanding C++ utilities for the PI32v2 SDK, from common
+ * standard-library algorithms. Does not provide allocation or exceptions.
+ */
+#ifndef GENAMB_FREESTANDING_ALGORITHM
+#define GENAMB_FREESTANDING_ALGORITHM
+namespace std {
+template<class T> inline const T& min(const T& a,const T& b){return b<a?b:a;}
+template<class T> inline const T& max(const T& a,const T& b){return a<b?b:a;}
+template<class T,class V> inline void fill(T* first,T* last,const V& val){for(;first!=last;++first)*first=val;}
+template<class T> inline T* copy(const T* first,const T* last,T* out){for(;first!=last;++first,++out)*out=*first;return out;}
+template<class T> inline void swap(T& a,T& b){T t=a;a=b;b=t;}
+template<class T> inline void sort(T* first,T* last){for(T* p=first+1;p<last;++p){T v=*p;T* q=p;while(q>first&&v<*(q-1)){*q=*(q-1);--q;}*q=v;}}
+template<class T> inline void reverse(T* a,T* z){while(a<z){--z;if(a>=z)break;swap(*a,*z);++a;}}
+template<class T> inline void rotate(T* a,T* b,T* z){reverse(a,b);reverse(b,z);reverse(a,z);}
+}
+#endif

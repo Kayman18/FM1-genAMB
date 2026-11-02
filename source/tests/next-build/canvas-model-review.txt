@@ -1,0 +1,69 @@
+PENDING SOURCE REVIEW — CANVAS AND THREE RINGS MODELS
+
+Scope
+  Current pending source only. No device firmware or full host application build.
+  The released v17.99.2 source remains unchanged.
+
+Canvas audit
+  base/device/gfx.c defaults to 240 * 144 uint16_t pixels in .pool: 69,120 bytes.
+  app/app.h now sets APP_CANVAS_PX to 240u * 132u: 31,680 pixels / 63,360 bytes.
+  This saves 5,760 bytes of the pool allocation.
+
+  All production canvas allocations were traced through device/unity.c and
+  host/plat_host.c, both of which include app.h before gfx.c:
+    Header:                       240 * 36
+    Main instrument/status area:  240 * 132
+    Performance:                  240 * 132
+    Mod graph:                    240 * 132, blitted at screen y108
+    Controls and ordinary help:   240 * 72
+    Mixer and Mixer help:         two 240 * 102 bands
+    Custom boot splash:           240 * 24 strips
+    Generic splash fallback:      240 * 64 (not selected by APP_SPLASH)
+    Boot/crash/safe/update text:   width <= 240, one font row of 16 pixels
+    Hardware calibration:         width 240, largest font row 32 pixels
+
+  The released generated Barlow font heights are T12, XS15, S16, B16, M24, L32.
+  UI init/full-screen clears use lcd_fill's separate 240-pixel fill buffer.
+  The host's 240 * 240 framebuffer is separate and is not reduced.
+
+  Direct writes: app_splash writes at most 5,760 pixels per strip. The only
+  other app direct access, px_blend, clips against cv_w and cv_y0/cv_y1.
+  gfx drawing primitives use those same bounds. Production has no callers of
+  cv_band or cv_blit_from that could enlarge the valid span. Mixer changes
+  cv_oy only; each band's clipping remains 0..101. Old template/example apps
+  are outside this build and retain the base default.
+
+  Every existing production cv_begin width/height fits 31,680 pixels. The
+  smaller capacity therefore changes no requested dimensions, clipping bounds,
+  draw coordinates, DMA lengths, redraw order, or synchronization. The retained
+  main strip reaches index31,679; no live path needs the discarded 12 rows.
+
+Three-model integration
+  app/ui.c turns the Model knob through rings_model_index/from_index using
+  RINGS_MODEL_COUNT. The intended choices are Modal0, Sympathetic1, String2.
+  Speech enumeration also uses the count and ordinal mapping. Generic knob
+  get/range/set retain their saved-value meaning; serialized P_RMODEL max6
+  remains available for validating historical projects.
+
+  app/project.c normalizes the active model and all eight saved pieces after
+  project_valid succeeds. Historical3/5/6 map to String2 and4 to Sympathetic1
+  through the shared helper. Invalid values remain invalid during validation;
+  they are not silently clamped into a valid project. Schema/format unchanged.
+
+  Rings Exciter now has Damping / Position / blank / Exciter. Knob3 uses the
+  existing K_NONE convention, so it has no label, drawing, speech-page entry,
+  or parameter action. P_RFX remains in the saved schema and validation range
+  for historical projects; no replacement control was introduced.
+
+Focused validation
+  Reproduce from this project root:
+    python3 tests/next-build/check-ui-model.py
+  The check compiles only the actual extracted UI turn/accel functions, the
+  real app/header model definitions, and small input/output stubs in a
+  temporary directory. It is not a firmware or full-app build.
+  It also compiles the actual page mappings/labels and verifies Exciter K3
+  is blank and ignores turns without modifying the retained String FX value.
+  Result is recorded separately in canvas-model-ui.log after execution.
+  Parent owns the focused project migration/corrupt-input tests.
+
+  No new rendered-screen or hardware result is claimed for this pending source.

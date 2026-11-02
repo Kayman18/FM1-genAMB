@@ -1,0 +1,54 @@
+AMB-1 Full Rings CloudsClean v17.9 - Button Remap + 1.5 s Rings Delay
+Date: 2026-10-20
+
+Base:
+- v17.8 Bassless Mixer
+- Pad 2 Lite preserved
+- Rings organic Density preserved
+- Rings reverb-send buffer-pointer distortion fix preserved
+- Longer Pad 1/Pad 2 fall/release behavior preserved
+- One-line button confirmations and Pad 2 Glass/Strings preserved
+
+Button remap:
+- ENV -> PAD 1 (press again for Pad 1 body/tone)
+- ARP -> PAD 2 (press again for Pad 2 body/tone)
+- SEQ -> RINGS (cycles Rings / Rings tone / Rings exciter / Rings delay)
+- FX -> REVERB SETTINGS (toggles Reverb Settings / Rev Sends)
+- GLO -> MIXER (press again for Setup so Setup remains accessible)
+- HOME, LFO, EDIT, PLAY, REC, SAVE, OCT-/OCT+, SELECT, PRESETS and ALGORITHM behavior is unchanged.
+- Header/button labels and help cards were updated to match the new assignments.
+
+Mixer/VU layout:
+- Panel 3 is now explicitly a static numeric MIX LEVELS summary and contains no VU graphics.
+- Panel 4 on the MIXER page is the only live VU area.
+- Knob 1/2/3/4 remain Pad / Rings / Pad 2 / Reverb.
+- Simulator pixel-diff validation during PLAY: Panel 3 remained unchanged; Panel 4 VU pixels changed after the pad rose, confirming live animation is confined to Panel 4.
+
+Rings mini-delay extension:
+- Time maximum increased from 800 ms to 1500 ms.
+- Storage changed from 22.05 kHz mono 16-bit to filtered 11.025 kHz mono 16-bit so the longer range does not increase RAM.
+- Full-rate output still uses fractional interpolation; input is low-pass filtered and averaged before 4:1 storage.
+- Existing Time-knob mapping is preserved through value 80 (20..644 ms).
+- Values 81..100 extend the range from about 687 ms to 1500 ms.
+- Feedback remains capped at 85%; Mix remains 0..100%; Mix 0 remains true bypass.
+- Focused simulator delay stress at max Time/Feedback/Mix completed without clipping; measured peak -24.2 dBFS in that generated pattern and render load 1.9% of real time on the host.
+
+Focused UI routing validation:
+- ENV: view 1 -> view 2 passed.
+- ARP: view 9 -> view 10 passed.
+- SEQ: views 3 -> 4 -> 5 -> 6 passed.
+- FX: views 11 <-> 12 passed.
+- GLO: views 8 <-> 13 passed.
+- Rings Delay screen displays 1500 ms at Time 100.
+
+FM-1 device build:
+- Build passed.
+- app image: 177676 bytes
+- RAM .data+.bss: 67184 / 98304 bytes
+- pool: 317128 / 344064 bytes
+- package identity: FM-1_700
+- fwsc package size: 610108 bytes
+- firmware SHA-256: 49faef228426616951fda62813b601c206a51d1d8bf8e5052496c7974f4978d9
+
+Regression note:
+- The repository's legacy scenario suite still contains older pre-fork page/preset expectations and reports the same unrelated scenario failures seen in earlier builds. The host target, focused routing checks, VU placement check, delay stress, linker/RAM/pool checks and final FM-1 package build all passed.

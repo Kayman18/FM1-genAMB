@@ -1,0 +1,28 @@
+Evolve Pattern and the swing-like feel — source diagnosis, 2026-10-22
+Applies to released v17.99.2-FM16 and the current pending octave candidate.
+
+Pattern is knob3 on each Evolve Pattern page. It selects one of 16 independently
+stored patterns for Rings or FM. A step stores pitch and note/rest state, not a
+swing or timing value. A different Pattern activates at the next bar during
+playback and restarts its step position; while stopped it applies immediately.
+
+Both Original and Evolve deliberately delay each generated strike by a random
+0..2599 samples (approximately 0..59ms at 44100Hz). This is always-on timing
+humanization. It is irregular, rather than alternating long/short swing. Faster
+Evolve rates make that fixed delay larger relative to the distance between steps.
+
+Burst can append 1..3 chord notes with 1560..4629 samples (about35..105ms) between
+notes. Burst0 removes those extras but cannot remove the initial random delay.
+Mutation0 freezes the stored note/rest evolution; it does not change timing.
+There is currently no exposed Humanize or Swing control. FM Gate is note duration.
+The legacy P_SWING parameter is repurposed as Pad2 Bright; it does not swing Evolve.
+
+To isolate: solo one layer, Burst0, Reverb Mix0, and Rings Delay Mix0 if using Rings.
+Use Mutation0, Rate1x, Length16 for a stable phrase. Density affects new/mutated
+steps; to fill every step, select a spare Pattern, set Density100, then use New.
+This changes that spare pattern, so it is not required merely to hear the timing.
+
+Source: app/ui.c VIEW_KNOB; app/dsp/evolve.c evo_select/evo_tick;
+app/dsp/amb.c ring_sequence_strike/tick/apply;
+app/dsp/fm_sequence.c fm_sequence_strike/fm_seq_select/fm_seq_tick.
+No sequencer timing changes were made as part of this question.

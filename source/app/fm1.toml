@@ -1,0 +1,29 @@
+# AMB-1's build settings (fm1-base's tools/build.py: ./build.sh)
+name = "AMB"                   # the build's files: amb.fwsc, amb-X.Y.fwsc
+id_prefix = "FM-1_7"           # package identity: dev FM-1_700, releases FM-1_7XXYYZZ (as AMB-1 0.9)
+usb_manufacturer = "genAMB"
+usb_product = "genAMB FM-1"
+ble = false                    # AMB-1 never uses the radio
+usb_audio_in = true            # the music recordable over USB
+usb_audio_out = false
+words = "words.tsv"
+include = ["dsp", "rings_port", "fm_port", "vendor/zen_fm", "vendor/rings", "vendor/cxx"]
+vendored = ["vendor/rings/", "vendor/cxx/", "vendor/zen_fm/"]
+mmio_skip = ["vendor/rings/"]
+o2_cflags = ["-fno-exceptions", "-fno-rtti", "-fno-threadsafe-statics", "-Wno-unused-variable", "-Wno-unused-parameter"]
+o2 = [
+  "dsp/amb.c",
+  "fm_port/fm_port.c",
+  "rings_port/rings_port.cc",
+  "vendor/rings/rings/resources.cc",
+  "vendor/rings/rings/dsp/part.cc",
+  "vendor/rings/rings/dsp/resonator.cc",
+  "vendor/rings/rings/dsp/string.cc",
+  "vendor/rings/stmlib/dsp/units.cc",
+  "vendor/rings/stmlib/utils/random.cc",
+]             # the engine, at -O2
+# the site
+tagline = "A generative ambient machine for the FM-1"
+repo = "https://github.com/charlesvestal/fm1-amb"
+licence = "GPL-3.0-only (combined firmware); MPL-2.0, MIT and Apache-2.0 components"
+credits = "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments)."

@@ -1,0 +1,44 @@
+genAMB v17.93 — dual-core performance diagnostic
+
+Based on hardware-confirmed v17.92. Starts in Dual when CPU1 startup succeeds.
+Press GLO/Mixer to cycle Mixer -> Setup -> Performance -> Mixer.
+Knob 1: Single (left) / Dual (right). Switching automatically resets the meters.
+Knob 2: turn either way to reset measurements. Knobs 3/4 are read-only.
+Core mode is temporary and is not stored in presets; reboot attempts Dual again.
+
+Metrics:
+Audio avg %: smoothed audio-render elapsed time as a percentage of the 256-frame
+5.805 ms deadline. Includes CPU0 work and waiting for CPU1; not combined CPU use.
+Audio peak %: largest audio-block time since reset, as a percentage of deadline.
+Rings us: smoothed sum of CPU1 Rings render times per audio block, in microseconds.
+Wait us: smoothed total CPU0 join-wait time per audio block, in microseconds.
+Dropouts: DMA late-buffer detections since reset (not every possible audible glitch).
+Faults: worker timeout/mailbox/stack-canary faults since reset.
+Seconds: elapsed time since reset. Worker: Ready/Off/Fault denotes availability;
+Ready in Single mode means the second core is parked and can be selected again.
+Rings us / Wait us are zero in Single mode; Rings still renders on CPU0.
+
+Comparison:
+1. Load a preset and let it play. Keep the same preset, mixer levels and effects.
+2. Open Performance, select Single, run for 30 seconds and photograph the page.
+3. Select Dual, run for 30 seconds and photograph it again.
+4. Send both photos. Lower audio average/peak indicates more deadline headroom;
+   dropouts/faults should stay zero. Repeat Single/Dual if the generative pattern
+   changes substantially, since two different musical passages are not identical
+   workloads. The average is a recent smoothed value, not the whole-window mean.
+
+Safety of live comparison: UI mode/reset actions mask CPU0 audio interrupts;
+all submitted worker jobs have been joined before an audio interrupt returns.
+Single mode leaves CPU1 parked in RAM and renders Rings on CPU0. Faulted CPU1 is
+not restarted by the mode control; reboot is required after a worker fault.
+
+Validation:
+Device build and package validation passed. Host navigation, mode toggle and
+reset checks passed. A 15.4-second host audio comparison with Single/Dual switches
+was byte-identical to the all-Dual path. Host screenshot uses zero timing values;
+it is a layout preview, not a device benchmark. v17.93 needs hardware validation.
+App 241136 bytes. Normal RAM 91960/98304; pool 331304/344064 bytes.
+
+PASS: identity, total length, header/table/payload CRCs, loader, decrypted app bytes and slot padding.
+identity: FM-1_7179300 package bytes: 610108 app bytes: 241136
+SHA256: 3e2fcb948a135a638a2ce1c738bf7865b9299f6cf1edc165a31ac8f8edb23e34

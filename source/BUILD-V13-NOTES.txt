@@ -1,0 +1,20 @@
+AMB-1 Full Rings - v13 Lush Cloud Lite 10-20s
+
+UI
+- Unchanged from v12.
+- Enlarged PAGE/BUTTON info panel retained.
+- Rows 1-3 display-only; Row 4 editable.
+- Tall bottom-to-top vertical VU meters retained.
+- Existing HOME/ENV/ARP/LFO/FX/SEQ/GLO mappings retained.
+
+Reverb
+- Keeps v12 CPU-light 4-line/4-diffuser, 22.05-kHz Lush Cloud Lite architecture.
+- Size now maps nominal decay to roughly 10-20 seconds, replacing v12's 10-40+ second range.
+- Reverb wet control changed from squared mapping to a stronger near-linear mapping (0..1.15 return gain).
+- Tank injection raised about 25% so the cloud blooms more clearly.
+- Return smoothing relaxed slightly (0.42 coefficient) for a more audible, present tail while retaining the smooth texture.
+- Modulation and half-rate CPU optimizations unchanged.
+- Space controls remain Reverb / Size / Damping / Mod.
+
+Hardware
+- Real FM-1 behavior should be verified on device.

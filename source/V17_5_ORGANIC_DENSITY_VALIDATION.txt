@@ -1,0 +1,81 @@
+AMB-1 v17.5 Organic Density validation
+=======================================
+Base: v17.4 Pad 2 Lite. Pad 1, Pad 2 Lite, Bass, Rings DSP parameters,
+CloudsClean v17 reverb, Rings reverb-send pointer fix, battery display and octave
+controls are otherwise unchanged.
+
+Requested change
+----------------
+Make the Rings Density control behave like charlesvestal/fm1-amb rather than the
+previous immediate-density workaround.
+
+Upstream fm1-amb behavior matched
+---------------------------------
+- Density still uses the original target formula: 0..5 notes per each of four
+  13/17/23/29-step generative loops, with the slow arc able to swell/thin it.
+- Turning Density changes only the target. It does NOT immediately rewrite the
+  current patterns.
+- Each loop independently grows/prunes toward the target only when that loop
+  reaches its own boundary (loop_pass), matching fm1-amb's organic response.
+- The earlier v17 DensitySendFix immediate loops_density_now() rebalance has been
+  removed.
+
+Rings trigger humanization / de-collision
+----------------------------------------
+- fm1-amb's bell strikes are delayed by a random 0..2599 samples (~0..59 ms at
+  44.1 kHz), with occasional octave doubles delayed a further 300..2299 samples.
+- The Rings version now uses the same timing behavior.
+- This also fixes a semantic mismatch in the Rings adapter: rings_port_trigger()
+  has one pending strike slot. Multiple loop notes posted on the same quarter-note
+  tick could overwrite one another before Rings rendered. A 16-event sample-time
+  scheduler now delivers each generated strike as its own Rings excitation.
+- Identical scheduled delays are separated by one sample so no pending trigger is
+  overwritten.
+- The scheduler is cleared by panic/quiet and at engine initialization.
+
+Direct engine validation
+------------------------
+At 120 bpm, with the four loop lengths 13/17/23/29 quarter notes:
+  initial Density 40:       total 8 notes = 2,2,2,2
+  set Density 0 immediate: total 8 notes = 2,2,2,2  (unchanged immediately)
+  after 15 seconds:         total 0 notes = 0,0,0,0
+  set Density 100 immediate: total 0 notes = 0,0,0,0 (unchanged immediately)
+  Motion 0 / Evolve 0, after 15 seconds:
+                            total 20 notes = 5,5,5,5
+
+A trigger-timestamp probe showed distinct delayed Rings excitations rather than
+same-tick collapse; representative first events (sample:note) included:
+  243468:64, 285761:67, 286884:67, 330099:65,
+  352940:93, 353980:69, 373915:62, 396223:81 ...
+
+CPU sanity check
+----------------
+Same 600-second host simulation, one run on the same host:
+  v17.4 Pad 2 Lite: 12.66 s
+  v17.5 Organic Density: 12.33 s
+This is a relative host sanity check only; the difference is normal run-to-run
+variation. The new event scheduler did not show a measurable CPU regression.
+
+Rings reverb-send fix preserved
+-------------------------------
+- app/rings_port/rings_port.cc is byte-identical to v17.4.
+- SHA-256 in both builds:
+  d967cff70b1008e0c1c2ebc166834a7e8802325a378e20204b98791e930682ee
+- Therefore the previous fix that advances the Rings reverb-send pointer between
+  kMaxBlockSize chunks remains unchanged.
+
+FM-1 device build
+-----------------
+- Release: 17.5
+- Package identity: FM-1_7170500
+- Package: 610108 bytes
+- App image: 176628 bytes
+- RAM .data + .bss: 33980 / 98304 bytes
+- Pool: 317128 / 344064 bytes
+- .ram_text audit: passed
+- No 64-bit multiply issue: passed
+- No soft-double routines: passed
+- Register-access audit: passed
+
+The FM-1 target build and package checks completed successfully. Real hardware
+remains the final subjective test for the Density feel and musical timing.

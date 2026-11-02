@@ -1,0 +1,103 @@
+Reported crash: VEC 1, PC 0200cc76, EMU 0, DBG 10, RET 0200fb78, audio active.
+
+Original exact v17.20 ELF (not a debug-recompiled binary):
+ 200cbcc:    06 15             	r7_r6 = r1_r0
+ 200cbce:    40 20             	r0 = 0
+ 200cbd0:    47 20             	r7 = 0
+ 200cbd2:    42 20             	r2 = 0
+ 200cbd4:    e4 f0 7c 05       	r4 = r0 + 0x3F000000  #
+ 200cbd8:    a2 22             		 [sp+136] = r2
+ 200cbda:    82 3a             	[sp+104] = r2
+ 200cbdc:    cb ff 00 00 80 bf 	r11 = 3212836864 <_data_load+0xBD7C5D2C : bf800000 >
+ 200cbe2:    d4 e9 b0 d0       	r13 = [sp+176]
+ 200cbe6:    d4 e9 8c 90       	r9 = [sp+140]
+ 200cbea:    a7 2b             	[sp+172] = r7
+ 200cbec:    05 f1 6c a0       	r5 = r10 + 108  #
+ 200cbf0:    a6 24             		 [sp+144] = r6
+ 200cbf2:    d4 e9 95 80       	[sp+148] = r8
+ 200cbf6:    d4 e9 b1 d0       	[sp+176] = r13
+ 200cbfa:    a0 26             	[sp+152] = r0
+ 200cbfc:    61 ff 1f 00 4f 05 	if ((r0 & 0x1F) != 0) goto 2718 <.GJTIE40_0_0_+0x216E : 200d6a0 >
+ 200cc02:    08 f1 48 a0       	r8 = r10 + 72  #
+ 200cc06:    58 41             		 r0 = b[r5+1] (u)
+ 200cc08:    00 f8 1f 04       	if (r0 == 2) goto 62 <.GJTIE40_0_0_+0x1718 : 200cc4a >
+ 200cc0c:    cd ff 0a d7 23 3c 	r13 = 1008981770 <_data_load+0x3A203436 : 3c23d70a >
+ 200cc12:    80 f8 2e 02       	if (r0 != 1) goto 92 <.GJTIE40_0_0_+0x1740 : 200cc72 >
+ 200cc16:    d0 ec 80 02       	r0 = [r8+32]
+ 200cc1a:    c1 ff c6 37 be b9 	r1 = 3116251078 <_data_load+0xB7BA94F2 : b9be37c6 >
+ 200cc20:    3f e5              <unknown instruction>
+ 200cc22:    00 01             	tbb [r0]
+ 200cc24:    d0 ec 81 02       	[r8+32] = r0
+ 200cc28:    41 20             	r1 = 0
+ 200cc2a:    01 ec              <unknown instruction>
+ 200cc2c:    22 08             	r2 = [r2++=r8] 
+ 200cc2e:    40 20             	r0 = 0
+ 200cc30:    d0 ec 81 02       	[r8+32] = r0
+ 200cc34:    40 22             	r0 = 2
+ 200cc36:    d8 41             	b[r5+1] = r0
+ 200cc38:    c0 ff 9a 99 19 3e 	r0 = 1041865114 <_data_load+0x3C15F6C6 : 3e19999a >
+ 200cc3e:    a0 d6             	r0 = r10  #
+ 200cc40:    f0 64             		 [r7+16] = r0
+ 200cc42:    01 39             	r1 = [sp+100]
+ 200cc44:    bf ea 26 ef       	call -8628 <pad_breathe : 200aa94 >
+ 200cc48:    04 94             	goto 40 <.GJTIE40_0_0_+0x1740 : 200cc72 >
+ 200cc4a:    d0 ec 80 02       	r0 = [r8+32]
+ 200cc4e:    c1 ff ee 42 64 39 	r1 = 962872046 <_data_load+0x3760A01A : 396442ee >
+ 200cc54:    3f e5              <unknown instruction>
+ 200cc56:    00 01             	tbb [r0]
+ 200cc58:    d0 ec 81 02       	[r8+32] = r0
+ 200cc5c:    cd ff 0a d7 23 3c 	r13 = 1008981770 <_data_load+0x3A203436 : 3c23d70a >
+ 200cc62:    10 ed              <unknown instruction>
+ 200cc64:    80 cc              <unknown instruction>
+ 200cc66:    60 e0 7e 05       	r0 = 0x3F800000
+ 200cc6a:    d0 ec 81 02       	[r8+32] = r0
+ 200cc6e:    40 20             	r0 = 0
+ 200cc70:    d8 41             	b[r5+1] = r0
+ 200cc72:    41 d6             	r1 = r4  #
+ 200cc74:    70 64             		 r0 = [r7+16] 
+ 200cc76:    c2 ff 66 66 66 3f 	r2 = 1063675494 <_data_load+0x3D62C392 : 3f666666 >
+ 200cc7c:    10 e9              <unknown instruction>
+
+v17.21 separated pad_coefs: pointer from argument retained to envelope read.
+ 200b4c0:    7f 04             	[--sp] = {rets, r15-r4}
+ 200b4c2:    e2 9e             	sp += -8
+ 200b4c4:    05 16             	r5 = r0
+ 200b4c6:    0f e1 6c 50       	r15 = r5 + 108
+ 200b4ca:    50 ee f1 00       	r0 = b[r15+1] (u)
+ 200b4ce:    1c 16             	r12 = r1
+ 200b4d0:    5f 88             	r7 = r5 + 8
+ 200b4d2:    09 e1 48 50       	r9 = r5 + 72
+ 200b4d6:    00 f8 1c 04       	if (r0 == 2) goto 56 <pad_coefs+0x52 : 200b512 >
+ 200b4da:    80 f8 2c 02       	if (r0 != 1) goto 88 <pad_coefs+0x76 : 200b536 >
+ 200b4de:    d0 ec 90 02       	r0 = [r9+32]
+ 200b4e2:    c1 ff c6 37 be b9 	r1 = 3116251078 <_data_load+0xB7BA9732 : b9be37c6 >
+ 200b4e8:    3f e5              <unknown instruction>
+ 200b4ea:    00 01             	tbb [r0]
+ 200b4ec:    41 20             	r1 = 0
+ 200b4ee:    d0 ec 91 02       	[r9+32] = r0
+ 200b4f2:    01 ec              <unknown instruction>
+ 200b4f4:    20 08             	r0 = [r2++=r8] 
+ 200b4f6:    48 ea 00 90       	[r9+32] = 0x0
+ 200b4fa:    40 22             	r0 = 2
+ 200b4fc:    52 ee f1 00       	b[r15+1] = r0
+ 200b500:    c0 ff 9a 99 19 3e 	r0 = 1041865114 <_data_load+0x3C15F906 : 3e19999a >
+ 200b506:    50 d6             	r0 = r5  #
+ 200b508:    f0 64             		 [r7+16] = r0
+ 200b50a:    c1 16             	r1 = r12
+ 200b50c:    bf ea c2 fa       	call -2684 <pad_breathe : 200aa94 >
+ 200b510:    04 92             	goto 36 <pad_coefs+0x76 : 200b536 >
+ 200b512:    d0 ec 90 02       	r0 = [r9+32]
+ 200b516:    c1 ff ee 42 64 39 	r1 = 962872046 <_data_load+0x3760A25A : 396442ee >
+ 200b51c:    3f e5              <unknown instruction>
+ 200b51e:    00 01             	tbb [r0]
+ 200b520:    60 e0 7e 15       	r1 = 0x3F800000
+ 200b524:    d0 ec 91 02       	[r9+32] = r0
+ 200b528:    10 ed              <unknown instruction>
+ 200b52a:    80 81             	rep 18 2 {
+ 200b52c:    48 ea 7e 95       		[r9+32] = 0x3F800000
+ 200b530:    40 20             		r0 = 0
+ 200b532:    52 ee f1 00       		b[r15+1] = r0
+ 200b536:    60 f0 7e 15       		r1 = 0x3F800000  #
+ 200b53a:    70 64             			 r0 = [r7+16] 
+ 
+PASS: observed zero-pointer sequence removed; four noinline routines and calls present.

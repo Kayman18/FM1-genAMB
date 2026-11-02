@@ -1,0 +1,34 @@
+AMB-1 Full Rings CloudsClean v17.6 - One-line confirmations + Pad 2 Colour
+Date: 2026-10-20
+
+Base:
+- v17.5 Organic Density / Pad 2 Lite.
+- Organic Rings Density behavior retained.
+- Rings reverb-send buffer-pointer fix retained.
+- Pad 2 remains the CPU-light half-speed independent four-voice engine.
+
+UI confirmation change:
+- All transient button/parameter confirmations now use one combined text string.
+- They render on a single header line using the same FONT_S face for the entire message.
+- Example validated in simulator: RINGS OCTAVE +1.
+- The screen-reader message text remains the same logical phrase.
+
+Pad 2 Colour change:
+- Pad 1 Colour remains Rhodes / Vintage.
+- Pad 2 Colour is now Glass / Strings.
+- Glass: clean sine body + light detuned triangle + inexpensive octave harmonic.
+- Strings: two wider-detuned soft triangles with Character controlling spread/blend.
+- No additional filter, chorus delay, or expensive per-sample modulation was added; Pad 2 stays on the Lite path.
+
+Focused simulator validation:
+- One-line Rings octave confirmation rendered correctly.
+- Pad 2 Colour page rendered Glass and Strings correctly.
+- Host render remained real-time safe in the simulator.
+
+FM-1 device build:
+- Build completed successfully.
+- app image: 176572 bytes
+- RAM .data+.bss: 33980 / 98304 bytes
+- pool: 317128 / 344064 bytes
+- package identity: FM-1_700
+- output package: 610108 bytes

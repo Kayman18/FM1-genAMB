@@ -1,0 +1,20 @@
+AMB-1 Full Rings - Clouds Clean Reverb v17
+
+Distortion / bitcrush correction
+--------------------------------
+- Fixes the real overload path instead of masking it with saturation or a hard clip.
+- Reverb tank input gain returns to the conservative 0.24 value.
+- Reverb wet-return makeup is reduced to 1.10x at 100% instead of 1.25x.
+- Master mix has about 3 dB more headroom than v16.
+- Adds a smooth peak guard that is exactly linear below +/-0.90 and only acts on true overload.
+- No always-on tanh saturation and no hard converter clamp in the normal signal path.
+- 0% Reverb remains fully dry; 100% remains wet-only.
+- Keeps 32-bit floating full-rate reverb storage and the long 10-20 s decay target.
+- Slightly relaxes v16's very dark damping curve to avoid concentrating long-tail energy in a harsh mid band.
+
+Unchanged
+---------
+- Enlarged info panel and vertical VU meters.
+- Mixer/page mappings and all instrument controls.
+- Full Rings integration and deferred model switching.
+- Existing pad, bass, drone, percussion, and Rings reverb sends.

@@ -1,0 +1,8 @@
+{
+  "baseline": "17.99.7",
+  "completed_version": "17.99.8",
+  "status": "built and package-verified; hardware test pending",
+  "change": "Replace former FAUST-inspired FM filter bank with Bypass, Clean SVF, SEM, Juno, Polysix and CS-80-inspired implementations",
+  "project_format": 22,
+  "pending": []
+}

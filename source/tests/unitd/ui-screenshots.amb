@@ -1,0 +1,45 @@
+# Source-native UNIT-D and GLO Mixer preview screenshots.
+setpar 91 75
+setpar 83 3
+setpar 96 3
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+wait 1750
+shot rings-unitd-row-mode.png
+spin SELECT 1
+wait 1750
+shot rings-unitd-row1.png
+spin SELECT 1
+wait 1750
+shot rings-unitd-row2.png
+tap SEQ
+wait 1750
+shot rings-unitd-options.png
+spin SELECT 1
+wait 1750
+shot rings-unitd-options-row2.png
+tap SEL
+tap SEL
+tap SEL
+tap SEL
+wait 1750
+shot fm-unitd-row-mode.png
+spin SELECT 1
+wait 1750
+shot fm-unitd-row1.png
+spin SELECT 1
+wait 1750
+shot fm-unitd-row2.png
+tap SEL
+wait 1750
+shot fm-unitd-options.png
+tap GLO
+wait 1750
+tap PLAY
+wait 3800
+shot glo-mixer-horizontal.png
+tap PLAY

@@ -1,0 +1,62 @@
+AMB-1 Full Rings CloudsClean v17.14 - Piano LEDs + Delay Repeats
+Date: 2026-10-21
+
+Base:
+- v17.13 Select Scale + Piano Mode
+- v17.12 clean 22.05 kHz Rings delay retained
+- Pad 2 Lite, Organic Density, Rings send fix, Bassless Mixer, current UI/LED rules retained
+
+Change 1 - PIANO mode key LEDs
+- While Mode = PIANO, all 27 hardware piano-key LEDs are forced bright/on.
+- This overrides the normal scale-key LED preference only while PIANO mode is selected.
+- Leaving PIANO restores the existing scale-light behavior.
+- Host validation in PIANO mode:
+    white keys: ################  (16/16 on)
+    black keys: ###########       (11/11 on)
+
+Change 2 - Rings Delay Repeats
+- Rings DELAY page now uses all four knobs:
+    K1 Time      20..1500 ms
+    K2 Feedback  0..85%
+    K3 Mix       0..100%
+    K4 Repeats   Inf, 1..8
+- Repeats = Inf preserves the v17.13 feedback-only behavior.
+- Finite values count the overall Rings delay stream. Repeat #1 comes from the original delay contents;
+  feedback is allowed only long enough to create the requested additional repeats.
+- A new Rings strike restarts the overall repeat count. It does not allocate per-note delay buffers.
+- No additional delay buffer is used, so the CPU/RAM impact is negligible.
+
+Focused audio validation (same Time/Feedback/Mix and one manual Rings strike):
+- Repeats 1: late-tail RMS is lowest and dies first.
+- Repeats 4: clearly more energy remains through ~2 s.
+- Repeats Inf: longest continuing feedback tail.
+- Representative RMS windows, dBFS:
+                  0.3-0.7s   0.7-1.2s   1.2-2.0s   2.0-3.0s
+    Repeats 1       -57.0       -64.2       -68.3       -74.7
+    Repeats 4       -55.2       -59.4       -64.8       -71.1
+    Infinite        -55.1       -59.3       -61.1       -66.4
+- Host render remained ~1.0-1.1% of real time in these focused tests.
+
+Project compatibility:
+- Project format bumped 12 -> 13.
+- v17.12/v17.13 format-12 projects migrate forward.
+- Existing delay settings are preserved; the new Repeats setting defaults to Inf so old projects retain
+  their previous delay behavior.
+
+FM-1 device build:
+- Build passed.
+- app image: 178380 bytes
+- RAM .data+.bss: 86160 / 98304 bytes
+- pool: 331304 / 344064 bytes
+- package identity: FM-1_7171400
+- fwsc package size: 610108 bytes
+
+Compared with v17.13:
+- app: +216 bytes
+- RAM: +32 bytes
+- pool: unchanged
+
+General legacy test-suite note:
+- The repository's broad scenario suite still contains expectations for older page maps, parameter
+  indices, preset values and PLAY/SELECT behavior and therefore reports the same class of stale scenario
+  failures seen in the recent branch. Focused host/device checks above validate the new paths directly.

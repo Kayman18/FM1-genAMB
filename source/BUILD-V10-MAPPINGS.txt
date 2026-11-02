@@ -1,0 +1,38 @@
+AMB-1 Full Rings — Airy Ambient Cloud + Readable UI v10
+
+STATIC DISPLAY ROWS (always visible, never assigned to K1-K4)
+Row 1 — Garden/Home status:
+  Chord | Tempo | Evolve | Motion | Drift
+Row 2 — musical state:
+  Preset (one active firmware preset name) | Mode | Scale
+Row 3 — Volume Mixer:
+  Pad | Rings | Drone | Bass
+
+ROW 4 — ACTIVE/EDITABLE PAGE ONLY
+K1-K4 remain mapped exactly to the existing firmware page mapping.
+Physical button paging is unchanged:
+  HOME -> Garden
+  ENV  -> Pad -> Pad body
+  ARP  -> Rings -> Rings tone -> Rings exciter
+  LFO  -> Mod
+  FX   -> Bass
+  SEQ  -> Drone -> Drone voice
+  GLO  -> Space -> Rev sends -> Setup
+The SELECT encoder still steps through the same page list.
+ALGORITHM still changes the mode; PRESET still changes the active firmware preset.
+
+HOME behavior:
+  Row 1 stays display-only.
+  When HOME/Garden is active, Row 4 duplicates the Garden values.
+  CHORD is display-only; K1-K4 edit Tempo / Evolve / Motion / Drift as before.
+
+REVERB
+The previous hall was retuned/reworked into an airy ambient cloud:
+  - 4-line stereo FDN
+  - 4 stages of gentle input diffusion
+  - low-frequency input cleanup
+  - long feedback tail
+  - wide stereo decorrelation
+  - two very slow modulations
+  - brighter wet return
+Space controls remain: Reverb / Size / Damping / Mod.

@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: MIT - minimal freestanding C++ math wrapper */
+#ifndef GENAMB_FREESTANDING_CMATH
+#define GENAMB_FREESTANDING_CMATH
+#include <math.h>
+namespace std {
+using ::fabsf; using ::fabs; using ::sqrtf; using ::sqrt;
+using ::expf; using ::exp; using ::logf; using ::log;
+using ::sinf; using ::sin; using ::cosf; using ::cos;
+using ::floorf; using ::floor; using ::powf; using ::pow;
+}
+#endif

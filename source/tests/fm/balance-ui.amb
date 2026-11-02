@@ -1,0 +1,6 @@
+tap GLO
+tap GLO
+tap GLO
+expect view 17
+wait 200
+shot performance-v17999.png

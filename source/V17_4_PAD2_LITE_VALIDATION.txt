@@ -1,0 +1,83 @@
+AMB-1 v17.4 Pad 2 Lite validation
+==================================
+Base: v17.3 Pad2 Half-Speed, preserving the v17.2 DensitySendFix/OctaveBattery changes.
+
+Requested change
+----------------
+Reduce the CPU cost of the independent half-speed Pad 2 while leaving Pad 1,
+Rings, the Rings reverb-send pointer fix, the battery display, octave controls,
+and the v17 reverb/audio path unchanged.
+
+Pad 2 Lite changes
+------------------
+- Four independent Pad 2 voices are retained.
+- Independent Pad 2 envelopes, oscillator phases, RNG/modulation state,
+  chord degree/voice-leading and half-speed chord clock are retained.
+- Audio remains full-rate at 44.1 kHz; Pad 2 is NOT downsampled.
+- Removed the second Pad 2 modulated chorus delay line and LFO.
+- The existing Pad 2 Chorus parameter ID is retained for project compatibility,
+  but is presented as Width and now controls phase-safe mid/side stereo width.
+- Removed Pad 2's per-voice resonant/TPT filters; brightness is handled by a
+  cheaper stereo bus low-pass.
+- Pad 2 pitch/timbre control updates are reduced from the full duplicate's
+  frequent coefficient path to a 128-sample control cadence.
+- Rhodes Lite uses one sine carrier plus a quiet detuned triangle rather than
+  nested FM/harmonic sine evaluation.
+- Vintage Lite uses two detuned triangles rather than dual BLEP oscillators plus
+  a per-voice filter.
+- Low Body uses a cheap octave-down triangle, then the shared Pad 2 bus low-pass.
+- Existing Level / Octave / Swell / Bright / Colour / Low Body / Character /
+  Width / Reverb Send controls remain independent of Pad 1.
+- Bass remains present in this build; it was not removed.
+
+CPU comparison (host, relative benchmark)
+-----------------------------------------
+Same 600-second whole-app simulated workload, same host:
+  v17.2 (before second Pad): 13.31 s CPU wall workload
+  v17.3 full Pad 2:          14.07 s
+  v17.4 Pad 2 Lite:          13.26 s
+The Lite workload is therefore effectively back at the v17.2 pre-Pad-2 host
+baseline (within normal host-run variation). This is a relative software
+benchmark, not a direct measurement of FM-1 hardware CPU percentage.
+
+Isolated 600-second Pad 2 render probe, same host:
+  Rhodes full Pad 2: 5.0007 s
+  Rhodes Pad 2 Lite: 3.7610 s   (~24.8% less host CPU)
+  Vintage full Pad 2: 5.7332 s
+  Vintage Pad 2 Lite: 3.7067 s  (~35.3% less host CPU)
+Both Lite modes completed with no NaNs/non-finite output.
+
+Half-speed / independence check
+-------------------------------
+Direct engine probe after start, using separate Pad/Pad2 RNG streams:
+  Pad 1 breath durations:  9.919, 14.674, 18.040, 18.647 s
+  Pad 2 breath durations: 22.869, 26.260, 29.533, 37.234 s
+  Per-voice ratios:        2.306, 1.790, 1.637, 1.997
+  Mean ratio:              1.932x
+Variation is expected because Pad 2 has its own independent random stream; the
+nominal timing multiplier remains 2x.
+
+FM-1 device build
+-----------------
+- Package: 610108 bytes
+- App image: 175300 bytes
+- RAM .data + .bss: 33852 / 98304 bytes
+- Pool: 317128 / 344064 bytes
+- .ram_text audit: passed
+- No 64-bit multiply issue: passed
+- No soft-double routines: passed
+- Register-access audit: passed
+- Package identity: FM-1_7170400
+
+Compared with v17.3 full Pad 2:
+- App image reduced from 178872 to 175300 bytes.
+- Pool reduced from 321224 to 317128 bytes (4096 bytes recovered by removing
+  the duplicate chorus delay memory).
+
+Validation note
+---------------
+The repository's old scenario suite contains pre-existing expectations for
+older page/preset mappings and its standalone amb_test compile command lacks the
+current Rings include/link setup. Targeted host builds, direct Pad 2 probes and
+the FM-1 device/link/package audits above were used for this revision.
+Real hardware remains the final test for dropout-free real-time headroom.

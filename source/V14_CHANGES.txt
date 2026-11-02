@@ -1,0 +1,13 @@
+AMB-1 v14 - Lush Cloud Lite Dry/Wet Fix
+
+Based on v13. UI/page mappings and reverb topology are unchanged.
+
+Reverb control changes:
+- 0% = fully dry output
+- 50% = clearly audible lush cloud blend
+- 100% = predominantly wet (10% dry retained for articulation)
+- Tank input drive: 1.70x
+- Wet return gain: up to 2.40x
+- Tail range remains approximately 10-20 seconds
+- Same 4-line / 4-diffuser half-rate 22.05 kHz Lite tank
+- No additional delay lines, filters, or modulation oscillators

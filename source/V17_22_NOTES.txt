@@ -1,0 +1,24 @@
+genAMB v17.22 — splash and control cleanup
+
+Based on v17.21, confirmed by the user to fix the device crash.
+- Enlarged Built on AMB-1 credit on the splash screen.
+- Removed duplicate Level controls from PAD1, PAD2 and Rings main pages.
+  Main-page encoders 1/2 now control Swell/Bright (pads) or Density/Burst (Rings).
+  Encoders 3/4 on these pages are unassigned. Mixer levels are retained.
+- Moved base Octave to each respective SEQ page. Encoders 1/2/3 are now
+  Octave / Oct Drift / Change (%); encoder 4 is unassigned.
+- Slowed Rings bursts to 35–105 ms between notes (previously 12–35 ms).
+  Burst probability, number of notes and velocity logic are unchanged.
+- Retained the v17.21 noinline pad crash workaround and existing saved settings.
+
+Validation: device compilation and memory checks passed; package identity,
+header/table/payload CRCs, decrypted app bytes and padding passed. Host page
+navigation/render check passed; screenshots included. v17.22 is not yet tested
+on hardware. No Surface integration.
+
+App 239032 bytes; firmware 610108 bytes.
+Normal RAM 88600/98304; pool 331304/344064 bytes.
+Splash credit edit used the built-in image editor with the instruction to enlarge
+only Built on AMB-1 approximately twofold and preserve the surrounding artwork.
+
+Firmware SHA256: c300792e0e9484651bd20a45d414a6e0e578705e6a4efba6d0467363832dd94b

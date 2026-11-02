@@ -1,0 +1,5 @@
+PASS fm-presets.wav: normal host, pthread single fallback and pthread dual are byte-identical. SHA256 29b6aeb524ac7bb6b673e0b45b294bcbdd7f9edc5b75ff5bb81b11e5af74b669
+PASS fm-original.wav: normal host, pthread single fallback and pthread dual are byte-identical. SHA256 7992c5abba91acceb8620e4601ee430996258d5b63f8207f5c325dbec3bfd2ba
+PASS mixed.wav: normal host, pthread single fallback and pthread dual are byte-identical. SHA256 d05c64bc7c0763bef35d5cf5f06a7ce78257662868d02f652e0369bead209e5d
+PASS FM-muted baseline: v17.98, v17.99 simulated dual and final v17.99 single fallback are byte-identical across all seven Rings models. SHA256 306f3d97e3a9fcf3d5f2c57d36d4cde1f0cfa52f9bd37e11f98bae1fe42205b4
+Hardware CPU load and real-time playback have not been measured on an FM-1.

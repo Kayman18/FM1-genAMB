@@ -1,0 +1,167 @@
+genAMB v17.99 — FM usage and release notes
+
+v17.99 adds a separate six-operator FM layer based on the Zen-1 engine, with up to four voices and nine bundled patches. FM has its own Original and Evolve sequencers and its own reverb send. Rings and FM can run together, with each layer choosing either sequencer independently. They share the musical clock, transport, root, scale and current chord.
+
+GETTING STARTED
+
+FM Level starts at 0 in the factory pieces and when importing an older project. Tap the physical SEL button to open the FM page, choose a patch with Knob 1, and raise Level with Knob 2. FM Level is on this page. The SELECT rotary encoder keeps its existing function.
+
+The nine patches, in selector order, are:
+1. Soft Pad
+2. Soft Swell
+3. Deep Pad
+4. Drop
+5. Mallet
+6. Bell
+7. Rin
+8. Bamboo
+9. Furin
+
+This build uses the bundled patches; runtime DX7/SysEx patch loading and patch editing are not included.
+
+FM PAGES
+
+Tap SEL repeatedly to cycle through FM, FM Motion and FM Seq. When FM Seq > Mode is Evolve, the cycle continues through FM Evolve Setup and FM Evolve Pattern before returning to FM. With Mode set to Original, FM Seq returns directly to FM.
+
+Page               | Knob 1  | Knob 2   | Knob 3    | Knob 4
+-------------------|---------|----------|-----------|--------
+FM                 | Patch   | Level    | Voices    | Gate
+FM Motion          | Density | Burst    | Rev Send  | —
+FM Seq             | Mode    | Octave   | Oct Drift | Chance
+FM Evolve Setup    | Length  | Mutation | Density   | Rate
+FM Evolve Pattern  | Range   | Follow   | Pattern   | New
+
+OCT− and OCT+ change FM's octave while any FM page is open. The Reverb > Sends page also exposes the FM send on Knob 4.
+
+SOUND AND COMMON SEQUENCER CONTROLS
+
+Level is 0–100; Voices selects 1–4 voices. Gate is 10–200% of a quarter-note beat: 100% holds a generated note for one beat before releasing its envelope. Patch release tails can continue afterward. The default is four voices and a 75% gate. Gate follows the shared internal or external tempo; it does not change with the Evolve Rate setting. Manually played notes are held until note-off.
+
+Rev Send is 0–100, default 65, and feeds the existing shared reverb. FM's effects routing consists of this reverb send; the Rings delay remains specific to Rings.
+
+On FM Seq, Mode selects Original or Evolve. Octave is −2 to +2. Oct Drift selects no shift, +1 octave, or ±1 octave; Chance sets the 0–100% probability of that shift on each generated strike. These controls apply to both FM sequencers.
+
+FM Motion > Burst is a 0–100% chance of adding a short chord strum to a generated strike and works in either sequencer. It starts at 0. FM Motion > Density controls Original only.
+
+ORIGINAL
+
+FM has its own four 13-, 17-, 23- and 29-step loops, advancing once per quarter-note beat. Its Density is 0–100, default 40. Each loop grows or prunes toward the density target when that loop completes a pass. The global Garden Evolve and Motion behavior also shapes the Original loops. FM loop content and positions are separate from Rings, and switching FM to Evolve does not overwrite its Original loops.
+
+EVOLVE
+
+FM has a separate bank of 16 evolving patterns. Its Evolve controls are independent of the Rings Evolve controls:
+
+• Length: 2–16 steps, default 16.
+• Mutation: 0–100% probability of replacing each step at the loop boundary, default 15. At 0, the pattern stays fixed until New is used.
+• Density: 0–100% probability of a note when a new or mutated step is generated, default 70. Changing Density does not immediately erase existing notes.
+• Rate: 1/2x, 1x or 2x, default 1x. These give one step every two beats, one step per beat, or two steps per beat without changing the master tempo.
+• Range: 1–3 octaves, default 1, before FM octave offset and drift.
+• Follow: Chord or Scale, default Chord. Stored steps map to the current harmony at playback; Scale follows the selected scale, including edits to its note pool.
+• Pattern: 1–16, default 1.
+• New: turn Knob 4 to regenerate the selected FM pattern using Evolve Density.
+
+Mode and Pattern changes take effect on the next bar while playing, or immediately while stopped. A newly selected pattern starts from its first step. The screen indicates a pending change.
+
+MANUAL PLAY AND MIDI
+
+In PIANO mode, physical keys play FM while any FM page is open; on the other pages they play Rings. Incoming MIDI on channel 3 plays FM in PIANO mode regardless of the displayed page. FM Octave also transposes these incoming notes. Channel 1 keeps its existing Rings/scale behavior.
+
+FM recognizes note-off and note-on with velocity zero. Releases use the pitch that was actually played, so changing octave or page while a key is held does not leave that note stuck. Channel 3 CC120/CC123 releases all FM notes. With MIDI out enabled, generated and manually played FM notes use channel 3.
+
+PIANO mode suspends automatic FM strikes. Stopping transport releases FM voices and allows their release tails to decay. Setting FM Level to 0 mutes FM, clears pending generated strikes and releases its voices.
+
+SAVE AND PROJECT COMPATIBILITY
+
+FM settings are stored per piece. Each layer has one separate bank of 16 Evolve patterns shared across the eight pieces; the selected pattern and Evolve settings belong to the piece. SAVE keeps all pieces plus the current Rings and FM Evolve banks, including their evolution state. Press SAVE to retain an evolved result: automatic mutation alone does not mark the project dirty for autosave.
+
+Loading a v17.98 project preserves its existing parameters, pieces, note pools and Rings Evolve bank, and initializes FM with Level 0 and Original mode.
+
+v17.99 writes project format 18 on SAVE or autosave. A format 18 project cannot be loaded by v17.98; rolling back to that firmware after saving starts from its factory recipes. Firmware rollback and saved-project compatibility are separate considerations.
+
+
+BUILD AND VALIDATION
+
+Status: device-compiled test firmware; physical FM-1 playback and real-time CPU
+headroom have not been measured in this workspace. The host CPU percentage is
+not a measurement of FM-1 performance. Four FM voices fit the device memory
+budget, but combined hardware load still needs an on-device listening test.
+
+Base: recovered genAMB v17.98 Ambient Evolve Test.
+Package identity: FM-1_7179900 (release 17.99).
+Firmware package: 610,108 bytes.
+Application image: 272,732 bytes.
+Normal RAM: 96,436 of 98,304 bytes; 1,868 bytes free.
+Pool RAM: 335,504 of 344,064 bytes; 8,560 bytes free. This includes the
+required 8,192-byte guard, leaving 368 bytes beyond that guard.
+
+Device build gates pass: no unsafe 64-bit multiply/load instruction pattern,
+no software double-precision arithmetic, register-access policy satisfied,
+and RAM-code section contains no external calls. Firmware validation checks
+release identity, all package/header/table CRCs, the loader, application bytes
+after decryption, and flash-slot padding.
+
+FM engine: 25 optimized checks and the same 25 checks with address/undefined
+behavior sanitizers pass. Tests cover all nine patches, release and gate
+behavior, manual notes, stealing, polyphony, old-patch release tails, serial
+wrap, arbitrary render-block boundaries, all 32 algorithms at parameter
+extremes, and 128 sanitized packed patches. There are no dynamic allocations.
+The adapted core matches the pinned upstream core byte-for-byte for 221,184
+Q24 samples across all nine patches and three pitches.
+
+Sequencing: 138,240 harmonic mappings pass, with all three Evolve rates,
+Original loop wrap, density endpoints, pattern-bank restore, bar-boundary
+changes, external clock gates, MIDI note cleanup, PIANO suppression, and
+muted phase advancement also checked under sanitizers.
+
+Whole app: host scenarios pass for FM page navigation and control values,
+independent Rings/FM modes and banks, held physical/MIDI note release,
+project-v17 migration, and format-18 save/reboot restoration. Five FM pages
+were rendered at the native 240 x 240 resolution and visually inspected.
+
+Audio: all nine patches, both FM sequencers, and dense combinations with
+Rings, both pads and reverb were rendered. The real pthread worker and the
+single-core fallback produce byte-identical WAVs in all three scenarios.
+The fallback now uses the same summation order as the worker, eliminating a
+one-sample-unit rounding difference found during verification. With FM
+muted, audio remains byte-identical to v17.98 across all seven Rings models.
+No full-scale 16-bit samples occurred in these audio scenarios.
+
+Reproduction from the source archive:
+  sh tests/run_fm_port_tests.sh
+  sh tests/fm/run_sequence_test.sh --sanitize
+  sh build.sh --host
+  app/build/host/amb_host tests/fm/ui.amb /tmp/fm99-ui
+  app/build/host/amb_host tests/fm/migration.amb /tmp/fm99-migration
+  app/build/host/amb_host tests/fm/audio.amb /tmp/fm99-audio
+
+For the pthread comparison, set CC to the absolute path of
+ tests/dual-core/host-cc before building --host. Run audio.amb once with
+ DC_SINGLE=1 and once with DC_SINGLE unset, using different output directories.
+Compare the corresponding WAVs byte-for-byte. The test wrapper is a host
+validation tool; it is not compiled into the device firmware.
+
+For the device, set JIELI_TOOLCHAIN and AC79_SDK to your installed toolchain
+and SDK paths (see BUILDING.md), then:
+  sh build.sh --release 17.99
+  python3 tests/fm/validate_package.py
+The result is app/build/amb-17.99.fwsc. Use your usual FM-1 firmware-file update
+workflow to install this .fwsc. The source archive includes application,
+platform, vendored DSP, preset generators, tests and license notices; the
+external toolchain and SDK are not bundled.
+
+PROVENANCE AND LICENSES
+
+Zen-1 upstream: https://github.com/aceyprime/zen-1
+Pinned commit: ec9295233ea64ddac224b58b4d07216706c1b8ee
+The nine included presets are Zen-1's original ambient patches. No Yamaha
+factory bank or commercial patch data is included. The imported core and
+preset settings are retained, with arithmetic and firmware-adapter changes
+for this platform. This is not a claim of bit-exact Yamaha DX7 emulation.
+
+See LICENSING.md and app/vendor/zen_fm/UPSTREAM.md in the source archive.
+The combined firmware is GPL-3.0-only, with the original MPL-2.0, MIT and
+Apache-2.0 component notices retained. Full corresponding application source
+is supplied alongside this test firmware.
+
+FIRMWARE SHA-256
+85e8136cb73db6ba53d2d6e3b8a49488e69ababb7b8a10504fcec47bfb044671

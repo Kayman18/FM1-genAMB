@@ -1,0 +1,155 @@
+{
+  "project": "genAMB FM-1",
+  "baseline": "v17.99.2-FM16",
+  "updated_date": "2026-10-22",
+  "status": "Octaves, six-voice standalone FM, smaller canvas and three-model Rings implemented in pending source; firmware build is on hold.",
+  "build_on_hold": true,
+  "build_complete": false,
+  "resume_condition": "Wait for the user to explicitly request the next firmware build.",
+  "changes": [
+    {
+      "id": "instrument_octaves_minus3_minus4",
+      "request": "for the next build can you aslo add for every Octave box that has a -2 add -3 and -4 to it, save this for next build",
+      "scope": [
+        "PAD1 octave",
+        "PAD2 octave",
+        "Rings octave",
+        "FM octave"
+      ],
+      "parameter_ids": [
+        64,
+        65,
+        21,
+        97
+      ],
+      "previous_choices": [
+        -2,
+        -1,
+        0,
+        1,
+        2
+      ],
+      "requested_choices": [
+        -4,
+        -3,
+        -2,
+        -1,
+        0,
+        1,
+        2
+      ],
+      "approval_status": "Explicitly requested; save for next build.",
+      "status": "Implemented; targeted native source validation in tests/next-build.",
+      "ui": "Shared parameter limits extend the sequence-page knob and OCT-/OCT+ buttons; overview cards use the same values.",
+      "pitch": "Original Rings/FM retain previous -2..+2 mapping; -3/-4 lower their prior -2 result by 12/24 semitones. Pad audio/MIDI/display use a consistent pitch-class-preserving bound. Manual Rings pitches are bounded before command packing.",
+      "persistence": "Existing format18 signed fields store the new values; no parameter renumbering or structure-size change."
+    },
+    {
+      "id": "rings_three_retained_models",
+      "request": "what if we only Kept, Modal, Sympathetic and string, remove the rest.",
+      "approval_status": "Explicit latest instruction; supersedes earlier FM-only Rings removal.",
+      "status": "Implemented and native audio regression validated; not device-built.",
+      "kept": [
+        "Modal",
+        "Sympathetic",
+        "String"
+      ],
+      "removed": [
+        "FM",
+        "Sym Q",
+        "Str+Rev",
+        "StrSynth"
+      ],
+      "removed_storage": [
+        "four internal FMVoice objects",
+        "Part internal reverb object",
+        "StringSynthPart object",
+        "32768-element uint16 effects buffer",
+        "mutable quantized sympathetic chord table",
+        "String FX selector state"
+      ],
+      "ui": "Model and its modulation use the three retained choices. Obsolete String FX knob is blank/inactive.",
+      "legacy_model_mapping": {
+        "0": 0,
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 1,
+        "5": 2,
+        "6": 2
+      },
+      "persistence": "Saved model IDs retain historical validation range 0..6; normalize only after complete project validation, for active project and all eight pieces. P_RFX remains as an inert legacy slot. Format18 and parameter IDs unchanged.",
+      "preserved": [
+        "standalone Zen FM and 16-patch bank",
+        "global Clouds reverb and sends",
+        "Rings mini delay",
+        "retained-model polyphony 1..4",
+        "next-strike model modulation commit, hysteresis and fade"
+      ],
+      "resource_estimate": {
+        "pool_bytes_freed": 68232,
+        "normal_ram_bytes_freed": 1412,
+        "method": "Released target ELF symbol sizes plus removed 32-bit field layout; exact future target link totals may vary."
+      }
+    },
+    {
+      "id": "standalone_fm_six_voices",
+      "approval_status": "Approved following the proposed Rings-memory and FM-voice changes.",
+      "status": "Implemented; focused optimized and sanitizer tests pass.",
+      "previous_maximum": 4,
+      "new_maximum": 6,
+      "default_selection": 4,
+      "settings": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "pool_state_bytes": 2256,
+      "pool_increase_bytes": 624,
+      "midi_gate_increase_bytes": 16,
+      "local_pool_allowance_bytes": 2408,
+      "behavior": "Matching six MIDI-out gate slots; existing allocation, release, per-voice gain, presets, core arithmetic and worker safeguards retained.",
+      "device_limit": "Six simultaneous voices add about 50 percent to FM operator work versus four, not to whole-device load. Device CPU timing and final mixed-output headroom require next-build validation."
+    },
+    {
+      "id": "right_size_shared_canvas",
+      "approval_status": "Approved with the proposed memory savings.",
+      "status": "Implemented; production draw paths audited and native UI checks pass.",
+      "old_pixels": 34560,
+      "new_pixels": 31680,
+      "new_dimensions": [
+        240,
+        132
+      ],
+      "pool_bytes_freed": 5760,
+      "behavior": "Shared canvas allocation matches the largest current draw band; draw dimensions, layout, clipping, DMA sizes and redraw order stay the same."
+    }
+  ],
+  "completed_queue_history": "history/NEXT_BUILD_QUEUE-completed-17.99.2.json",
+  "discussion_only": [
+    {
+      "id": "parallel_reverb_return",
+      "status": "Proposed during diagnosis; no explicit implementation instruction recorded."
+    },
+    {
+      "id": "evolve_humanization",
+      "status": "User asked whether Pattern adds swing; diagnosed always-on random onset delays. No timing edit requested."
+    }
+  ],
+  "validation_limit": "Isolated native tests only; no device firmware, complete application simulator or new flashable package built. Target link, integrated UI/audio, hardware timing and listening checks await the explicit next-build request.",
+  "resource_estimate": {
+    "baseline": "tests/release-17.99.2/device-audit.json",
+    "pool_net_bytes_freed": 73368,
+    "pool_free_before_bytes": 8392,
+    "pool_free_projected_bytes": 81760,
+    "required_pool_spare_bytes": 8192,
+    "pool_projected_margin_above_required_bytes": 73568,
+    "normal_ram_net_bytes_freed": 1396,
+    "normal_ram_free_before_bytes": 1868,
+    "normal_ram_free_projected_bytes": 3264,
+    "qualification": "Projection from released target sizes and changed objects; not a new target link report."
+  }
+}

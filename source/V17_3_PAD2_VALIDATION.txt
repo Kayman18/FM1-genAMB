@@ -1,0 +1,78 @@
+AMB-1 v17.3 Pad 2 Half-Speed validation
+=======================================
+Base: v17.2 OctaveBattery / DensitySendFix line
+
+Requested change
+----------------
+- Removed the old Drone synthesis layer.
+- Replaced it with Pad 2: a second instance of the existing Pad engine.
+- Pad 2 runs its slow musical clocks at half the speed of Pad 1.
+- Pad 2 is state-independent from Pad 1.
+
+Pad 2 independence
+------------------
+- Separate four-voice pad_t voice array.
+- Separate oscillator phases, envelopes, filters, low-body states and voice-leading targets.
+- Separate stereo bus low-pass state.
+- Separate chorus delay memory, write pointer and LFO phase.
+- Separate xorshift RNG stream.
+- Separate six-source slow-random modulation state.
+- Separate chord degree, chord tones and chord-evolution timer.
+- Separate slow arc state.
+- Separate level, octave, swell, brightness, colour, low body, character, chorus and reverb-send controls.
+- MIDI notes use a separate channel (channel 5) when MIDI out is enabled.
+
+Half-speed behavior
+-------------------
+- Breath-cycle duration is multiplied by 2.
+- Chord-evolution/drift duration is multiplied by 2.
+- Slow-random modulation target durations are multiplied by 2.
+- Arc movement time constants are multiplied by 2.
+- Chorus modulation rate is halved.
+- Handoff/envelope tracking is slowed to match the second layer.
+
+Direct engine timing check at identical Pad-style defaults
+----------------------------------------------------------
+Pad 1 voice rates:
+  6.06313806e-05, 5.01421309e-05, 4.27738014e-05, 3.64018488e-05
+Pad 2 voice rates:
+  3.00833053e-05, 2.37125423e-05, 2.21942191e-05, 1.84633100e-05
+Pad1 / Pad2 duration-rate ratios:
+  2.0154, 2.1146, 1.9272, 1.9716
+The small per-voice variation is intentional because Pad 2 has its own independent random stream.
+
+UI
+--
+SEQ page 1 (Pad 2): Level / Octave / Swell / Bright
+SEQ page 2 (Pad 2 body): Colour / Low Body / Character / Chorus
+Rev sends page: Pad / Rings / Pad 2 / Bass
+Hardware OCT-/OCT+ edits Pad 2 octave while either Pad 2 page is active and displays the existing ~2.5 s octave popup.
+
+Project migration
+-----------------
+- Project format bumped from 8 to 9.
+- Existing v17.2 projects migrate instead of resetting.
+- The former Drone level is retained as the starting Pad 2 level.
+- Pad 2's initial tone/body/colour/character/chorus/octave/reverb values are copied from the existing Pad on migration and in factory recipes, then become fully independent.
+
+Preserved fixes/features
+------------------------
+- Rings Density immediate pattern update.
+- Rings reverb-send block pointer fix (the distortion fix).
+- Rings/Pad octave controls and hardware octave popup.
+- Battery percentage readout in the top Info panel.
+- Existing v17 reverb/audio path unchanged.
+
+FM-1 device build
+-----------------
+- Package: 610108 bytes
+- App image: 178872 bytes
+- RAM .data + .bss: 33868 / 98304 bytes
+- Pool: 321224 / 344064 bytes
+- .ram_text audit: passed
+- No 64-bit multiply issue: passed
+- No soft-double routines: passed
+- Register-access audit: passed
+- Package identity: FM-1_7170300
+
+Note: compilation/resource validation is complete. Real-hardware CPU headroom should still be listened to under a worst-case patch because replacing the lightweight Drone with a second full Pad engine necessarily costs more DSP than the previous layer.

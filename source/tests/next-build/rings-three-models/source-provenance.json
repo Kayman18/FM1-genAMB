@@ -1,0 +1,37 @@
+{
+  "before": {
+    "source_tree": "/workspace/scratch/94160f085613/work/genAMB-v17.99.2-FM16",
+    "source_sha256": {
+      "app/fm1.toml": "2f52fb5cc9fa55d335cabe1bee11f6caad0a3be6d26edcbae43d4dec480e9245",
+      "app/rings_port/rings_port.cc": "c47a5d86f093c187761df21c95fe1de28bb5ac580e1aecbd142add934da95f37",
+      "app/rings_port/rings_port.h": "115b0d264be29036766f0751e65dc91cdd995034c94a5b21b9b29b8f24cde5bf",
+      "app/vendor/rings/rings/dsp/fm_voice.cc": "ff53e6b13344b0c7229101f3905c17ad67812d532d301e2938be9933ba42a434",
+      "app/vendor/rings/rings/dsp/part.cc": "d9dc8afa830a3d01b29c3422a18548e9fe6c421b8787c09eb9c27f8a67d983d7",
+      "app/vendor/rings/rings/dsp/part.h": "7af88b40551bf08b5a78e63dd99394c81957cfc57817929888ae08ce30d2efef",
+      "app/vendor/rings/rings/dsp/plucker.h": "2be02c0860d5de5f3b808de7c706457a9d86db9539c20ec8de6d0de20924b211",
+      "app/vendor/rings/rings/dsp/resonator.cc": "f75160f7c96e90dcb45c522b3ad0658f7ede32a32a283b62fead958ee1309074",
+      "app/vendor/rings/rings/dsp/string.cc": "70a61145e5fc2b54ca941745e89a10fe110b3a1e12e0ca324641b3319b0d1e6d",
+      "app/vendor/rings/rings/dsp/string_synth_part.cc": "aab71aefac848058b515f8db8787395fd09f0ea4d678eb222b2e873e6d1f00dc",
+      "app/vendor/rings/rings/resources.cc": "e9fd699ee57a596c7ee28db6207d76ec1389030e956b5ec0b214068e4820eb2d",
+      "app/vendor/rings/stmlib/dsp/units.cc": "0acbe230ffaa2d181ba285fce54f2fd0b2339b3ec163a1dd00c946e6bf82ea4a",
+      "app/vendor/rings/stmlib/utils/random.cc": "145c4d7a30e373d001fd664ce6f97a475458f7dc8286252d24ca6f592e0cdb93"
+    }
+  },
+  "after": {
+    "source_tree": "/workspace/scratch/94160f085613/work/genAMB-Next-Build",
+    "source_sha256": {
+      "app/fm1.toml": "b3c97557b19d6a2dd9ca033aa475a866feff6dcc1b9e8daec1aad315d1c0d90a",
+      "app/rings_port/rings_models.h": "3138a1d29e93a4907303cebe694e1b6527ab29b87efba4971a96ec7a01b46eab",
+      "app/rings_port/rings_port.cc": "10cf26fc7d698698c63b940d341e72d1c4165cfac51dd7503d9a26b53b38b753",
+      "app/rings_port/rings_port.h": "2231ccf274becbf519eb565e38176366fc2fa10a30a16925ffdf1ad0f27d3b6d",
+      "app/vendor/rings/rings/dsp/part.cc": "fa74ce8a7fa622ad030fd92ff3f0d276887fb35b5cba6af08e444b4f33ae3e0f",
+      "app/vendor/rings/rings/dsp/part.h": "df7c8fba0d6f1cf23bdbd7e9cf4e1cfc8c5f9ef47564a60262059928648798a2",
+      "app/vendor/rings/rings/dsp/plucker.h": "6145077e14ca26ba7c659aeb42e55fd77a95d27a4d5170c567335c7fb0213c46",
+      "app/vendor/rings/rings/dsp/resonator.cc": "f75160f7c96e90dcb45c522b3ad0658f7ede32a32a283b62fead958ee1309074",
+      "app/vendor/rings/rings/dsp/string.cc": "70a61145e5fc2b54ca941745e89a10fe110b3a1e12e0ca324641b3319b0d1e6d",
+      "app/vendor/rings/rings/resources.cc": "e9fd699ee57a596c7ee28db6207d76ec1389030e956b5ec0b214068e4820eb2d",
+      "app/vendor/rings/stmlib/dsp/units.cc": "0acbe230ffaa2d181ba285fce54f2fd0b2339b3ec163a1dd00c946e6bf82ea4a",
+      "app/vendor/rings/stmlib/utils/random.cc": "145c4d7a30e373d001fd664ce6f97a475458f7dc8286252d24ca6f592e0cdb93"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+AMB-1 / genAMB v17.18 — Splash + Battery Readout Validation
+============================================================
+
+Changes carried forward from v17.17 ProminentDelay
+---------------------------------------------------
+All v17.17 Rings / delay / root-note / master-popup changes remain in place.
+
+1. New genAMB startup splash
+----------------------------
+- Replaces the prior startup artwork with the approved rainy Japanese garden / koi scene.
+- Center title: "genAMB".
+- Lower-right credit: "Built on AMB-1".
+- Device asset is exactly 240 x 240 pixels for the FM-1 TFT.
+- The image is encoded as a 256-colour RGB565 palette + 8-bit index map.
+- Image payload is 58,112 bytes (512-byte palette + 57,600-byte index map).
+- app_splash() renders in 24-row strips through the existing canvas, so no second 240x240 framebuffer is allocated.
+- Source preview: app/assets/genAMB-splash-240x240.png
+- Generated device table: app/splash_genamb.h
+
+2. Battery percentage root cause and fix
+----------------------------------------
+Root cause in v17.17:
+- The UI called plat_battery_pct(), but the FM-1 battery ADC was being converted from the stock four-bar thresholds:
+    raw >= 591 -> 100%
+    raw >= 561 -> 67%
+    raw >= 531 -> 33%
+    otherwise -> 0%
+- Therefore any battery reading above 591 displayed 100%, potentially for a large part of the discharge cycle.
+
+v17.18 behaviour:
+- Reads the same FM-1 battery divider on ADC channel 3.
+- Uses a continuous estimate instead of treating the top stock bar as 100%:
+    raw 505 -> 0%
+    raw 610 -> 100%
+    linear interpolation between those endpoints
+- Filtering is kept in Q8 fixed point. This prevents the integer-IIR dead band where a slowly moving ADC can appear frozen when each update is less than the divisor.
+- The ADC is sampled at approximately 1 Hz when the analog peripheral is available.
+- An enumerated, awake USB host is shown as "USB" in the header instead of a misleading "100%".
+- The FM-1 has no separate charger-detect line exposed to this firmware. A power-only USB source cannot reliably be distinguished from battery power, so that case still uses the voltage estimate.
+- This remains a voltage-based estimate, not coulomb counting; lithium discharge is not perfectly linear, so the displayed percentage should be treated as approximate.
+
+3. Validation
+-------------
+PASS: 240x240 splash preview generated.
+PASS: splash table contains 256 RGB565 entries and 57,600 pixel indices.
+PASS: source compiles successfully with the host build (./build.sh --host).
+PASS: battery mapping endpoints and USB sentinel are integrated into the UI.
+PASS: existing v17.17 source changes were preserved.
+
+Device build status
+-------------------
+The real FM-1 cross-build was not produced in this runtime because the proprietary JieLi pi32v2 toolchain / matching AC79 SDK are not installed here. Do not treat the host compile as a flash validation. A new .fwsc should only be distributed after compiling with the real FM-1 toolchain and checking the package.

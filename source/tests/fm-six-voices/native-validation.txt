@@ -1,0 +1,53 @@
+Staged six-voice standalone FM validation
+
+Scope: pending genAMB-Next-Build only. No firmware, package, whole-app build,
+upload, or on-device timing measurement was performed for these checks.
+
+Production changes:
+- FM_PORT_VOICES is six. The enclosing app retains its default selection of four.
+- FM_MIDI_VOICES derives from FM_PORT_VOICES; MIDI-out gate storage has six slots.
+- Explicit FM pool allowance is 2408 B: previous 1832 B plus at least 576 B
+  reclaimed from the removed Rings internal FMVoice array. Other Rings removal
+  and canvas savings are not spent by this allowance.
+- Core arithmetic, sixteen presets, gain, worker and memory-map guards unchanged.
+- Existing octave_pitch.h integration in fm_sequence.c is preserved.
+
+Native results:
+- Optimized adapter: 41 passed, zero failed.
+- AddressSanitizer + UndefinedBehaviorSanitizer adapter: 41 passed, zero failed.
+- Optimized and sanitized sequencer suites pass, including existing five-rate,
+  harmonic mapping, transport, density and bank tests plus 1..6 voice MIDI gates.
+- Tests exercise full six-note allocation, released-before-held stealing,
+  oldest-held stealing, retrigger reuse, every 1..6 limit, lower-limit release
+  tails, restored capacity, clamping, independent fifth/sixth gate expiry,
+  preset retention, serial wrap, and irregular render blocks with six voices.
+- All sixteen presets render finite six-note audio and retire after release.
+- Native sizeof: core note 296 B, adapter voice 312 B, combined pool state 2256 B,
+  shared buffers 512 B, LFO state 384 B, automatic LFO arrays 128 B.
+- MIDI gate array 48 B (+16 B); total declared sequencer state 982 B.
+- FM pool increase is 624 B, with 152 B left within the conservative 2408 B budget.
+  These are source/native sizes, not a newly linked whole-device measurement.
+- Existing FM16 core PCM regression remains 0c1440e9 over 393216 Q24 samples.
+  This rechecks the previously upstream-matched fingerprint; it is not a new
+  upstream-core or device comparison.
+
+Audio limit of this check:
+Six notes 48/55/60/64/67/72, velocity 127, gate 27563 samples (about 625 ms),
+FM level 100, all sixteen presets. Maximum observed raw adapter peak 1.729542
+(Drop), before the app mix, master and peak guard. No final-output clipping or
+CPU-headroom claim is made. Existing per-voice gain is unchanged.
+
+Reproduce from the source root with a native C compiler:
+  mkdir -p /tmp/genamb-fm6-staged
+  cc -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Werror -Wno-unused-function tests/host/fm_port_test.c -lm -o /tmp/genamb-fm6-staged/adapter
+  /tmp/genamb-fm6-staged/adapter
+  cc -O1 -g -ffp-contract=off -std=c99 -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -Wall -Wextra -Werror -Wno-unused-function tests/host/fm_port_test.c -lm -o /tmp/genamb-fm6-staged/adapter_sanitize
+  ASAN_OPTIONS=detect_leaks=0 /tmp/genamb-fm6-staged/adapter_sanitize
+  ./tests/fm/run_sequence_test.sh
+  UBSAN_OPTIONS=halt_on_error=1 ./tests/fm/run_sequence_test.sh --sanitize
+  cc -O2 -ffp-contract=off -std=c99 tests/host/fm_port_reference.c -o /tmp/genamb-fm6-staged/core_reference
+  /tmp/genamb-fm6-staged/core_reference
+
+LeakSanitizer alone is disabled for the restricted runtime; the adapter and
+sequencer do not allocate on the heap. Address and undefined checks remain on.
+Detailed output is in the adjacent five small logs; no binaries or PCM bundled.

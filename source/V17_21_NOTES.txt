@@ -1,0 +1,41 @@
+genAMB v17.21 — pad audio crash workaround
+
+User's v17.20 device report:
+VEC 00000001, PC 0200cc76, EMU 00000000, DBG 00000010,
+RET 0200fb78, DURING AUDIO RENDER.
+
+The exact v17.20 binary contains an invalid pointer sequence in the inlined Pad 1
+control/envelope update: r7 is cleared to zero and then [r7+16] is loaded.
+The reported PC is immediately after that load. DBG bit 4 is a bus-invalid guard
+flag. This points to bad generated code, not the splash artwork. RET points into
+Rings modulation, which is the preceding call; it does not identify the faulting
+load. A debug-enabled rebuild changed instruction addresses, so the diagnosis uses
+the saved original v17.20 ELF, not addresses from the debug rebuild.
+
+FIX
+Prevent inlining of pad_coefs, pad2_coefs_lite, render_pad and render_pad2.
+This reduces live-register pressure and preserves separate pad control/render
+calls. Inspection of the new device code shows pad_coefs loading its pointer from
+the argument and retaining it through the formerly failing envelope load.
+The exact before/after instructions are included in tests/startup21.
+
+Both pads, Rings, reverb, delay, LFO waveform display, octave/probability controls,
+preset storage and migration remain. The v17.20 defined exponent arithmetic and
+15-second labeled crash display remain. No presets are erased or relocated.
+
+VALIDATION
+Real pi32v2 release build: passed.
+App 239032 bytes, firmware package 610108 bytes, identity FM-1_7172100.
+RAM data/BSS 88600 / 98304 bytes; pool 331304 / 344064 bytes.
+No soft-double, unsafe nearby 64-bit multiply, RAM-text calls or MMIO check failures.
+Host audio regression: 42.8 simulated seconds; both pad tone variants exercised.
+AddressSanitizer / UndefinedBehaviorSanitizer: passed.
+Before/after WAV files were byte-identical.
+Package identity, lengths, CRCs, loader and decrypted app bytes: passed.
+Physical FM-1 retest is still required to confirm the crash is resolved on-device.
+
+If another red screen occurs, report all codes from this v17.21 build.
+Its exact ELF and disassembly are saved inside the matching source package.
+
+Firmware SHA256:
+a0743309206562e9d9a9a4c80502fd399ee8728fdc559caab64643a1b930909b

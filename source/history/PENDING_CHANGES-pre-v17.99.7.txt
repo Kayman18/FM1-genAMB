@@ -1,0 +1,100 @@
+genAMB — changes saved for the next firmware build
+Baseline: v17.99.2-FM16
+Updated: 2026-10-22
+Build status: ON HOLD at the user's request. No new release identity assigned.
+
+1. RINGS: KEEP MODAL, SYMPATHETIC AND STRING
+The latest instruction supersedes the earlier proposal to remove only Rings FM.
+Remove the selectable FM, Sym Q, Str+Rev and StrSynth models and their unused
+DSP state. Modal, Sympathetic and String retain their existing sound and 1..4
+polyphony. Model modulation spans the three retained choices and preserves
+hysteresis, next-strike switching and the existing transition fade.
+
+The internal FM array, internal Rings reverb, StringSynthPart, shared 65,536-byte
+effects buffer, quantized sympathetic chord table and String FX selector state
+are removed from the compiled implementation. The standalone Zen FM synth,
+all 16 FM presets, global Clouds reverb and sends, and Rings mini delay remain.
+Unused upstream vendor sources are retained as provenance but are not compiled.
+
+The obsolete String FX control is removed from the Rings Exciter page:
+Damping / Position / blank / Exciter. Its saved parameter slot remains inert.
+
+Old valid project model IDs map on load, including all eight saved pieces:
+  0 Modal        -> Modal
+  1 Sympathetic  -> Sympathetic
+  2 String       -> String
+  3 FM           -> String
+  4 Sym Q        -> Sympathetic
+  5 Str+Rev      -> String
+  6 StrSynth     -> String
+Remaining settings are preserved. Removed models naturally no longer produce
+their former sound. Invalid stored IDs are rejected before any fallback mapping.
+
+2. STANDALONE FM: SIX AVAILABLE VOICES
+The Voices selector now permits 1..6. Default and existing saved four-voice
+settings remain four; select five or six when wanted. MIDI-out gate tracking
+has the same six-slot capacity. Core arithmetic, the 16 presets, per-voice gain,
+allocation policy, release behavior and C2 worker safeguards remain intact.
+
+FM pool state grows 1,632 -> 2,256 bytes (+624); MIDI gates add 16 normal-RAM
+bytes. The explicit local FM allowance is 2,408 bytes, leaving 152 bytes there.
+More pool RAM is available, but raising polyphony beyond six is not part of this
+approval. Six active voices can require about 50% more FM operator work than
+four; that is not a prediction of whole-device CPU percentage. Next-build/device
+checks must confirm timing and final mixed-output headroom at six voices.
+
+3. SHARED DISPLAY CANVAS
+Reduce the shared RGB565 canvas from 240x144 to 240x132, saving 5,760 pool bytes.
+The largest production draw band is 132 rows. Mixer uses two 102-row bands;
+other pages, help, splash and boot/update text fit. Layout, drawing dimensions,
+clipping bounds, DMA lengths, synchronization and redraw order stay unchanged.
+
+4. OCTAVES
+PAD1, PAD2, Rings and FM choices: -4, -3, -2, -1, 0, +1, +2.
+The upper limit stays +2; recipe/default values retain their previous behavior.
+Sequence-page knobs, OCT-/OCT+ buttons and main-page cards share these values.
+Original Rings/FM -3/-4 play one/two octaves below the former -2 result while
+all old -2..+2 mappings remain unchanged. Pad audio/MIDI/display use consistent
+pitch-class-preserving bounds when -4 plus downward Oct Drift would go below
+MIDI0. Manually transposed Rings pitches are bounded before byte packing.
+
+RESOURCE PROJECTION (NOT A NEW TARGET LINK)
+Released 17.99.2: pool free 8,392 B; normal RAM free 1,868 B.
+Rings removals:   pool -68,232 B used; normal RAM -1,412 B used.
+Canvas:          pool -5,760 B used.
+Two FM voices:   pool +624 B used; normal RAM +16 B used.
+Net:             pool 73,368 B recovered (71.65 KiB), normal RAM 1,396 B recovered.
+Projected free:  pool 81,760 B (79.84 KiB), normal RAM 3,264 B.
+The pool's existing 8,192-byte required spare is preserved; projected margin
+above it is 73,568 B. Final target totals may differ through link/layout effects.
+Derivation and native measurements are in tests/next-build/resource-projection.json
+and tests/next-build/rings-three-models/README.md.
+
+VALIDATION COMPLETED
+- Three retained Rings models x polyphony 1..4: identical native stereo and
+  reverb-send samples to the released baseline with delay enabled.
+- Legacy model fallback audio and global Clouds reverb: baseline comparisons pass.
+- Model traversal/modulation/switching and blank String FX control: native pass.
+- Six-voice FM adapter: 41/41 optimized and 41/41 ASan/UBSan checks pass; sequencer
+  tests pass with all six gate slots and all sixteen presets.
+- FM core PCM fingerprint remains 0c1440e9 over 393,216 Q24 samples.
+- Four extended octave ranges, pitch bounds, save/load/apply and manual Rings
+  command bounds: isolated sanitizer checks pass.
+- Old/new scheduler trace remains 045f9e32; five-rate and transport checks pass.
+- Active project/all eight pieces, model migration, corruption rejection,
+  FM 1..6 persistence/default four and canvas capacity: integration checks pass.
+
+Only isolated native source checks were compiled. No device firmware, full host
+application, new screenshot set or new flashable firmware package was built.
+Physical timing/listening and full release validation await a build request.
+
+COMPATIBILITY
+Project format18 and parameter positions are unchanged. Older saves load forward
+with the explicit Rings model fallbacks above. Saves using octave -3/-4 or FM
+voices 5/6 cannot be loaded by older firmware with narrower validation bounds;
+restore those values to the old range before downgrading.
+
+DISCUSSION ONLY
+The parallel reverb return and an Evolve timing/humanization control have not
+been approved as implementation changes. The timing explanation is in
+EVOLVE_PATTERN_TIMING.txt. Neither change is silently included here.

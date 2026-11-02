@@ -1,0 +1,21 @@
+Sequencer octave controls — source candidate
+
+Independent Seq pages for Pad 1, Pad 2, Rings.
+Pad buttons cycle Main -> Body -> Seq. Rings cycles Main -> Tone -> Exciter -> Delay -> Seq.
+Knob 1: Oct Drift (0, +1, +/-1). Knob 2: Change (0-100%).
+0 range or 0% chance keeps every newly generated event in its base octave.
++1 permits an octave above; +/-1 permits above or below, chosen equally on shifted events.
+100% moves every new event out of the base octave (unless range is 0).
+Pads choose at each new voice breath; Rings at each generated strike.
+Pad base register is MIDI 48-59 plus its existing Octave setting; Rings is 60-71 plus its Octave setting.
+Existing notes finish their current breath. Manual Rings keyboard/MIDI playing is unaffected.
+Rings bursts share the selected event octave; legacy unsolicited octave sparkle is removed.
+
+Saved project format 15 migrates format 14 and retains older migration field counts.
+All six new controls default to 0, including when loading an older project.
+LFO waveform changes retained.
+
+Verified: host compilation, rendered page navigation, pitch classes, octave bounds,
+chance probability/endpoints, both pads, actual Rings event/burst queue, MIDI note-off,
+format 14 full parameter/slot migration, and independent save/load round trip.
+FM-1 cross-build completed as v17.19. No physical-device test was performed.

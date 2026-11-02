@@ -1,0 +1,45 @@
+[
+  {
+    "path": "app/vendor/zen_fm/fm6_core.c",
+    "unchanged": true,
+    "sha256": "e08409340410687bb69e43f2b61e3baa264b71ff1d2e2ba02273c9786dbc4b13"
+  },
+  {
+    "path": "app/vendor/zen_fm/fm6_patch.c",
+    "unchanged": true,
+    "sha256": "2f5913aa4110cebbacb39e65bf03e9e8692399ef8da473686db6da66aaad3a9e"
+  },
+  {
+    "path": "base/tools/build.py",
+    "unchanged": true,
+    "sha256": "091cb78d1082e5012b1f5510909613adecf977ab868169ff0b53d51d7a80eb90"
+  },
+  {
+    "path": "base/device/dual_core.c",
+    "unchanged": true,
+    "sha256": "50f69ccd3cbcaca7b8a7cadbd73a99413bb3e23b134c4630ed305a177d4bcc56"
+  },
+  {
+    "path": "app/dsp/dual_core.h",
+    "unchanged": true,
+    "sha256": "6ba770ee3e469bbc57d1afa8fa59001e89d5c5e619c99039b89261ce8602bea1"
+  },
+  {
+    "path": "base/device/unity.c",
+    "unchanged": true,
+    "sha256": "af30e5ce13fd5ed48023f94b9b03acab82d849e776c921176fddd57fa4cf0c9d"
+  },
+  {
+    "path": "base/device/gfx.c",
+    "unchanged": true,
+    "sha256": "a20f0f27e0a7753ce182fa92dd603db96955748097b9730455790202e659ac99"
+  },
+  {
+    "released_firmware": "genAMB-v17.99.2-FM16.fwsc",
+    "unchanged": true,
+    "sha256": "17ee960ebfcc4a8111de6d76d88126a3f0a213e4e3d40ae7bf33bd96b7726855"
+  },
+  {
+    "pending_application_build_directory_present": false
+  }
+]

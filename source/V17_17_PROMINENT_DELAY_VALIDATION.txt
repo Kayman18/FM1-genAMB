@@ -1,0 +1,35 @@
+AMB-1 Full Rings CloudsClean v17.17 - Prominent Additive Rings Delay
+Date: 2026-10-21
+
+Base:
+- v17.16 Select Root + Master Popup
+- Rings Burst, PIANO mode, Repeats, 22.05 kHz clean-delay storage, Pad engines, reverb, UI and LEDs preserved.
+
+Delay-mix changes only:
+1. Dry Rings stays at unity for every non-zero delay Mix value.
+2. Delay is now an additive wet return instead of a dry/wet crossfade.
+3. Wet-return gain is 35% stronger at Mix 100 (1.35x instead of 1.0x).
+4. Mix uses a square-root curve so the lower half of the knob is more useful:
+     Mix 25 -> wet gain ~0.675x
+     Mix 50 -> wet gain ~0.955x
+     Mix 75 -> wet gain ~1.169x
+     Mix 100 -> wet gain 1.350x
+   At Mix 50, the delayed return is therefore about 1.91x the old 0.5x wet contribution (+5.6 dB),
+   while the dry Rings signal remains full instead of being attenuated to 0.5x.
+5. The nonlinear Mix curve is calculated only when the control changes and cached; no sqrt is performed per audio sample.
+6. Feedback, Repeats, Time mapping, delay storage, damping and quantization behavior are unchanged.
+7. Mix 0 remains a true bypass and retains the incremental buffer clear behavior.
+
+Focused host validation:
+- Mix 100 / Feedback 85 / Infinite repeats / dense PIANO-mode Rings strums:
+  peak = -32.5 dBFS in the deterministic host stress render (well below clipping).
+- Stress render load: about 1.1% of real time on the host reference machine.
+- Mix 50 reference render also passed; the additive path is audibly stronger while preserving dry Rings.
+
+FM-1 device build:
+- Build passed.
+- app image: 178680 bytes
+- RAM .data+.bss: 86324 / 98304 bytes
+- pool: 331304 / 344064 bytes
+- package identity: FM-1_700
+- fwsc package size: 610108 bytes

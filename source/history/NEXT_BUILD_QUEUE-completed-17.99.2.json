@@ -1,0 +1,178 @@
+{
+  "project": "genAMB FM-1",
+  "baseline": "v17.99.1-FM-Fix",
+  "updated_date": "2026-10-22",
+  "status": "Completed: all five requested change groups implemented, validated and built as release 17.99.2.",
+  "build_on_hold": false,
+  "resume_condition": "Satisfied: user explicitly requested the final firmware build on 2026-10-22.",
+  "changes": [
+    {
+      "id": "rings_fm_evolve_rates",
+      "scope": [
+        "Rings Evolve Setup",
+        "FM Evolve Setup"
+      ],
+      "control": "Rate, Knob 4",
+      "current_choices": [
+        "1/2x",
+        "1x",
+        "2x"
+      ],
+      "requested_choices": [
+        "1/4x",
+        "1/2x",
+        "1x",
+        "2x",
+        "4x"
+      ],
+      "independent_rate_settings": true,
+      "status": "Implemented and verified in device firmware 17.99.2.",
+      "approval_status": "Approved"
+    },
+    {
+      "id": "fm_plucked_preset_replacements",
+      "scope": "First three FM patch slots",
+      "replacements": [
+        {
+          "slot": 1,
+          "stored_index": 0,
+          "from": "Soft Pad",
+          "to": "Koto"
+        },
+        {
+          "slot": 2,
+          "stored_index": 1,
+          "from": "Soft Swell",
+          "to": "Harp"
+        },
+        {
+          "slot": 3,
+          "stored_index": 2,
+          "from": "Deep Pad",
+          "to": "Bright Harp",
+          "screen_label": "Brt Harp"
+        }
+      ],
+      "following_patches_unchanged": [
+        "Drop",
+        "Mallet",
+        "Bell",
+        "Rin",
+        "Bamboo",
+        "Furin"
+      ],
+      "status": "Implemented and verified in device firmware 17.99.2.",
+      "approval_status": "Approved"
+    },
+    {
+      "id": "fm_layout_for_other_instrument_tabs",
+      "request": "Copy the main FM page layout under SEL to the PAD1, PAD2 and RINGS tabs.",
+      "template": {
+        "page": "FM",
+        "button": "SEL",
+        "view": "V_FM",
+        "view_index": 21,
+        "layout": "Large instrument identity card with its level meter; two musical-context cards; three smaller detail/status cards; status line; four bottom control boxes."
+      },
+      "targets": [
+        {
+          "page": "Pad 1",
+          "button": "ENV",
+          "view": "V_PAD",
+          "view_index": 1,
+          "existing_controls": [
+            "Swell",
+            "Bright",
+            "Colour",
+            "Chorus"
+          ]
+        },
+        {
+          "page": "Pad 2",
+          "button": "ARP",
+          "view": "V_DRONE",
+          "view_index": 9,
+          "existing_controls": [
+            "Swell",
+            "Bright",
+            "Colour",
+            "Width"
+          ]
+        },
+        {
+          "page": "Rings",
+          "button": "SEQ",
+          "view": "V_RINGS",
+          "view_index": 3,
+          "existing_controls": [
+            "Density",
+            "Burst",
+            "Model",
+            "Polyphony"
+          ]
+        }
+      ],
+      "implementation_scope": "Adapt the FM visual layout to these main instrument pages, retaining each instrument's applicable controls, labels and settings.",
+      "status": "Implemented and verified in device firmware 17.99.2.",
+      "preview_assets": [
+        "PAD1-proposal.png",
+        "PAD2-proposal.png",
+        "Rings-proposal.png",
+        "FM-reference.png"
+      ],
+      "approval_status": "Approved"
+    },
+    {
+      "id": "mixer_expanded_control_panel",
+      "request": "Keep the Mixer top label panel and panel 4 only; expand panel 4 over the rest of the window.",
+      "scope": "Mixer / GLO / V_MIXER (view 8)",
+      "existing_controls": [
+        "Pad",
+        "Rings",
+        "Pad 2",
+        "FM"
+      ],
+      "implementation_scope": "Retain the existing four instrument level controls, values, colours and meter sources in the expanded panel.",
+      "status": "Implemented and verified in device firmware 17.99.2.",
+      "approval_status": "Approved"
+    },
+    {
+      "id": "fm_sixteen_preset_bank",
+      "scope": "Append seven factory FM presets without renumbering the existing nine",
+      "additional_slot_count": 7,
+      "total_slot_count": 16,
+      "new_patch_types": [
+        "Marimba",
+        "Celeste",
+        "Kalimba",
+        "Xylophone",
+        "Glockenspiel",
+        "Warm Bass",
+        "Reso Bass"
+      ],
+      "voice_count": 4,
+      "approval_status": "Explicitly requested",
+      "status": "Implemented and verified in device firmware 17.99.2."
+    }
+  ],
+  "additional_changes": "None outstanding in this approved build scope.",
+  "completed_queue_history": "history/NEXT_BUILD_QUEUE-v17.23.json",
+  "approval_status": "All prior designs approved; all changes and device build explicitly authorized.",
+  "approval_evidence": "yes all approved; i want to add a Marimba, Celeste, Kalimba,XYLOPHONE, GLOKENSPL, and 2 Analog Synth Basses, to fill out the 16 slot bank, then build all changes to firmware file",
+  "library_save": {
+    "authorized": true,
+    "scope": [
+      "candidate source",
+      "checkpoint notes",
+      "audio previews",
+      "screenshots"
+    ],
+    "status": "Approved pre-build checkpoint saved; release deliverables are complete."
+  },
+  "open_questions": [],
+  "release": "17.99.2",
+  "build_complete": true,
+  "firmware_filename": "genAMB-v17.99.2-FM16.fwsc",
+  "firmware_identity": "FM-1_7179902",
+  "firmware_sha256": "17ee960ebfcc4a8111de6d76d88126a3f0a213e4e3d40ae7bf33bd96b7726855"
+}

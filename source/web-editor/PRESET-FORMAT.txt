@@ -1,0 +1,32 @@
+genAMB .genamb preset snapshot format
+====================================
+
+A .genamb file is UTF-8 JSON. It is a portable snapshot of the current live
+control/settings state, not a raw flash backup.
+
+Top-level fields written by WEB1:
+  format          "genAMB-FM1-Preset"
+  version         1
+  name            user-entered preset name
+  source          editor/build label
+  capturedAt      ISO-8601 timestamp
+  piece.index     current piece identity, 0..7
+  piece.name      display name for that piece
+  leds            0=off, 1=on, 2=keys only
+  playing         Play/Rest state
+  frozen          Freeze state
+  pool            12-bit custom scale mask relative to the root
+  parameterCount  167
+  params          object keyed by the exact firmware P_* parameter names
+
+The 167 parameter keys are stable append-only firmware IDs. Loading a preset
+restores every value that is present in the file, then restores piece identity,
+lights, scale pool, Play/Rest and Freeze. The restore is literal: it does not
+invoke model-selection convenience defaults that would change other values.
+
+Loading changes the live state. Use SAVE TO FM-1 if you want the result written
+to the FM-1 project flash.
+
+A .genamb preset intentionally does NOT replace the other seven saved piece
+slots and does not attempt to serialize hidden generated note-history/random
+engine state. It captures every exposed control/settings value.

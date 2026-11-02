@@ -1,0 +1,326 @@
+In file included from app/vendor/rings/rings/dsp/fm_voice.cc:29:
+In file included from app/vendor/rings/rings/dsp/fm_voice.h:34:
+app/vendor/cxx/algorithm:8:105: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void rotate(It b, It m, It e){ if(b==m||m==e)return; It n=m; while(b!=n){ auto t=*b; *b=*n; *n=t; ++b; ++n; if(n==e)n=m; else if(b==m)m=n; }}
+                                                                                                        ^
+app/vendor/cxx/algorithm:9:127: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void sort(It b, It e){ for(It i=b;i!=e;++i) for(It j=i;j!=b;){ It k=j; --k; if(!(*j<*k)) break; auto t=*j; *j=*k; *k=t; j=k; }}
+                                                                                                                              ^
+2 warnings generated.
+In file included from app/rings_port/rings_port.cc:6:
+In file included from app/vendor/rings/rings/dsp/part.h:32:
+app/vendor/cxx/algorithm:8:105: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void rotate(It b, It m, It e){ if(b==m||m==e)return; It n=m; while(b!=n){ auto t=*b; *b=*n; *n=t; ++b; ++n; if(n==e)n=m; else if(b==m)m=n; }}
+                                                                                                        ^
+app/vendor/cxx/algorithm:9:127: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void sort(It b, It e){ for(It i=b;i!=e;++i) for(It j=i;j!=b;){ It k=j; --k; if(!(*j<*k)) break; auto t=*j; *j=*k; *k=t; j=k; }}
+                                                                                                                              ^
+In file included from app/rings_port/rings_port.cc:6:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:172:7: warning: unused typedef '__static_assertion_test_at_line_172' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:48:1: note: expanded from here
+__static_assertion_test_at_line_172
+^
+In file included from app/rings_port/rings_port.cc:6:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:200:7: warning: unused typedef '__static_assertion_test_at_line_200' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:58:1: note: expanded from here
+__static_assertion_test_at_line_200
+^
+In file included from app/rings_port/rings_port.cc:6:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:229:7: warning: unused typedef '__static_assertion_test_at_line_229' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:68:1: note: expanded from here
+__static_assertion_test_at_line_229
+^
+In file included from app/rings_port/rings_port.cc:6:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:243:7: warning: unused typedef '__static_assertion_test_at_line_243' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:81:1: note: expanded from here
+__static_assertion_test_at_line_243
+^
+6 warnings generated.
+In file included from app/vendor/rings/rings/dsp/resonator.cc:29:
+In file included from app/vendor/rings/rings/dsp/resonator.h:34:
+app/vendor/cxx/algorithm:8:105: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void rotate(It b, It m, It e){ if(b==m||m==e)return; It n=m; while(b!=n){ auto t=*b; *b=*n; *n=t; ++b; ++n; if(n==e)n=m; else if(b==m)m=n; }}
+                                                                                                        ^
+app/vendor/cxx/algorithm:9:127: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void sort(It b, It e){ for(It i=b;i!=e;++i) for(It j=i;j!=b;){ It k=j; --k; if(!(*j<*k)) break; auto t=*j; *j=*k; *k=t; j=k; }}
+                                                                                                                              ^
+2 warnings generated.
+In file included from app/vendor/rings/rings/dsp/part.cc:29:
+In file included from app/vendor/rings/rings/dsp/part.h:32:
+app/vendor/cxx/algorithm:8:105: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void rotate(It b, It m, It e){ if(b==m||m==e)return; It n=m; while(b!=n){ auto t=*b; *b=*n; *n=t; ++b; ++n; if(n==e)n=m; else if(b==m)m=n; }}
+                                                                                                        ^
+app/vendor/cxx/algorithm:9:127: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void sort(It b, It e){ for(It i=b;i!=e;++i) for(It j=i;j!=b;){ It k=j; --k; if(!(*j<*k)) break; auto t=*j; *j=*k; *k=t; j=k; }}
+                                                                                                                              ^
+In file included from app/vendor/rings/rings/dsp/part.cc:29:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:172:7: warning: unused typedef '__static_assertion_test_at_line_172' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:48:1: note: expanded from here
+__static_assertion_test_at_line_172
+^
+In file included from app/vendor/rings/rings/dsp/part.cc:29:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:200:7: warning: unused typedef '__static_assertion_test_at_line_200' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:58:1: note: expanded from here
+__static_assertion_test_at_line_200
+^
+In file included from app/vendor/rings/rings/dsp/part.cc:29:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:229:7: warning: unused typedef '__static_assertion_test_at_line_229' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:68:1: note: expanded from here
+__static_assertion_test_at_line_229
+^
+In file included from app/vendor/rings/rings/dsp/part.cc:29:
+In file included from app/vendor/rings/rings/dsp/part.h:40:
+In file included from app/vendor/rings/rings/dsp/fx/reverb.h:34:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:243:7: warning: unused typedef '__static_assertion_test_at_line_243' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:81:1: note: expanded from here
+__static_assertion_test_at_line_243
+^
+6 warnings generated.
+In file included from app/vendor/rings/rings/dsp/string.cc:29:
+In file included from app/vendor/rings/rings/dsp/string.h:34:
+app/vendor/cxx/algorithm:8:105: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void rotate(It b, It m, It e){ if(b==m||m==e)return; It n=m; while(b!=n){ auto t=*b; *b=*n; *n=t; ++b; ++n; if(n==e)n=m; else if(b==m)m=n; }}
+                                                                                                        ^
+app/vendor/cxx/algorithm:9:127: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void sort(It b, It e){ for(It i=b;i!=e;++i) for(It j=i;j!=b;){ It k=j; --k; if(!(*j<*k)) break; auto t=*j; *j=*k; *k=t; j=k; }}
+                                                                                                                              ^
+2 warnings generated.
+In file included from app/vendor/rings/rings/dsp/string_synth_part.cc:29:
+In file included from app/vendor/rings/rings/dsp/string_synth_part.h:34:
+In file included from app/vendor/rings/stmlib/dsp/filter.h:36:
+app/vendor/cxx/algorithm:8:105: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void rotate(It b, It m, It e){ if(b==m||m==e)return; It n=m; while(b!=n){ auto t=*b; *b=*n; *n=t; ++b; ++n; if(n==e)n=m; else if(b==m)m=n; }}
+                                                                                                        ^
+app/vendor/cxx/algorithm:9:127: warning: 'auto' type specifier is a C++11 extension [-Wc++11-extensions]
+template <typename It> inline void sort(It b, It e){ for(It i=b;i!=e;++i) for(It j=i;j!=b;){ It k=j; --k; if(!(*j<*k)) break; auto t=*j; *j=*k; *k=t; j=k; }}
+                                                                                                                              ^
+In file included from app/vendor/rings/rings/dsp/string_synth_part.cc:29:
+In file included from app/vendor/rings/rings/dsp/string_synth_part.h:37:
+In file included from app/vendor/rings/rings/dsp/fx/chorus.h:36:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:172:7: warning: unused typedef '__static_assertion_test_at_line_172' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:42:1: note: expanded from here
+__static_assertion_test_at_line_172
+^
+In file included from app/vendor/rings/rings/dsp/string_synth_part.cc:29:
+In file included from app/vendor/rings/rings/dsp/string_synth_part.h:37:
+In file included from app/vendor/rings/rings/dsp/fx/chorus.h:36:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:200:7: warning: unused typedef '__static_assertion_test_at_line_200' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:52:1: note: expanded from here
+__static_assertion_test_at_line_200
+^
+In file included from app/vendor/rings/rings/dsp/string_synth_part.cc:29:
+In file included from app/vendor/rings/rings/dsp/string_synth_part.h:37:
+In file included from app/vendor/rings/rings/dsp/fx/chorus.h:36:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:229:7: warning: unused typedef '__static_assertion_test_at_line_229' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:62:1: note: expanded from here
+__static_assertion_test_at_line_229
+^
+In file included from app/vendor/rings/rings/dsp/string_synth_part.cc:29:
+In file included from app/vendor/rings/rings/dsp/string_synth_part.h:37:
+In file included from app/vendor/rings/rings/dsp/fx/chorus.h:36:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:243:7: warning: unused typedef '__static_assertion_test_at_line_243' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:75:1: note: expanded from here
+__static_assertion_test_at_line_243
+^
+6 warnings generated.
+font T: BarlowSemiCondensed-SemiBold.ttf 10px h 12, digit adv 5, 3600 B
+font XS: BarlowSemiCondensed-SemiBold.ttf 12px h 15, digit adv 6, 7005 B
+font S: BarlowSemiCondensed-Medium.ttf 15px h 16, digit adv 7, 8576 B
+font B: BarlowSemiCondensed-Bold.ttf 15px h 16, digit adv 8, 8752 B
+font M: BarlowSemiCondensed-SemiBold.ttf 23px h 24, digit adv 12, 11832 B
+font L: BarlowSemiCondensed-Bold.ttf 31px h 32, digit adv 16, 19776 B
+font set barlow: 60782 B (approx)
+words: 22 own + 51 common -> /workspace/scratch/30930cf3155d/current-source/app/web/words/d9e124d7ad.json (1655 B)
+loader: image 8236 B at 0x1c0a800, bss end 0x1c0f520
+loader: ota.bin 6952 B
+  ok    .ram_text: 916 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 239240 B; RAM .data+.bss 88596 B of 98304; pool 331304 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+parts    USB audio in  (not built in: Bluetooth MIDI, Bluetooth MIDI devices, WiFi, USB audio out, velocity and pressure)
+app      /workspace/scratch/30930cf3155d/current-source/app/build/amb.bin  239240 B
+loader   /workspace/scratch/30930cf3155d/current-source/app/build/loader/ota.bin  6952 B
+package  /workspace/scratch/30930cf3155d/current-source/app/build/amb-17.19.fwsc  610108 B, identity FM-1_7171900

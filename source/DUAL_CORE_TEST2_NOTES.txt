@@ -1,0 +1,49 @@
+genAMB Dual-Core TEST2 v17.92
+
+TEST1 v17.91 device result: brief error, then booted with 1C. This confirms
+startup fallback; CPU1 did not acknowledge startup. The exact displayed error
+was not captured, so the precise hardware exception is not yet confirmed.
+
+Likely startup defect addressed:
+CPU1 starts in chip ROM, outside our enabled instruction-address guards.
+Open those bounds only during the bounded startup handshake and restore the
+exact saved bounds afterward. Also clear CPU1's interrupt bank and ICFG,
+initialize SSP explicitly, and separate its user/supervisor stacks.
+
+Further changes:
+- Stop/disable CPU1 before clearing shared RAM on warm startup.
+- Configure CPU1's own stack guard and retain the software canary.
+- Put producer/consumer mailbox fields on separate 64-byte boundaries.
+- Check sequence, function pointer and argument consistency before dispatch.
+- Keep the RAM-resident idle handshake, startup fallback and runtime timeout.
+- Retain Rings on CPU1; pads and reverb on CPU0, as TEST1.
+
+Startup sequence cross-checked against the published X0X CPU1 hardware notes:
+https://github.com/charlesvestal/fm1-x0x/blob/main/firmware/hal/fm1_cpu1.h
+https://github.com/charlesvestal/fm1-x0x/blob/main/firmware/hal/fm1_cpu1.S
+https://github.com/charlesvestal/fm1-x0x/blob/main/firmware/hal/fm1_guard.h
+
+Display:
+2C: CPU1 acknowledged startup; worker enabled.
+1C S0: no entry breadcrumb observed; startup fallback.
+1C S1: entry reached, but C worker not reached.
+1C S2: C worker reached, but RAM idle handshake not reached.
+1C S3: RAM handshake reached but startup was not accepted.
+C2!: worker timeout, invalid request, or stack-canary failure; Rings muted.
+
+Flash then power the FM-1 fully off and on. Report the full PAGE indicator and
+whether PAD1, PAD2 and Rings play cleanly. If an error remains, capture its text
+or a short video. The stable rollback remains genAMB v17.23.
+
+Validation: device build, host compilation and package checks passed.
+Inspected the compiled secondary-core entry for CLI, cleared ICFG, diagnostic
+write, USP/SP/SSP setup, and RTI. RAM idle code has no calls. DSP code is unchanged
+from TEST1, whose threaded-host/fallback audio matched v17.23. These checks do
+not establish hardware startup success or performance improvement.
+
+Normal RAM 91928/98304; pool 331304/344064 bytes.
+Retained-RAM CPU1 stack: 8192-byte user, 512-byte supervisor, 256-byte canary band.
+
+PASS: identity, total length, header/table/payload CRCs, loader, decrypted app bytes and slot padding.
+identity: FM-1_7179200 package bytes: 610108 app bytes: 240020
+SHA256: 96c26e7f1f4ad1beb5b611f01ffd16addb22f3a8357d943f2a5b5e1dcb4213aa

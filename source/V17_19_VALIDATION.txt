@@ -1,0 +1,18 @@
+genAMB v17.19 — LFO waveform and sequencer octave controls
+
+Built for FM-1 using the JieLi pi32v2 toolchain.
+LFO page: controls below header, MOD/LFO title removed, selected modulation history below.
+Pad 1, Pad 2, Rings: independent Seq pages with Oct Drift 0/+1/+/-1 and Change 0-100%.
+Pads: press the instrument button to cycle Main / Body / Seq.
+Rings: Main / Tone / Exciter / Delay / Seq.
+Existing octave knob selects base register. Drift 0 or Change 0 keeps generated notes at base;
+100% shifts every generated event when Drift is nonzero. +/-1 randomly chooses up or down.
+Previous v17.18 splash, battery and prominent delay changes retained.
+Saved settings migrate to format 15; the new settings start at zero.
+
+Build checks: PASS. App 239240 bytes; RAM 88596 / 98304; pool 331304 / 344064.
+Package checks: PASS — identity, lengths, header/table/payload CRCs, embedded app and loader.
+Host tests: octave limits/probability, Rings bursts, pad MIDI note-off, old preset migration and save/load.
+Physical FM-1 playback and timing have not been tested here.
+
+Firmware SHA256: c8052c789942c35dc95aa1832221de7aa0e185e1742abdcdc70ca376120fbbbf

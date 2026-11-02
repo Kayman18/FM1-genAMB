@@ -1,0 +1,3 @@
+PASS: identity, total length, header/table/payload CRCs, loader, decrypted app bytes and slot padding.
+identity: FM-1_7179300 package bytes: 610108 app bytes: 241136
+SHA256: 3e2fcb948a135a638a2ce1c738bf7865b9299f6cf1edc165a31ac8f8edb23e34

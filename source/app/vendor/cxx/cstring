@@ -1,0 +1,9 @@
+/* SPDX-License-Identifier: MIT - minimal freestanding C++ string wrapper */
+#ifndef GENAMB_FREESTANDING_CSTRING
+#define GENAMB_FREESTANDING_CSTRING
+#include <string.h>
+namespace std {
+using ::memcpy; using ::memset; using ::memcmp; using ::memmove;
+using ::strlen;using ::strcmp;using ::strncpy;using ::strcpy;
+}
+#endif

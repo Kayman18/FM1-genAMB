@@ -1,0 +1,30 @@
+AMB-1 Full Rings CloudsClean v17 - Density + Rings Send Fix
+Date: 2026-10-20
+
+Base:
+- AMB-1-Full-Rings-CloudsClean-v17-DensityRestore source
+- Reverb core, master gain staging, Rings dry path, and all non-Rings reverb sends are unchanged.
+
+Fix 1 - Rings Density now responds immediately
+- Root cause: P_DENSITY changed the target note count, but loop patterns were only rebalanced when each 13/17/23/29-step loop completed. A panel change could therefore sound unchanged for many seconds.
+- Fix: after the audio-thread command applies P_DENSITY, all four Rings trigger loops are immediately grown/pruned to the new target and published to the UI.
+- Existing loop evolution still runs at the end of each pass.
+- Direct engine validation: Density 0 -> 0 populated notes; Density 100 -> 20 populated notes (5 per loop at neutral arc), immediately after the command is drained.
+
+Fix 2 - Rings-only reverb-send distortion
+- Root cause: rings_port_render_add() renders in Mutable Instruments kMaxBlockSize chunks. It advanced the dry left/right pointers after every chunk but did NOT advance the reverb_send pointer. Successive chunks were repeatedly summed into the beginning of the same send buffer, producing large transient spikes and breakup only when Rings was routed to the global reverb.
+- Fix: advance reverb_send by k after every internal Rings render chunk, exactly like left/right.
+- Send coefficient remains the original 0.5 * (L+R) * send_amount. The dry Rings level and all other sends are untouched.
+- Stress comparison, identical repeated-note render at Rings Level 100 / send 100:
+    old send peak:   1.594745 FS
+    fixed send peak: 0.426751 FS
+    dry Rings peak:  0.681601 FS in both builds
+  The global reverb wet peak also remained below full scale in the fixed test.
+
+Build validation:
+- FM-1 device build completed successfully.
+- app image: 172436 bytes
+- RAM .data+.bss: 33204 / 98304 bytes
+- pool: 317128 / 344064 bytes
+- package identity: FM-1_700
+- output package size: 610108 bytes

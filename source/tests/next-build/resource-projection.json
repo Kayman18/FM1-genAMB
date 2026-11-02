@@ -1,0 +1,45 @@
+{
+  "status": "source projection, not newly linked firmware",
+  "baseline": "v17.99.2-FM16",
+  "baseline_elf": "app/build/amb.elf in the frozen released source",
+  "baseline_pool_used": 335672,
+  "pool_capacity": 344064,
+  "baseline_pool_free": 8392,
+  "baseline_normal_used": 96436,
+  "normal_capacity": 98304,
+  "baseline_normal_free": 1868,
+  "pool_removed": {
+    "rings_FMVoice_array": 576,
+    "rings_Part_reverb_32bit": 68,
+    "rings_StringSynthPart": 2052,
+    "rings_fx_buffer": 65536,
+    "unused_canvas_rows": 5760
+  },
+  "pool_added": {
+    "two_FM_voices": 624
+  },
+  "pool_net_freed": 73368,
+  "pool_projected_used": 262304,
+  "pool_projected_free": 81760,
+  "pool_required_spare": 8192,
+  "pool_projected_margin_above_spare": 73568,
+  "normal_removed": {
+    "mutable_sympathetic_quantized_chords": 1408,
+    "string_fx_selector": 4
+  },
+  "normal_added": {
+    "two_MIDI_gate_slots": 16
+  },
+  "normal_net_freed": 1396,
+  "normal_projected_used": 95040,
+  "normal_projected_free": 3264,
+  "target_part_size_before": 110452,
+  "target_part_size_projected_after": 109808,
+  "native_64bit_part_size_before": 110704,
+  "native_64bit_part_size_after": 110048,
+  "caveats": [
+    "Target numbers use the released ELF and removed 32-bit fields; native pointer sizes differ.",
+    "Whole-device target allocation/alignment and final CPU/audio headroom await the explicitly requested next build.",
+    "Removing inactive synthesis choices does not speed the retained models per audio block."
+  ]
+}

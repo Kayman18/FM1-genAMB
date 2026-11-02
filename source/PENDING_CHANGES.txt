@@ -1,0 +1,5 @@
+genAMB v17.99.8
+Classic FM filter replacement implemented, target-built and package-verified.
+No further cosmetic or engine changes queued by this rebuild.
+Physical FM-1 validation remains outstanding.
+See RELEASE-v17.99.8-Notes.md.
