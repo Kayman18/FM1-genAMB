@@ -66,28 +66,10 @@ jobs:
             mkdir -p base/assets/fonts
             cp /tmp/fm1-base-fonts/assets/fonts/BarlowSemiCondensed-*.ttf base/assets/fonts/
           fi
-          python3 - <<'PY'
-from pathlib import Path
-import re, json
-h=Path('app/dsp/amb.h').read_text()
-html=Path('web-editor/index.html').read_text()
-body=re.search(r'enum \\{(.*?)P_NPARAMS\\s*\\n\\};',h,re.S)
-keys=[]
-if body:
-    for k in re.findall(r'\\b(P_[A-Z0-9_]+)\\b',body.group(1)):
-        if k not in keys: keys.append(k)
-m=re.search(r'const PARAMS=(\\[.*?\\]);\\nconst PIECES=',html,re.S)
-params=json.loads(m.group(1)) if m else []
-print('AMB_KEYS',len(keys))
-print('HTML_PARAMS',len(params))
-print('FIRST_KEYS',keys[:5])
-print('LAST_KEYS',keys[-5:])
-print('FIRST_HTML',[p.get('key') for p in params[:5]])
-print('LAST_HTML',[p.get('key') for p in params[-5:]])
-htmlkeys=[p.get('key') for p in params]
-print('MISSING_IN_HTML',[k for k in keys if k not in htmlkeys])
-print('EXTRA_IN_HTML',[k for k in htmlkeys if k not in keys])
-PY
+          echo "Header parameter tokens:"
+          grep -o 'P_[A-Z0-9_]*' app/dsp/amb.h | sort -u | wc -l
+          echo "HTML parameter metadata rows:"
+          grep -o '"key":"P_[A-Z0-9_]*"' web-editor/index.html | wc -l
           python3 tests/web_editor_metadata_test.py
           sh build.sh --release 17.99.13 --display-version "1.0 RC2"
           python3 tests/validate_built_fwsc_rc2.py app/build/amb-17.99.13.fwsc
