@@ -1,7 +1,6 @@
 # genAMB FM-1 — DUSK Monumatic Reverb TEST2
 
-Custom firmware for the FM-1. Version **17.99.31** combines DUSK TEST4’s two generative pads, independent pad filters and four-channel mixer with the stereo reverb from Knobula Monumatic. The firmware identifies itself as `FM-1_7179931`.
-
+Custom firmware for the FM-1. Two generative pads, independent pad filters and four-channel mixer with the stereo reverb. 
 | Loading screen | HOME · Garden |
 | --- | --- |
 | ![genAMB startup artwork on the FM-1](docs/screens/splash.png) | ![DUSK Garden HOME screen showing Tempo, Evolve, Motion and Drift](docs/screens/home.png) |
