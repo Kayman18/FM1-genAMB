@@ -2,7 +2,7 @@
 
 Custom firmware for the FM-1. 
 
-It will start in PIANO mode (this mode will let you play Rings or the FM synth Via the Keybed. Depending on Which one you have selected), only the Pad synths will run. Turn the Algorithm knob to place it in scale mode and have the sequencers trigger notes.
+It may start in PIANO mode (this mode will let you play Rings or the FM synth Via the Keybed. Depending on Which one you have selected), only the Pad synths will run. Turn the Algorithm knob to place it in scale mode and have the sequencers trigger notes.
 
 *  2 Pad Synths (Both have different Characters Pad 1 - Vintage and Rhodes. Pad 2 - Strings and Glass. Pad 1 has a Chorus Effect, Pad 2 has a Stereo Width setting (cpu maxing out)
 *  Rings port - 4 Voice and Modes Kept - Modal, Sympathetic strings, and Strings the rest had to go for space and memory and weren't distinct enough to keep
