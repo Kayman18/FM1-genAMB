@@ -11,7 +11,7 @@ It may start in PIANO mode (this mode will let you play Rings or the FM synth Vi
 *  Burst Setting, to simulate Chords strums
 *  Delay on Rings (too costly to add everywhere, may try to add it to FM later)
 *  Global 4 Channel Mixer
-*  10 Reverb Modes Inspired by the ones on the Valeton GP-05
+*  Reverb based on Knubula's Monumatic
 
 Extract the source ZIP before building. It includes the application, platform code, vendored DSP sources, original upstream Hallucigenia source, tests, and license notices. The compiler, SDK resources and fonts are external to this archive; see the build instructions.
 
