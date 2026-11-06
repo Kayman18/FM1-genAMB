@@ -204,13 +204,25 @@ def generate():
     """generated headers: the fonts, the screen reader's words link (fm1-reader)"""
     GEN.mkdir(parents=True, exist_ok=True)
     tools = SRC / "tools"
-    for c in [[tools / "gen_font.py", GEN / "felucca_font.h"],
-              [tools / "gen_words.py", APP / CONF.get("words", "words.tsv"), APP / "web" / "words", GEN / "ann_words.h"]]:
+    # Font generation normally needs the Barlow TTF source asset.  Release/source
+    # bundles may carry only the already-generated header, which is sufficient
+    # for firmware compilation.  Reuse it when present instead of making the
+    # build depend on a locally-installed font file.
+    font_out = GEN / "felucca_font.h"
+    if not font_out.exists():
+        c = [tools / "gen_font.py", font_out]
         r = subprocess.run([sys.executable, *map(str, c)], capture_output=True, text=True)
         sys.stdout.write(r.stdout)
         if r.returncode:
             sys.stderr.write(r.stderr)
             raise SystemExit(f"build: {c[0].name} failed")
+
+    c = [tools / "gen_words.py", APP / CONF.get("words", "words.tsv"), APP / "web" / "words", GEN / "ann_words.h"]
+    r = subprocess.run([sys.executable, *map(str, c)], capture_output=True, text=True)
+    sys.stdout.write(r.stdout)
+    if r.returncode:
+        sys.stderr.write(r.stderr)
+        raise SystemExit(f"build: {c[0].name} failed")
     for line in CONF.get("gen", []):          # the app's own generators: a script (relative to APP_DIR) and its arguments
         c = [a.replace("{gen}", str(GEN)) for a in line.split()]
         r = subprocess.run([sys.executable, str(APP / c[0]), *c[1:]], cwd=APP, capture_output=True, text=True)

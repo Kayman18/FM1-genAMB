@@ -1,0 +1,37 @@
+{
+  "note": "Host LP-kernel timings with control updates every 64 frames. Different algorithms/features; not FM1 CPU percentages or guaranteed hardware ranking. Two stereo pad buses process four channel samples per audio frame.",
+  "kernels": {
+    "Clean SVF": {
+      "median_ns_per_mono_sample": 11.749,
+      "relative_to_Clean": 1.0
+    },
+    "SEM": {
+      "median_ns_per_mono_sample": 28.071,
+      "relative_to_Clean": 2.389224614860839
+    },
+    "Juno": {
+      "median_ns_per_mono_sample": 28.712,
+      "relative_to_Clean": 2.443782449570176
+    },
+    "Polysix": {
+      "median_ns_per_mono_sample": 310.745,
+      "relative_to_Clean": 26.4486339262916
+    },
+    "CS80": {
+      "median_ns_per_mono_sample": 24.849,
+      "relative_to_Clean": 2.1149885096603964
+    },
+    "MCO SVF": {
+      "median_ns_per_mono_sample": 15.177,
+      "relative_to_Clean": 1.291769512298919
+    },
+    "1-pole LP": {
+      "median_ns_per_mono_sample": 5.647,
+      "relative_to_Clean": 0.4806366499276534
+    },
+    "2 cascaded poles": {
+      "median_ns_per_mono_sample": 6.035,
+      "relative_to_Clean": 0.5136607370840072
+    }
+  }
+}

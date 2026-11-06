@@ -1,0 +1,71 @@
+master 4096
+wait 2300
+tap FX
+expect view 11
+spin K1 1000
+spin K2 1000
+spin K3 1000
+spin K4 1000
+wait 100
+expect par11 100
+expect par165 100
+expect par9 100
+expect par10 100
+wait 1300
+shot Monumatic-Reverb.png
+tap FX
+expect view 12
+spin K1 1000
+spin K2 1000
+spin K3 1000
+spin K4 1000
+wait 100
+wait 1300
+shot Monumatic-Sends.png
+tap FX
+expect view 11
+tap SAVE
+wait 300
+reboot
+wait 100
+expect par11 100
+expect par165 100
+expect par9 100
+expect par10 100
+expect par57 100
+expect par58 100
+expect par59 100
+expect par95 100
+setpar 91 100
+tap PLAY
+wait 500
+wav Monumatic-Max-Wet.wav
+wait 20000
+wavstop
+expect peak_db_min -70
+expect peak_db_max -1
+tap PLAY
+wait 300
+tap FX
+expect view 11
+spin K2 -1000
+spin K3 -1000
+wait 100
+expect par165 0
+expect par9 0
+wav Monumatic-Dark-Tail.wav
+wait 5000
+wavstop
+tap HOME
+wait 100
+setpar 57 0
+setpar 58 0
+setpar 59 0
+setpar 95 0
+monumatic_panic
+wait 1000
+peakreset
+wav Monumatic-Panic.wav
+wait 2000
+wavstop
+expect peak_db_max -100

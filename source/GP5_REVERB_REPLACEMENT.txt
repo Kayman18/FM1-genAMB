@@ -1,0 +1,10 @@
+genAMB RC2 GP5 reverb replacement
+
+- Removed the global Clouds-derived reverb tank from rings_port.cc.
+- Added PolyWavetable TEST74 native GP5 stereo reverb engine.
+- All 10 GP5 models are available through the former Space knob:
+  Air, Room, Hall, Church, Plate L, Plate, Spring, N-Star, Deepsea, Sweet Space.
+- Reverb page is now Model / Decay / Damping / Motion.
+- Existing per-layer sends and global reverb return are unchanged.
+- Default former Space=65 migrated to GP5 model selection; new factory default is 100 (Sweet Space).
+- GP5 tank storage: 7,830 floats instead of the old Clouds 16,384-float tank plus allpasses.

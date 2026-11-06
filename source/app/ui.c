@@ -19,24 +19,24 @@
 #include "fm_port.h"
 
 /* the pages, one a layer (a button each); page buttons handle navigation directly */
-enum { V_GARDEN, V_PAD, V_PADBODY, V_RINGS, V_RINGTONE, V_RINGEXC, V_RINGDLY, V_MOD, V_MIXER, V_DRONE, V_DRONEVOICE, V_SPACE, V_REVSEND, V_SETUP, V_PADSEQ, V_PAD2SEQ, V_RINGSEQ, V_PERF, V_DAMBIENT, V_ESETUP, V_EPATTERN, V_FM, V_FMMOTION, V_FMSEQ, V_FMESETUP, V_FMEPATTERN, V_REVMIX, V_RPROTOPT, V_FPROTOPT, V_FMFILTER, V_RUNITOPT, V_FUNITOPT, V_ROOTDIV, NVIEWS };
-static const char *const VIEW_NAME[NVIEWS] = {"Garden", "Pad 1", "Body", "Rings", "Tone", "Exciter", "Delay", "Mod", "Mixer", "Pad 2", "Body", "Reverb", "Sends", "Setup", "Pad 1 Seq", "Pad 2 Seq", "Rings Seq", "Performance", "Delay 2", "Hallucigenia Setup", "Hallucigenia Pattern", "FM", "FM Motion", "FM Seq", "FM Hallucigenia Setup", "FM Hallucigenia Pattern", "Reverb Mix", "Proteus Options", "FM Proteus Options", "FM Filter", "Unit-D Options", "FM Unit-D Options", "Root & Note Div"};
-static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ENV, B_SEQ, B_SEQ, B_SEQ, B_SEQ, B_LFO, B_GLO, B_ARP, B_ARP, B_FX, B_FX, B_GLO, B_ENV, B_ARP, B_SEQ, B_GLO, B_SEQ, B_SEQ, B_SEQ, B_SEL, B_SEL, B_SEL, B_SEL, B_SEL, B_FX, B_SEQ, B_SEL, B_SEL, B_SEQ, B_SEL, B_HOME};
-static const char *const VIEW_BTN_NAME[NVIEWS] = {"HOME", "PAD 1", "PAD 1", "RINGS", "RINGS", "RINGS", "RINGS", "LFO", "MIXER", "PAD 2", "PAD 2", "REVERB", "REVERB", "MIXER", "PAD 1", "PAD 2", "RINGS", "MIXER", "RINGS", "RINGS", "RINGS", "FM", "FM", "FM", "FM", "FM", "REVERB", "RINGS", "FM", "RINGS", "FM", "HOME"};
+enum { V_GARDEN, V_PAD, V_PADBODY, V_RINGS, V_RINGTONE, V_RINGEXC, V_RINGDLY, V_MOD, V_MIXER, V_DRONE, V_DRONEVOICE, V_SPACE, V_REVSEND, V_SETUP, V_PADSEQ, V_PAD2SEQ, V_RINGSEQ, V_PERF, V_DAMBIENT, V_ESETUP, V_EPATTERN, V_FM, V_FMMOTION, V_FMSEQ, V_FMESETUP, V_FMEPATTERN, V_REVMIX, V_RPROTOPT, V_FPROTOPT, V_FMFILTER, V_RUNITOPT, V_FUNITOPT, V_ROOTDIV, V_PAD2FILTER, NVIEWS };
+static const char *const VIEW_NAME[NVIEWS] = {"Garden", "Pad 1", "Body", "Rings", "Tone", "Exciter", "Delay", "Mod", "Mixer", "Pad 2", "Body", "Reverb", "Sends", "Setup", "Pad 1 Seq", "Pad 2 Seq", "Rings Seq", "Performance", "Delay 2", "Hallucigenia Setup", "Hallucigenia Pattern", "FM", "FM Motion", "FM Seq", "FM Hallucigenia Setup", "FM Hallucigenia Pattern", "Reverb Mix", "Proteus Options", "FM Proteus Options", "Pad 1 Filter", "Unit-D Options", "FM Unit-D Options", "Root & Note Div", "Pad 2 Filter"};
+static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ENV, B_SEQ, B_SEQ, B_SEQ, B_SEQ, B_LFO, B_GLO, B_ARP, B_ARP, B_FX, B_FX, B_GLO, B_ENV, B_ARP, B_SEQ, B_GLO, B_SEQ, B_SEQ, B_SEQ, B_SEL, B_SEL, B_SEL, B_SEL, B_SEL, B_FX, B_SEQ, B_SEL, B_ENV, B_SEQ, B_SEL, B_HOME, B_ARP};
+static const char *const VIEW_BTN_NAME[NVIEWS] = {"HOME", "PAD 1", "PAD 1", "RINGS", "RINGS", "RINGS", "RINGS", "LFO", "MIXER", "PAD 2", "PAD 2", "REVERB", "REVERB", "MIXER", "PAD 1", "PAD 2", "RINGS", "MIXER", "RINGS", "RINGS", "RINGS", "FM", "FM", "FM", "FM", "FM", "REVERB", "RINGS", "FM", "PAD 1", "FM", "HOME", "PAD 2"};
 enum { K_LEDS = 192, K_CPU, K_MOD_ROUTE, K_MOD_DEST, K_MOD_DEPTH, K_MOD_SPEED, K_PERF_MODE, K_PERF_RESET, K_PERF_SECS, K_PERF_STATE, K_EVONEW, K_FMEVONEW, K_RPROTNEW, K_FPROTNEW, K_MOD_SHAPE, K_NONE };
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_SWELL, P_BRIGHT, P_PADTONE, P_PADCHORUS},
     {P_BTONE, P_PADCHAR, K_NONE, K_NONE},
-    {K_NONE, P_RBURST, P_RMODEL, P_RPOLY},
+    {P_RMODEL, P_RBURST, P_RPOLY, K_NONE},
     {P_RSTRUCT, P_RBRIGHT, P_RDAMP, P_RPOS},
     {P_REXCITER, K_NONE, K_NONE, K_NONE},
     {P_RDELAYTIME, P_RDELAYFB, P_RDELAYMIX, P_RDELAYREPEATS},
     {K_MOD_ROUTE, K_MOD_DEST, K_MOD_DEPTH, K_MOD_SPEED},
-    {P_PAD, P_BELLS, P_PULSE, P_FMLEVEL},
+    {P_PAD, P_PULSE, P_BELLS, P_FMLEVEL},
     {P_HITS, P_SWING, P_DRONEVOICE, P_PAD2CHORUS},
     {P_HATS, P_PAD2CHAR, K_NONE, K_NONE},
-    {P_REVSPACE, P_SIZE, P_ECHO, P_ETIME},
+    {P_SIZE, P_GP5TONE, P_ETIME, P_REVERB},
     {P_PADREV, P_RINGREV, P_DRONEREV, P_FMREV},
     {P_TUNE, P_MIDI, K_LEDS, K_NONE},
     {P_PADOCT, P_PADRANGE, P_PADCHANCE, K_NONE},
@@ -51,27 +51,28 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_FMSEQMODE, P_FMOCT, P_FMRANGE, P_FMCHANCE},
     {P_FMELENGTH, P_FMEMUTATE, P_FMEDENSITY, P_FMERATE},
     {P_FMERANGE, P_FMEFOLLOW, P_FMEPATTERN, K_FMEVONEW},
-    {P_REVERB, K_NONE, K_NONE, K_NONE},
+    {P_SIZE, P_GP5TONE, P_ETIME, P_REVERB},
     {P_RPROTRANGE, K_RPROTNEW, P_BOCT, P_RINGRANGE},
     {P_FPROTRANGE, K_FPROTNEW, P_FMOCT, P_FMRANGE},
     {P_FFILTERTYPE,P_FFILTERCUT,P_FFILTERRES,P_FFILTERMIX},
     {P_RUDTOL,P_RUDRANGE,P_RUDRATE,P_RUDPOLY},
     {P_FUDTOL,P_FUDRANGE,P_FUDRATE,P_FUDPOLY},
     {P_ROOT, P_FMDENSITY, P_DENSITY, K_NONE},
+    {P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tempo", "Evolve", "Motion", "Drift"},
     {"Swell", "Bright", "Colour", "Chorus"},
     {"Low Body", "Character", "", ""},
-    {"Density", "Burst", "Model", "Polyphony"},
+    {"Model", "Burst", "Polyphony", ""},
     {"Structure", "Brightness", "Damping", "Position"},
     {"Exciter", "", "", ""},
     {"Time", "Feedback", "Mix", "Repeats"},
     {"Source", "Destination", "Depth", "Speed"},
-    {"Pad", "Rings", "Pad 2", "FM"},
+    {"Pad", "Pad 2", "Rings", "FM"},
     {"Swell", "Bright", "Colour", "Width"},
     {"Low Body", "Character", "", ""},
-    {"Space", "Decay", "Damping", "Motion"},
+    {"Decay", "Tone", "Motion", "Dry/Wet"},
     {"Pad", "Rings", "Pad 2", "FM"},
     {"Tune", "MIDI out", "Lights", ""},
     {"Octave", "Oct Drift", "Change", ""},
@@ -86,13 +87,14 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Mode", "Octave", "Oct Drift", "Chance"},
     {"Length", "Mutation", "Density", "Rate"},
     {"Range", "Follow", "Pattern", "New"},
-    {"Mix", "", "", ""},
+    {"Decay", "Tone", "Motion", "Dry/Wet"},
     {"Range", "New Melody", "Octave", "Oct Drift"},
     {"Range", "New Melody", "Octave", "Oct Drift"},
     {"Type", "Cutoff", "Resonance", "Mix"},
     {"Tolerance", "Range", "Rate", "Polyphony"},
     {"Tolerance", "Range", "Rate", "Polyphony"},
     {"Root", "FM Density", "Rings Density", ""},
+    {"Type", "Cutoff", "Resonance", "Mix"},
 };
 
 /* the screen's colours: the cover of Ambient 1: Music for Airports (1978), as the web app and the site.
@@ -147,7 +149,7 @@ static struct {
 /* Track the emitted pitch, not the current octave, until its source releases.
  * A zero entry is idle; MIDI note 0..127 is stored as 1..128. */
 static uint8_t fm_key_note[NKEYS], fm_midi_note[128];
-static int fm_view(int v) { return (v >= V_FM && v <= V_FMEPATTERN) || v == V_FPROTOPT || v == V_FMFILTER || v == V_FUNITOPT; }
+static int fm_view(int v) { return (v >= V_FM && v <= V_FMEPATTERN) || v == V_FPROTOPT || v == V_FUNITOPT; }
 static int fm_clip_note(int n) { return n < 0 ? 0 : n > 127 ? 127 : n; }
 static void fm_manual_release(void)
 {
@@ -235,13 +237,14 @@ static const char *mode_name(void)
 }
 
 /* ------------------------------------------------------------ values --- */
-static int fm_filter_knob(int row,int slot) {
+static int fm_filter_knob(int view,int row,int slot) {
     static const int upper[4]={P_FFILTERTYPE,P_FFILTERCUT,P_FFILTERRES,P_FFILTERMIX};
+    if(view==V_PAD2FILTER){static const int p2[4]={P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX};return row==2?(slot==0?P_P2FILTERMODEL:K_NONE):p2[slot];}
     return row==2 ? slot==0?P_FFILTERMODEL:K_NONE : upper[slot];
 }
 static int mod_view_knob(int row,int slot) {
     if (ui.mod_route < 11) {
-        static const int top[4]={K_MOD_ROUTE,K_MOD_DEST,K_NONE,K_MOD_DEPTH};
+        static const int top[4]={K_MOD_ROUTE,K_MOD_DEST,K_MOD_DEPTH,K_NONE};
         static const int bottom[4]={K_MOD_SHAPE,K_NONE,K_MOD_SPEED,K_NONE};
         return row==2?bottom[slot]:top[slot];
     }
@@ -294,7 +297,7 @@ static const char *grid_label(int view,int row,int slot)
 }
 static int bound_view_knob(int view,int slot) {
     if(wide_grid_page(view))return VIEW_KNOB[view][slot];
-    if(view==V_FMFILTER)return fm_filter_knob(ui.fm_filter_row,slot);
+    if(view==V_FMFILTER || view==V_PAD2FILTER)return fm_filter_knob(view,ui.fm_filter_row,slot);
     if(view==V_RUNITOPT || view==V_FUNITOPT)
         return ui.unit_row[view==V_FUNITOPT]==1?VIEW_KNOB[view][slot]:K_NONE;
     if(view==V_MOD)return mod_view_knob(ui.mod_row,slot);
@@ -337,7 +340,7 @@ static int knob_get(int k)
 static void knob_range(int k, int *lo, int *hi)
 {
     if (k < P_NPARAMS) {
-        if(k==P_FFILTERTYPE && (proj.par[P_FFILTERMODEL]==FM_FILTER_BYPASS || proj.par[P_FFILTERMODEL]>=FM_FILTER_JUNO)) {
+        if((k==P_FFILTERTYPE || k==P_P2FILTERTYPE) && (proj.par[k==P_P2FILTERTYPE?P_P2FILTERMODEL:P_FFILTERMODEL]==FM_FILTER_BYPASS || proj.par[k==P_P2FILTERTYPE?P_P2FILTERMODEL:P_FFILTERMODEL]>=FM_FILTER_JUNO)) {
             *lo=*hi=0;return;
         }
         *lo = en_param_info(k)->lo;
@@ -390,7 +393,7 @@ static void knob_text(int k, char *b)
         else{b[1]='1';b[2]=(char)('0'+v-9);b[3]=0;}
     } else if (k == K_MOD_DEST) {
         int mp=mod_param(k);
-        if(ui.mod_route>=9) {const char *x=ui.mod_route==9?"FM Cutoff":"FM Res";while((*b++=*x++));}
+        if(ui.mod_route>=9) {const char *x=ui.mod_route==9?"Pad Cut":"Pad Res";while((*b++=*x++));}
         else if(mp<0){ const char *x="Pad fixed"; while((*b++=*x++)); } else en_param_text(mp,v,b);
     } else if (k == K_MOD_DEPTH || k == K_MOD_SPEED || k == K_MOD_SHAPE) {
         int mp=mod_param(k);if(mp>=0)en_param_text(mp,v,b);else if(k==K_MOD_SHAPE && ui.mod_route<6){const char *x="Smooth Rnd";while((*b++=*x++)){} }else b[0]=0;
@@ -481,9 +484,9 @@ static void knob_set(int k, int v)
         int p=mod_param(k);if(p>=0){proj.par[p]=(int16_t)v;en_set(p,v);}
     } else if (k < P_NPARAMS) {
         proj.par[k] = (int16_t)v; en_set(k, v);
-        if(k==P_FFILTERMODEL) {
+        if(k==P_FFILTERMODEL || k==P_P2FILTERMODEL) {
             int type=0;
-            proj.par[P_FFILTERTYPE]=(int16_t)type;en_set(P_FFILTERTYPE,type);
+            int param=k==P_P2FILTERMODEL?P_P2FILTERTYPE:P_FFILTERTYPE;proj.par[param]=(int16_t)type;en_set(param,type);
         }
     } else if (k == K_LEDS) {
         proj.leds = (uint8_t)v;
@@ -593,6 +596,8 @@ static void set_piece(int i)                    /* the piece playing kept as it 
 static void set_view(int v)
 {
     ui.view = (uint8_t)v;
+    if(v==V_FMFILTER || v==V_PAD2FILTER)ui.fm_filter_row=1;
+    if(v==V_RINGSEQ || v==V_FMSEQ)ui.seq_zone[v==V_FMSEQ]=1;
     ui.touched = -1;
 }
 
@@ -603,8 +608,8 @@ static void button(int b)
      * FX=Reverb, GLO=Mixer. Setup remains available as the second
      * GLO page so no existing configuration page is lost. */
     if (b == B_HOME) { set_view(ui.view==V_GARDEN?V_ROOTDIV:V_GARDEN); return; }
-    if (b == B_ENV) { set_view(ui.view == V_PAD ? V_PADBODY : ui.view == V_PADBODY ? V_PADSEQ : V_PAD); return; }
-    if (b == B_ARP) { set_view(ui.view == V_DRONE ? V_DRONEVOICE : ui.view == V_DRONEVOICE ? V_PAD2SEQ : V_DRONE); return; }
+    if (b == B_ENV) { set_view(ui.view == V_PAD ? V_PADBODY : ui.view == V_PADBODY ? V_FMFILTER : ui.view == V_FMFILTER ? V_PADSEQ : V_PAD); return; }
+    if (b == B_ARP) { set_view(ui.view == V_DRONE ? V_DRONEVOICE : ui.view == V_DRONEVOICE ? V_PAD2FILTER : ui.view == V_PAD2FILTER ? V_PAD2SEQ : V_DRONE); return; }
     if (b == B_SEQ) {
         set_view(ui.view == V_RINGS ? V_RINGTONE : ui.view == V_RINGTONE ? V_RINGEXC :
                  ui.view == V_RINGEXC ? V_RINGDLY : ui.view == V_RINGDLY ? V_DAMBIENT :
@@ -614,13 +619,12 @@ static void button(int b)
         return;
     }
     if (b == B_SEL) {
-        set_view(ui.view == V_FM ? V_FMFILTER :
-                 ui.view == V_FMFILTER ? V_FMSEQ :
+        set_view(ui.view == V_FM ? V_FMSEQ :
                  ui.view == V_FMSEQ && proj.par[P_FMSEQMODE] == 2 ? V_FPROTOPT :
                  ui.view == V_FMSEQ && proj.par[P_FMSEQMODE] == 3 ? V_FUNITOPT : V_FM);
         return;
     }
-    if (b == B_FX) { set_view(ui.view == V_SPACE ? V_REVSEND : ui.view == V_REVSEND ? V_REVMIX : V_SPACE); return; }
+    if (b == B_FX) { set_view(ui.view == V_SPACE ? V_REVSEND : ui.view == V_REVSEND ? V_SPACE : V_SPACE); return; }
     if (b == B_GLO) { set_view(ui.view == V_MIXER ? V_SETUP : ui.view == V_SETUP ? V_PERF : V_MIXER); return; }
     for (v = 0; v < NVIEWS; v++)                 /* a page's button: its page */
         if (VIEW_BTN[v] == b) {
@@ -652,8 +656,8 @@ static void button(int b)
         {
             int p;
             const char *name;
-            if (ui.view == V_PAD || ui.view == V_PADBODY || ui.view == V_PADSEQ) { p = P_PADOCT; name = "PAD OCTAVE"; }
-            else if (ui.view == V_DRONE || ui.view == V_DRONEVOICE || ui.view == V_PAD2SEQ) { p = P_PAD2OCT; name = "PAD 2 OCTAVE"; }
+            if (ui.view == V_PAD || ui.view == V_PADBODY || ui.view == V_PADSEQ || ui.view==V_FMFILTER) { p = P_PADOCT; name = "PAD OCTAVE"; }
+            else if (ui.view == V_DRONE || ui.view == V_DRONEVOICE || ui.view == V_PAD2SEQ || ui.view==V_PAD2FILTER) { p = P_PAD2OCT; name = "PAD 2 OCTAVE"; }
             else if (fm_view(ui.view)) { p = P_FMOCT; name = "FM OCTAVE"; }
             else { p = P_BOCT; name = "RINGS OCTAVE"; }
             char t[8];
@@ -795,7 +799,7 @@ static void input(void)
         }
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {
-        if(ui.view==V_FMFILTER) {
+        if(ui.view==V_FMFILTER || ui.view==V_PAD2FILTER) {
             ui.fm_filter_row=(uint8_t)(((int)(ui.fm_filter_row?ui.fm_filter_row:1)-1+e%2+2)%2+1);
             ui.sig[1]=ui.sig[2]=0;
             say("SELECT",ui.fm_filter_row==1?"ROW 1":"ROW 2 MODEL");
@@ -812,11 +816,11 @@ static void input(void)
             say("SELECT",ui.unit_row[fi]==1?"ROW 1":"ROW 2 RESERVED");
         } else if (ui.view == V_RINGSEQ || ui.view == V_FMSEQ) {
             int fi=ui.view==V_FMSEQ;
-            int zone=(int)ui.seq_zone[fi]+e;
-            while(zone<0) zone+=3;
-            ui.seq_zone[fi]=(uint8_t)(zone%3);
-            ui.sig[1]=ui.sig[2]=0;
-            say("SELECT",ui.seq_zone[fi]==0?"MODE":ui.seq_zone[fi]==1?"ROW 1":"ROW 2");
+            int zone=(int)(ui.seq_zone[fi]==2?2:1)-1+e;
+            while(zone<0)zone+=2;
+            ui.seq_zone[fi]=(uint8_t)(zone%2+1);
+            ui.sig[0]=ui.sig[1]=ui.sig[2]=0;
+            say("SELECT",ui.seq_zone[fi]==1?"BANK 1":"BANK 2");
         } else if (ui.view == V_GARDEN || ui.view == V_ROOTDIV) {
             if (btn >> B_HOME & 1u) {
                 set_view(ui.view==V_GARDEN?V_ROOTDIV:V_GARDEN);
@@ -836,7 +840,13 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {
-        set_mode(proj.par[P_MODE] + (e > 0 ? 1 : -1));
+        if(ui.view==V_RINGSEQ || ui.view==V_FMSEQ){
+            int fi=ui.view==V_FMSEQ,k=fi?P_FMSEQMODE:P_RSEQMODE;
+            int mode=(proj.par[k]+e%4+4)%4;
+            knob_set(k,mode);ui.seq_zone[fi]=1;
+            ui.sig[0]=ui.sig[1]=ui.sig[2]=0;
+            char value[24];knob_text(k,value);say("SEQUENCER",value);
+        }else set_mode(proj.par[P_MODE] + (e > 0 ? 1 : -1));
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_PRESET)) != 0) {
@@ -1286,12 +1296,12 @@ static int help_lines(int b, const char *l[HELP_LINES])
 #define L(t) (l[n++] = (t))
     switch (b) {
     case B_HOME: L("THE GARDEN"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("SELECT: ROOT (HOME ONLY)"); L("HOLD HOME + SELECT: ROW"); break;
-    case B_ENV: L("PAD 1"); L("PRESS AGAIN: BODY"); L("LEVEL, OCTAVE, SWELL, BRIGHT"); break;
-    case B_ARP: L("PAD 2 - INDEPENDENT"); L("PRESS AGAIN: BODY"); L("HALF-SPEED PAD ENGINE"); break;
+    case B_ENV: L("PAD 1"); L("AGAIN: BODY / FILTER / SEQ"); L("LEVEL, OCTAVE, SWELL, BRIGHT"); break;
+    case B_ARP: L("PAD 2 - INDEPENDENT"); L("AGAIN: BODY / FILTER / SEQ"); L("HALF-SPEED PAD ENGINE"); break;
     case B_LFO: L("MODULATION"); L("SOURCE, DESTINATION, DEPTH, SPEED"); break;
-    case B_SEQ: L("RINGS"); L("TONE / EXCITER / DELAY"); L("DELAY 2: DIFFUSION / MOTION / SEND"); L("SEQ + OPTIONS FOLLOW"); break;
-    case B_SEL: L("FM - SIX OPERATORS"); L("MAIN: 2X4 CONTROL GRID"); L("AGAIN: FILTER / SEQ"); L("PIANO: KEYS OR MIDI CH 3"); break;
-    case B_FX: L("REVERB"); L("SPACE, DECAY, DAMPING, MOTION"); L("PRESS AGAIN: SENDS / MIX"); break;
+    case B_SEQ: L("RINGS"); L("TONE / EXCITER / DELAY"); L("DELAY 2: DIFFUSION / MOTION / SEND"); L("SEQ: ALGO MODE / SELECT BANK"); break;
+    case B_SEL: L("FM - SIX OPERATORS"); L("AGAIN: SEQUENCER"); L("SEQ: ALGO MODE / SELECT BANK"); L("PIANO: KEYS OR MIDI CH 3"); break;
+    case B_FX: L("REVERB"); L("MONUMATIC FULL-RATE REVERB"); L("PRESS AGAIN: LAYER SENDS"); break;
     case B_GLO: L("MIXER"); L("PAD, RINGS, PAD 2, FM"); L("PRESS AGAIN: SETUP"); L("THEN PERFORMANCE"); break;
     case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); break;
     case B_REC: L("FREEZE: THE CHORD HOLDS"); L(" AND THE REVERB RINGS ON"); L("AGAIN: THAW"); break;
@@ -1535,7 +1545,7 @@ static void unit_opt_main(void){
     for(int i=0;i<4;i++)unit_opt_cell(i,1,70,59);
 }
 static void fm_filter_cell(int slot,int row,int y,int ht) {
-    int k=fm_filter_knob(row,slot), x=4+59*slot;
+    int k=fm_filter_knob(ui.view,row,slot), x=4+59*slot;
     int active=ui.fm_filter_row==row;
     uint16_t edge=active?K_FM:mix(K_LINE,K_BG,4);
     outline_box(x,y,slot==3?55:56,ht,edge,active?mix(K_PANEL,K_FM,2):K_PANEL);
@@ -1667,9 +1677,9 @@ static void grid_context(int view)
         left=view==V_RINGTONE?"RINGS TONE":view==V_RINGEXC?"RINGS EXCITER":view==V_RINGDLY?"RINGS DELAY":view==V_DAMBIENT?"RINGS DELAY 2":"PROTEUS OPTIONS";
         en_param_text(P_RMODEL,proj.par[P_RMODEL],value);
     } else if(view==V_SPACE||view==V_REVSEND||view==V_REVMIX) {
-        left=view==V_SPACE?"REVERB":view==V_REVSEND?"REVERB SENDS":"REVERB RETURN";
-        num_text(proj.par[P_REVERB],value);
-        right="REVERB MIX";right_value=value;
+        left=view==V_SPACE?"MONUMATIC REVERB":view==V_REVSEND?"REVERB SENDS":"MONUMATIC REVERB";
+        en_param_text(P_REVSPACE,proj.par[P_REVSPACE],value);
+        right="TYPE";right_value="FULL RATE";
     } else {
         left="SETTINGS";value[0]=0;
     }
@@ -1677,7 +1687,8 @@ static void grid_context(int view)
     outline_box(2,1,236,64,color,K_PANEL);
     cv_text(7,3,(text_w(&FONT_XS,left)<=110?&FONT_XS:&FONT_T),left,color);
     if(view==V_SPACE||view==V_REVSEND||view==V_REVMIX) {
-        text_c(67,21,panel_fit("FX REVERB",107,25),"FX REVERB",K_TEXT);
+        en_param_text(P_REVSPACE,proj.par[P_REVSPACE],value);
+        text_c(67,21,panel_fit(value,107,25),value,K_TEXT);
     } else {
         const felucca_font_t *f=panel_fit(value,107,25);
         text_c(66,21,f,value,K_TEXT);
@@ -1791,7 +1802,7 @@ static void draw_main(void)
     if(ui.view==V_RUNITOPT || ui.view==V_FUNITOPT){
         unit_opt_main();cv_blit(0,MAIN_Y);return;
     }
-    if(ui.view==V_FMFILTER) {
+    if(ui.view==V_FMFILTER || ui.view==V_PAD2FILTER) {
         uint16_t col=K_FM;
         outline_box(2,1,236,54,col,K_PANEL);
         cv_text(8,3,&FONT_T,"FILTER RESPONSE",col);
@@ -2591,6 +2602,7 @@ static void speak_dump(void)
     char t[48];
     for (v = 0; v < NVIEWS; v++) {
         ui.view = (uint8_t)v;
+    if(v==V_FMFILTER || v==V_PAD2FILTER)ui.fm_filter_row=1;
         sp_page(0);
         sp_print("SCREEN", sp_buf);
         for (i = 0; i < 4; i++) {
@@ -2713,13 +2725,14 @@ void ui_init(void)
     sp_tp.play_t = plat_ms();
 }
 
+
+#include "ui_dusk.h"
+
 void ui_frame(void)
 {
     input();
     autosave();
-    draw_header();
-    draw_main();
-    draw_knobs();
+    dusk_draw();
     leds();
     speak();
     ann_tick(plat_ms());

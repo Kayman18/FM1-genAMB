@@ -19,10 +19,10 @@ static void wide_layout_tests(void){
         ui.mod_route=route;ui.mod_row=1;
         assert(bound_view_knob(V_MOD,0)==K_MOD_ROUTE);
         assert(bound_view_knob(V_MOD,1)==K_MOD_DEST);
-        assert(bound_view_knob(V_MOD,2)==K_NONE);
-        assert(bound_view_knob(V_MOD,3)==K_MOD_DEPTH);
+        assert(bound_view_knob(V_MOD,3)==K_NONE);
+        assert(bound_view_knob(V_MOD,2)==K_MOD_DEPTH);
         int lo,hi;knob_range(K_MOD_DEST,&lo,&hi);assert(lo==0 && hi==0);
-        knob_set(K_MOD_DEPTH,20);turn(0,bound_view_knob(V_MOD,3),1);assert(knob_get(K_MOD_DEPTH)==21);
+        knob_set(K_MOD_DEPTH,20);turn(0,bound_view_knob(V_MOD,2),1);assert(knob_get(K_MOD_DEPTH)==21);
         ui.mod_row=2;assert(bound_view_knob(V_MOD,2)==K_MOD_SPEED);
         knob_range(K_MOD_SHAPE,&lo,&hi);assert(lo==0 && hi==0);
         knob_set(K_MOD_SPEED,20);turn(0,bound_view_knob(V_MOD,2),1);assert(knob_get(K_MOD_SPEED)==21);

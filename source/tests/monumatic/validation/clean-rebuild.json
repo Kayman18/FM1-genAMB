@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "byte_identical": true,
+  "sha256": "49e8cecada93a6f370695ddeefa944d65516c91df60f16f8fe7483b9df6bb900",
+  "base": "genAMB-DUSK-TEST4",
+  "identity": "FM-1_7179931",
+  "normal_used": 96980,
+  "normal_capacity": 98304,
+  "pool_used": 294248,
+  "pool_capacity": 344064,
+  "pool_free": 49816,
+  "hardware_tested": false
+}

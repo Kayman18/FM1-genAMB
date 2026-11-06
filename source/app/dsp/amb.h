@@ -46,13 +46,13 @@ extern const uint8_t EN_DRUM_N[EN_NDRUM];
 
 /* parameters: value ranges in en_param_info() */
 enum {
-    P_PAD, P_BELLS, P_BASS, P_PULSE,                  /* layer levels */
+    P_PAD, P_BELLS, P_P2FILTERMODEL, P_PULSE,                  /* layer levels */
     P_DENSITY, P_EVOLVE, P_DRIFT, P_HITS,             /* motion */
     P_ECHO, P_ETIME, P_REVERB, P_SIZE,                /* space */
     P_BRIGHT, P_SWELL, P_BTONE, P_MOTION,             /* pad tone/body + motion */
     P_TUNE, P_MIDI, P_TEMPO, P_ROOT, P_MODE, P_BOCT,  /* setup, panel encoders, bell octave */
     P_PADTONE,                                        /* pad colour: Rhodes, Vintage Analog */
-    P_BASSOCT, P_GLIDE, P_FIFTH,                      /* bass: its octave, its glide, how often it leans on the fifth */
+    P_P2FILTERTYPE, P_P2FILTERCUT, P_P2FILTERRES,                      /* bass: its octave, its glide, how often it leans on the fifth */
     P_SWING, P_HATS,                                  /* pulse: swing, the hats' colour */
     P_RMODEL, P_RSTRUCT, P_RBRIGHT, P_RDAMP, P_RPOS, P_RPOLY, P_RFX,
     P_M1DEPTH, P_M1SPEED, P_M2DEPTH, P_M2SPEED, P_M3DEPTH, P_M3SPEED,
@@ -60,7 +60,7 @@ enum {
     P_M7DEST, P_M7DEPTH, P_M7SPEED,
     P_M8DEST, P_M8DEPTH, P_M8SPEED,
     P_M9DEST, P_M9DEPTH, P_M9SPEED,
-    P_PADCHAR, P_PADREV, P_RINGREV, P_DRONEREV, P_BASSREV,
+    P_PADCHAR, P_PADREV, P_RINGREV, P_DRONEREV, P_P2FILTERMIX,
     P_DRONEVOICE, P_REXCITER, P_PADCHORUS,
     P_PADOCT,                                         /* pad octave: -4..+2, appended for project compatibility */
     P_PAD2OCT, P_PAD2CHAR, P_PAD2CHORUS,              /* Pad 2: independent duplicate of Pad, appended for compatibility */
@@ -89,8 +89,16 @@ enum {
     P_FUDSEED, P_FUDNODES, P_FUDRADIUS, P_FUDDENS,
     P_FUDWALK, P_FUDLOCK, P_FUDGATE, P_FUDGDEN,
     P_FUDTOL, P_FUDRANGE, P_FUDRATE, P_FUDPOLY,
+    /* Full PolyWavetable GP5 reverb controls, append-only for project compatibility. */
+    P_GP5TONE, P_GP5RATE,
     P_NPARAMS
 };
+#define P_BASS P_P2FILTERMODEL /* removed Bass ID, retained for historical migrations */
+#define P_BASSOCT P_P2FILTERTYPE /* removed Bass ID, retained for historical migrations */
+#define P_GLIDE P_P2FILTERCUT /* removed Bass ID, retained for historical migrations */
+#define P_FIFTH P_P2FILTERRES /* removed Bass ID, retained for historical migrations */
+#define P_BASSREV P_P2FILTERMIX /* removed Bass ID, retained for historical migrations */
+
 typedef struct {
     const char *name;
     int16_t lo, hi, def;

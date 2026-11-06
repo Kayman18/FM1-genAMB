@@ -30,9 +30,9 @@ enum {
     RP_DEST_COUNT = 15
 };
 
-void cloud_reverb_port_init(void);
-void cloud_reverb_port_set(float size_0_1, float damping_0_1, float mod_0_1, float space_0_1);
-void cloud_reverb_port_process(float *mono_inout, float *wet_right, uint32_t n);
+
+
+
 
 void rings_port_init(void);
 void rings_port_panic(void);

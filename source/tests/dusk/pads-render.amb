@@ -1,0 +1,16 @@
+wait 2200
+setpar 1 0
+setpar 91 0
+wav pads.wav
+wait 45000
+setpar 19 7
+wait 15000
+tap REC
+wait 10000
+tap REC
+setpar 64 -4
+setpar 65 2
+wait 10000
+tap PLAY
+wait 10000
+wavstop

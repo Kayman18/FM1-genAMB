@@ -1,0 +1,12 @@
+genAMB full PolyWavetable GP5 reverb replacement
+
+Global Clouds reverb: removed.
+GP5 core: byte-identical source to PolyWavetable TEST74/reference74 pw_gp5.c + gp5_reverb.h.
+Models (10): Air, Room, Hall, Church, Plate L, Plate, Spring, N-Star, Deepsea, Sweet Space.
+UI controls copied from Poly's GP5 exposure:
+  Page REVERB: Model / Decay / Tone / High Damp
+  Page REVERB SENDS: Pad / Rings / Pad 2 / FM
+  Page GP5 MOD + MIX: Mod Rate / Mod Depth / Dry-Wet
+Model changes apply PolyWavetable's per-model defaults.
+GP5 rate uses Poly raw units 1..500 (actual Hz = raw * 0.05).
+Existing genAMB per-instrument sends remain parallel around the transplanted GP5 bank.

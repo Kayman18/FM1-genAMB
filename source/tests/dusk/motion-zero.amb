@@ -1,0 +1,5 @@
+setpar 15 0
+wait 6000
+wav zero.wav
+wait 30000
+wavstop

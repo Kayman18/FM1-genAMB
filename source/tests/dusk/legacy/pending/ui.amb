@@ -1,0 +1,17 @@
+pending_layout_tests
+tap HOME
+wait 200
+shot Home.png
+tap ENV
+wait 200
+shot Pad1.png
+tap SEQ
+wait 200
+shot Rings.png
+tap FX
+wait 200
+shot Reverb.png
+tap LFO
+spin K1 6
+wait 200
+shot M7.png

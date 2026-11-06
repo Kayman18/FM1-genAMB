@@ -7,6 +7,7 @@
 #include "rings/dsp/patch.h"
 #include "rings/dsp/performance_state.h"
 #include "rings/dsp/fx/fx_engine.h"
+#include "monumatic_reverb_port.h"
 
 extern "C" float fabsf(float x) { return x < 0.0f ? -x : x; }
 extern "C" float sqrtf(float x) {
@@ -23,12 +24,8 @@ extern "C" float sqrtf(float x) {
 #endif
 
 namespace {
-/* Clean global ambience reverb based directly on the Mutable Instruments Clouds
- * Griesinger/Dattorro reverb topology and delay lengths. Clouds used 12-bit delay
- * storage at 32 kHz; this port keeps the same 10-delay topology at the FM-1's full
- * audio rate and uses 32-bit floating storage to avoid the crunchy/bit-reduced character.
- * The two Clouds LFO interpolation points are retained; Rev Mod scales their depth. */
-/* Small float allpasses add density without reducing the existing long buffers. */
+/* Rings delay diffusion all-pass helper. This is independent of the removed
+ * Clouds global reverb and is still required by ring_delay_process(). */
 template<int N> struct AmbientAP {
   float b[N]; int pos;
   void Clear() { for (int i=0;i<N;++i) b[i]=0.0f; pos=0; }
@@ -37,142 +34,7 @@ template<int N> struct AmbientAP {
     if (++pos==N) pos=0; return y;
   }
 };
-static AmbientAP<149> rev_ap1 RP_POOL;
-static AmbientAP<211> rev_ap2 RP_POOL;
-class CloudsCleanReverb {
- public:
-  void Init(float* buffer) {
-    engine_.Init(buffer);
-    rev_ap1.Clear(); rev_ap2.Clear();
-    hp_1_ = hp_2_ = 0.0f;
-    engine_.SetLFOFrequency(rings::LFO_1, 0.13f / 44100.0f);
-    engine_.SetLFOFrequency(rings::LFO_2, 0.19f / 44100.0f);
-    amount_ = 1.0f;
-    /* v17: conservative tank drive. The reverb network is linear, so feeding
-     * it harder only raises the later master-output peak; it does not make the
-     * tail richer. Keep the tank well below overload and let the Reverb control
-     * set the audible wet/dry balance instead. */
-    input_gain_ = 0.24f;
-    reverb_time_ = 0.90f;
-    diffusion_ = 0.625f;
-    lp_ = 0.48f;
-    mod_depth_ = 0.25f;
-    lp_decay_1_ = 0.0f;
-    lp_decay_2_ = 0.0f;
-  }
 
-  void Process(float* left, float* right, size_t size) {
-    /* Exact Clouds delay layout: 4 input APs then 2 x (2 AP + long delay).
-     * We deliberately use the existing MI FxEngine at FORMAT_32_BIT. */
-    typedef E::Reserve<113,
-      E::Reserve<162,
-      E::Reserve<241,
-      E::Reserve<399,
-      E::Reserve<1653,
-      E::Reserve<2038,
-      E::Reserve<3411,
-      E::Reserve<1913,
-      E::Reserve<1663,
-      E::Reserve<4782> > > > > > > > > > Memory;
-    E::DelayLine<Memory, 0> ap1;
-    E::DelayLine<Memory, 1> ap2;
-    E::DelayLine<Memory, 2> ap3;
-    E::DelayLine<Memory, 3> ap4;
-    E::DelayLine<Memory, 4> dap1a;
-    E::DelayLine<Memory, 5> dap1b;
-    E::DelayLine<Memory, 6> del1;
-    E::DelayLine<Memory, 7> dap2a;
-    E::DelayLine<Memory, 8> dap2b;
-    E::DelayLine<Memory, 9> del2;
-    E::Context c;
-
-    const float kap = diffusion_;
-    const float klp = lp_;
-    const float krt = reverb_time_;
-    const float amount = amount_;
-    const float gain = input_gain_;
-    const float mod = mod_depth_;
-    float lp_1 = lp_decay_1_;
-    float lp_2 = lp_decay_2_;
-
-    while (size--) {
-      float wet;
-      float apout = 0.0f;
-      engine_.Start(&c);
-
-      /* Clouds' first-diffuser smear. At Mod=0 this collapses to a fixed read;
-       * increasing Mod restores the original Clouds movement. */
-      c.Interpolate(ap1, 10.0f, rings::LFO_1, 60.0f * mod, 1.0f);
-      c.Write(ap1, 100, 0.0f);
-
-      c.Read(rev_ap2.Process(rev_ap1.Process(*left + *right, kap), kap), gain);
-      c.Read(ap1 TAIL, kap); c.WriteAllPass(ap1, -kap);
-      c.Read(ap2 TAIL, kap); c.WriteAllPass(ap2, -kap);
-      c.Read(ap3 TAIL, kap); c.WriteAllPass(ap3, -kap);
-      c.Read(ap4 TAIL, kap); c.WriteAllPass(ap4, -kap);
-      c.Write(apout);
-
-      c.Load(apout);
-      c.Interpolate(del2, 4680.0f, rings::LFO_2, 100.0f * mod, krt);
-      c.Lp(lp_1, klp);
-      c.Hp(hp_1_, 0.0015f);
-      c.Read(dap1a TAIL, -kap); c.WriteAllPass(dap1a, kap);
-      c.Read(dap1b TAIL, kap);  c.WriteAllPass(dap1b, -kap);
-      c.Write(del1, 2.0f);
-      c.Write(wet, 0.0f);
-      *left += (wet - *left) * amount;
-
-      c.Load(apout);
-      c.Interpolate(del1, 3300.0f, rings::LFO_1, 70.0f * mod, krt);
-      c.Lp(lp_2, klp);
-      c.Hp(hp_2_, 0.0015f);
-      c.Read(dap2a TAIL, kap);  c.WriteAllPass(dap2a, -kap);
-      c.Read(dap2b TAIL, -kap); c.WriteAllPass(dap2b, kap);
-      c.Write(del2, 2.0f);
-      c.Write(wet, 0.0f);
-      *right += (wet - *right) * amount;
-
-      ++left;
-      ++right;
-    }
-    lp_decay_1_ = lp_1;
-    lp_decay_2_ = lp_2;
-  }
-
-  void set_size(float x) {
-    x = clamp01(x);
-    /* Longer ambient feedback range; strictly below unity at maximum. */
-    reverb_time_ = 0.85f + 0.12f * x;
-  }
-  void set_damping(float x) {
-    x = clamp01(x);
-    /* FxEngine LP coefficient: larger is brighter. Keep the long tail dark
-     * enough to avoid glassy ringing while retaining more upper-mid diffusion
-     * than v16, which could bunch energy into a narrow, harsh-sounding band. */
-    lp_ = 0.68f - 0.42f * x;
-  }
-  void set_space(float x) { diffusion_ = 0.45f + 0.28f * clamp01(x); }
-  void set_mod(float x) { mod_depth_ = clamp01(x); }
-  void set_input_gain(float x) { input_gain_ = x; }
-  void Clear() { engine_.Clear(); rev_ap1.Clear(); rev_ap2.Clear(); hp_1_ = hp_2_ = lp_decay_1_ = lp_decay_2_ = 0.0f; }
-
- private:
-  static float clamp01(float x) { return x < 0.0f ? 0.0f : (x > 1.0f ? 1.0f : x); }
-  typedef rings::FxEngine<16384, rings::FORMAT_32_BIT> E;
-  E engine_;
-  float amount_;
-  float input_gain_;
-  float reverb_time_;
-  float diffusion_;
-  float lp_;
-  float mod_depth_;
-  float hp_1_, hp_2_;
-  float lp_decay_1_;
-  float lp_decay_2_;
-};
-
-static CloudsCleanReverb g_cloud_reverb RP_POOL;
-static float g_cloud_buffer[16384] RP_POOL;
 static rings::Part g_part RP_POOL;
 static rings::Patch g_base_patch;
 static rings::Patch g_patch;
@@ -360,24 +222,6 @@ static void mod_one(float x, int dest, int depth, float *model_sum) {
     default: break;
     }
 }
-}
-
-extern "C" void cloud_reverb_port_init(void) {
-    g_cloud_reverb.Init(g_cloud_buffer);
-}
-extern "C" void cloud_reverb_port_set(float size_0_1, float damping_0_1, float mod_0_1, float space_0_1) {
-    g_cloud_reverb.set_size(size_0_1);
-    g_cloud_reverb.set_damping(damping_0_1);
-    g_cloud_reverb.set_mod(mod_0_1);
-    g_cloud_reverb.set_space(space_0_1);
-}
-extern "C" void cloud_reverb_port_process(float *mono_inout, float *wet_right, uint32_t n) {
-    for (uint32_t i = 0; i < n; ++i) {
-        float x = mono_inout[i] * 0.5f;
-        mono_inout[i] = x;
-        wet_right[i] = x;
-    }
-    g_cloud_reverb.Process(mono_inout, wet_right, n);
 }
 
 extern "C" void rings_port_init(void) {

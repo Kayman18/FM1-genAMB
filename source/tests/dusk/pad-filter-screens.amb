@@ -1,0 +1,31 @@
+wait 2200
+tap ENV
+tap ENV
+tap ENV
+expect view 29
+wait 1300
+shot pad1-filter.png
+spin SELECT 1
+wait 1300
+shot pad1-model.png
+tap ARP
+tap ARP
+tap ARP
+expect view 33
+wait 1300
+shot pad2-filter.png
+spin SELECT 1
+wait 1300
+shot pad2-model.png
+tap GLO
+expect view 8
+wait 1300
+shot mixer.png
+spin K2 1
+shot mixer-pad2-edit.png
+tap SEL
+expect view 21
+tap SEL
+expect view 23
+wait 1300
+shot fm-seq-no-filter.png

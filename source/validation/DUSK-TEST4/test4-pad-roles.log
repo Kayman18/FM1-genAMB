@@ -1,0 +1,2 @@
+PASS pad roles: Pad1 cycle 21.20s; Pad2 180s: 25 starts, 1.402 mean active, 13.9% full silence, max 2, upper chord notes unique, harmony follows
+host: 100 ms simulated, 2 blits, render 2.5% of real time (host CPU)

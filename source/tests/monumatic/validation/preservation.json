@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "base": "genAMB-DUSK-TEST4",
+  "base_archive_sha256": "ac3d2a669549d22b9681000efff8949e952adc3187837a179e12bb7475efc46f",
+  "unchanged_TEST4_sources": [
+    "app/project.c",
+    "app/dsp/amb.h",
+    "app/fm_port/fm_port.c",
+    "app/fm_port/fm_filter.c",
+    "app/fm_port/fm_filter.h"
+  ],
+  "unchanged_TEST1_reverb_sources": [
+    "app/monumatic_reverb_port.c",
+    "app/monumatic_reverb_port.h",
+    "app/monumatic/reverb.c",
+    "app/monumatic/reverb_parameters.inc",
+    "app/monumatic/reverb_maximum_delays.inc"
+  ],
+  "screens_visually_checked": [
+    "Monumatic-Reverb.png",
+    "mixer.png",
+    "pad1-filter.png"
+  ]
+}

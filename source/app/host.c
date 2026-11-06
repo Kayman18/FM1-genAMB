@@ -13,6 +13,10 @@ void hallucigenia_tests(void);
 #include "../tests/pending/layout_host.h"
 #include "../tests/filter/classic_migration_host.h"
 
+
+#include "../tests/dusk/ui_controls_host.h"
+#include "../tests/dusk/pad_filter_controls_host.h"
+
 static en_evo_bank_t host_evo_saved, host_fmevo_saved;
 static en_proteus_bank_t host_prot_saved;
 static uint32_t host_chord_stamp;
@@ -105,10 +109,16 @@ int app_expect(const char *what, int *got)
 int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
 {
     (void)b, (void)c, (void)d;
+    if (!strcmp(cmd,"pad_filter_controls_tests")) {pad_filter_controls_tests();return 1;}
+    if (!strcmp(cmd,"dusk2_ui_controls_tests")) {dusk2_ui_controls_tests();return 1;}
+    if (!strcmp(cmd,"pad_movement_tests")) {extern void pad_movement_tests(void);pad_movement_tests();return 1;}
+    if (!strcmp(cmd,"pad_roles_tests")) {extern void pad_roles_tests(void);pad_roles_tests();return 1;}
+    if (!strcmp(cmd,"duskview")) { int v=atoi(a);assert(v>=0 && v<NVIEWS);set_view(v);return 1; }
     if (!strcmp(cmd,"hallucigenia_tests")) {hallucigenia_tests();return 1;}
     if (!strcmp(cmd,"wide_layout_tests")) {wide_layout_tests();return 1;}
     if (!strcmp(cmd,"pending_layout_tests")) {pending_layout_tests();return 1;}
     if (!strcmp(cmd,"classic_migration_tests")) {classic_migration_tests();return 1;}
+    if (!strcmp(cmd,"monumatic_panic")) { app_panic(); return 1; }
     if (!strcmp(cmd,"setpar")) { int p=atoi(a),v=atoi(b);if(p>=0&&p<P_NPARAMS){proj.par[p]=v;en_set(p,v);mark_dirty();}return 1; }
     if (!strcmp(cmd,"chordhash")) {
         host_chord_stamp=0;

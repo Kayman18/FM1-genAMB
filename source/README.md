@@ -1,3 +1,12 @@
+# genAMB DUSK Monumatic Reverb TEST2
+
+Corrected DUSK TEST4 base with the Monumatic replacement. Build with
+`sh build-test.sh`. See [MONUMATIC-TEST2-NOTES.md](MONUMATIC-TEST2-NOTES.md)
+for controls, validation and hardware test steps. Original documentation below
+is retained as history.
+
+---
+
 # genAMB 1.0 RC2
 
 Current release: upstream Hallucigenia sequencing-core port for Rings and FM. See [release notes](RELEASE-1.0-RC2.md), [build instructions](BUILDING-1.0-RC2.md) and [upstream adaptation notes](app/vendor/hallucigenia/UPSTREAM.md).

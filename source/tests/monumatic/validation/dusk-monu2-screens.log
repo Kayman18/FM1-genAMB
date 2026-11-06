@@ -1,0 +1,6 @@
+  ok view == 29
+  ok view == 33
+  ok view == 8
+  ok view == 21
+  ok view == 23
+host: 10723 ms simulated, 30 blits, render 9.3% of real time (host CPU)

@@ -1,0 +1,17 @@
+  ok par83 == 1
+  ok view == 16
+  ok par83 == 2
+  ok view == 16
+  ok par83 == 3
+  ok view == 16
+  ok par83 == 0
+  ok view == 16
+  ok par96 == 1
+  ok view == 23
+  ok par96 == 2
+  ok view == 23
+  ok par96 == 3
+  ok view == 23
+  ok par96 == 0
+  ok view == 23
+host: 25640 ms simulated, 72 blits, render 10.1% of real time (host CPU)

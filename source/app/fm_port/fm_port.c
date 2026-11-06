@@ -68,7 +68,7 @@ void fm_port_init(void)
     polyphony = FM_PORT_DEFAULT_VOICES;
     target_gain = gain = fm_port_level = 0.0f;
     fm_port_active_voices = 0;
-    fm_filter_init();
+
 }
 
 void fm_port_panic(void)
@@ -241,7 +241,7 @@ void fm_port_render_add(float *left, float *right, float *reverb_send,
         gain += (target_gain - gain) * 0.004f;
         if (target_gain == 0.0f && gain < 0.000001f)
             gain = 0.0f;
-        sample = fm_filter_sample(cached[position++] * gain);
+        sample = cached[position++] * gain;
         left[i] += sample;
         right[i] += sample;
         if (reverb_send)

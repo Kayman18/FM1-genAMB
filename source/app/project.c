@@ -98,6 +98,30 @@ static void filter_from_legacy(int16_t *par)
     par[P_FFILTERTYPE]=(int16_t)type;
 }
 
+/* Format 23 reuses five retired Bass slots for Pad 2; save layout stays fixed. */
+#define V22_NPARAMS 167
+typedef struct {int16_t par[V22_NPARAMS];uint16_t pool;} slot_v22_t;
+typedef struct {
+    uint32_t magic,format;int16_t par[V22_NPARAMS];uint16_t pool;
+    uint8_t leds,piece,rsv0[2];slot_v22_t slot[NPIECES];uint8_t rsv[16];
+    en_evo_bank_t evo,fm_evo;en_proteus_bank_t proteus;en_ud_bank_t unitd;
+} project_v22_t;
+static void from_v22(const project_v22_t *old)
+{
+    project_defaults();proj.pool=old->pool;proj.leds=old->leds;proj.piece=old->piece;
+    for(int p=0;p<V22_NPARAMS;p++)proj.par[p]=old->par[p];
+    for(int i=0;i<NPIECES;i++){
+        proj.slot[i].pool=old->slot[i].pool;
+        for(int p=0;p<V22_NPARAMS;p++)proj.slot[i].par[p]=old->slot[i].par[p];
+    }
+    proj.evo=old->evo;proj.fm_evo=old->fm_evo;proj.proteus=old->proteus;proj.unitd=old->unitd;
+    /* A former FM bypass becomes the initial Clean Pad 1 filter. */
+    if(old->format==22u){
+        if(proj.par[P_FFILTERMODEL]==0)proj.par[P_FFILTERMODEL]=FM_FILTER_CLEAN;
+        for(int i=0;i<NPIECES;i++)if(proj.slot[i].par[P_FFILTERMODEL]==0)proj.slot[i].par[P_FFILTERMODEL]=FM_FILTER_CLEAN;
+    }
+}
+
 /* The v17.99.5 format-20 struct is byte-exact: 141 parameters plus
  * Hallucigenia/Proteus banks, without UNIT-D parameters or saved state. */
 #define V20_NPARAMS P_RUDSEED
@@ -468,6 +492,7 @@ int project_load(void)
 {
     static union {
         project_t now;
+        project_v22_t v22;
         project_v20_t v20;
         project_v19_t v19;
         project_v18_t v18;
@@ -488,7 +513,8 @@ int project_load(void)
     int n, i;
     memset(&buf, 0, sizeof buf);
     n = plat_store_load(OBJ_PROJ, &buf, sizeof buf);
-    if (n >= (int)sizeof(project_v20_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 20u)
+    if(n>=(int)sizeof(project_v22_t) && buf.now.magic==PROJ_MAGIC && (buf.now.format==21u || buf.now.format==22u))from_v22(&buf.v22);
+    else if (n >= (int)sizeof(project_v20_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 20u)
         from_v20(&buf.v20);
     else if (n >= (int)sizeof(project_v19_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 19u)
         from_v19(&buf.v19);
@@ -531,6 +557,14 @@ int project_load(void)
         filter_from_legacy(proj.par);
         for(i=0;i<NPIECES;i++)filter_from_legacy(proj.slot[i].par);
         proj.format=PROJ_FORMAT;
+    }
+    /* Reclaim only the five removed Bass slots when upgrading to format 23. */
+    if(n>=8 && buf.now.magic==PROJ_MAGIC && buf.now.format<23u){
+        const int ids[]={P_P2FILTERMODEL,P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX};
+        for(int row=-1;row<NPIECES;row++){
+            int16_t *p=row<0?proj.par:proj.slot[row].par;
+            for(int j=0;j<5;j++)p[ids[j]]=en_param_info(ids[j])->def;
+        }
     }
     /* Same format/layout: preserve old projects, capping only formerly valid
      * 7..10 voice settings. Values outside the old range remain invalid. */

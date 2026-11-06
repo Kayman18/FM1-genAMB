@@ -10,3 +10,13 @@ void fm_filter_init(void);
 void fm_filter_set(int model, int type, int cutoff, int resonance, int wet,
                    float mod_cutoff, float mod_res);
 float fm_filter_sample(float input);
+
+typedef struct {
+    float z[4], sv[2], high[2];
+    float g, target_g, gh, target_gh, resonance, target_res, wet, target_wet;
+    float blend, target_blend;
+    uint8_t model, type, pending_model, pending_type;
+} fm_filter_state_t;
+void classic_filter_init(fm_filter_state_t *fs);
+void classic_filter_set(fm_filter_state_t *fs,int model,int type,int cutoff,int resonance,int wet,float mod_cutoff,float mod_res);
+float classic_filter_sample(fm_filter_state_t *fs,float input);

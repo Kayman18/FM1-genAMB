@@ -1,0 +1,2 @@
+PASS DUSK2 controls: Rings Model/Burst/Voices/blank, LFO Depth K3; SEQ and SEL enter active banks and edit all four sequencer modes
+host: 100 ms simulated, 2 blits, render 7.2% of real time (host CPU)

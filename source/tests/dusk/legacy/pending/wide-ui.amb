@@ -1,0 +1,97 @@
+pending_layout_tests
+wide_layout_tests
+tap SEQ
+expect view 3
+wait 200
+shot Rings.png
+tap SEQ
+expect view 4
+wait 200
+shot Rings-Tone.png
+tap SEQ
+expect view 5
+wait 200
+shot Rings-Exciter.png
+tap SEQ
+expect view 6
+wait 200
+shot Rings-Delay.png
+tap SEQ
+expect view 18
+wait 200
+shot Rings-Delay-2.png
+tap SEQ
+expect view 16
+wait 200
+shot Rings-SEQ.png
+tap SEQ
+expect view 30
+wait 200
+shot Rings-UnitD-Options.png
+tap SEQ
+expect view 3
+wait 200
+shot Rings-Return.png
+tap ARP
+expect view 9
+wait 200
+shot PAD2.png
+tap ARP
+expect view 10
+wait 200
+shot PAD2-Body.png
+tap ARP
+expect view 15
+wait 200
+shot PAD2-SEQ.png
+tap ENV
+wait 200
+shot PAD1.png
+tap ENV
+wait 200
+shot PAD1-Body.png
+tap ENV
+wait 200
+shot PAD1-SEQ.png
+tap FX
+tap FX
+expect view 12
+wait 200
+shot Reverb-Sends.png
+tap FX
+expect view 26
+wait 200
+shot Reverb-Mix.png
+tap LFO
+wait 200
+shot M1.png
+spin K1 1
+wait 200
+shot M2.png
+spin K1 1
+wait 200
+shot M3.png
+spin K1 1
+wait 200
+shot M4.png
+spin K1 1
+wait 200
+shot M5.png
+spin K1 1
+wait 200
+shot M6.png
+spin K1 1
+wait 200
+shot M7.png
+spin K1 1
+wait 200
+shot M8.png
+spin K1 1
+wait 200
+shot M9.png
+spin K1 1
+wait 200
+shot M10.png
+spin K1 1
+wait 200
+shot M11.png

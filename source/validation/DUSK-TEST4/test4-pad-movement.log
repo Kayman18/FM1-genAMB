@@ -1,0 +1,2 @@
+PASS pad movement: 8 smooth bounded cycles over 180s, independent layers, Motion ramps and settles to exact zero
+host: 100 ms simulated, 2 blits, render 2.5% of real time (host CPU)

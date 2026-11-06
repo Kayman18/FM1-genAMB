@@ -1,0 +1,96 @@
+In file included from app/rings_port/rings_port.cc:9:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:172:7: warning: unused typedef '__static_assertion_test_at_line_172' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:48:1: note: expanded from here
+__static_assertion_test_at_line_172
+^
+In file included from app/rings_port/rings_port.cc:9:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:200:7: warning: unused typedef '__static_assertion_test_at_line_200' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:58:1: note: expanded from here
+__static_assertion_test_at_line_200
+^
+In file included from app/rings_port/rings_port.cc:9:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:229:7: warning: unused typedef '__static_assertion_test_at_line_229' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:68:1: note: expanded from here
+__static_assertion_test_at_line_229
+^
+In file included from app/rings_port/rings_port.cc:9:
+app/vendor/rings/rings/dsp/fx/fx_engine.h:243:7: warning: unused typedef '__static_assertion_test_at_line_243' [-Wunused-local-typedef]
+      STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
+      ^
+app/vendor/rings/stmlib/stmlib.h:58:90: note: expanded from macro 'STATIC_ASSERT'
+  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+                                                                                         ^
+app/vendor/rings/stmlib/stmlib.h:49:27: note: expanded from macro 'JOIN'
+#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:50:27: note: expanded from macro 'JOIN_1'
+#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
+                          ^
+app/vendor/rings/stmlib/stmlib.h:51:27: note: expanded from macro 'JOIN_2'
+#define JOIN_2(lhs, rhs)  lhs##rhs
+                          ^
+<scratch space>:81:1: note: expanded from here
+__static_assertion_test_at_line_243
+^
+4 warnings generated.
+font T: DejaVuSans.ttf 10px h 12, digit adv 6, 5832 B
+font XS: DejaVuSans.ttf 12px h 14, digit adv 8, 7686 B
+font S: DejaVuSans.ttf 15px h 16, digit adv 10, 10240 B
+font B: DejaVuSans-Bold.ttf 15px h 16, digit adv 10, 11024 B
+font M: DejaVuSans-Bold.ttf 21px h 22, digit adv 15, 19140 B
+font L: DejaVuSans-Bold.ttf 26px h 28, digit adv 18, 19488 B
+font set dusk: 74940 B (approx)
+words: 22 own + 51 common -> /workspace/scratch/1b4f3bf94579/genamb-dusk-monumatic2/app/web/words/c1a0ae0122.json (1653 B)
+loader: image 8236 B at 0x1c0a800, bss end 0x1c0f520
+loader: ota.bin 6952 B
+  ok    .ram_text: 929 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 304088 B; RAM .data+.bss 96980 B of 98304; pool 294248 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+parts    USB audio in  (not built in: Bluetooth MIDI, Bluetooth MIDI devices, WiFi, USB audio out, velocity and pressure)
+app      /workspace/scratch/1b4f3bf94579/genamb-dusk-monumatic2/app/build/amb.bin  304088 B
+loader   /workspace/scratch/1b4f3bf94579/genamb-dusk-monumatic2/app/build/loader/ota.bin  6952 B
+package  /workspace/scratch/1b4f3bf94579/genamb-dusk-monumatic2/app/build/amb-17.99.31.fwsc  610108 B, identity FM-1_7179931

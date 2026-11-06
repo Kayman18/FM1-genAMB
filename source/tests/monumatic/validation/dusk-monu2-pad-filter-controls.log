@@ -1,0 +1,2 @@
+PASS stereo pad filter controls, moved page navigation, mixer Pad1/Pad2/Rings/FM, format22 migration and format23 save roundtrip; unchanged save size
+host: 100 ms simulated, 2 blits, render 4.1% of real time (host CPU)

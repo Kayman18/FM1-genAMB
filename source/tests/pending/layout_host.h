@@ -20,9 +20,9 @@ static void pending_layout_tests(void) {
         ui.mod_route=r;ui.mod_row=1;
         assert(bound_view_knob(V_MOD,0)==K_MOD_ROUTE);
         assert(bound_view_knob(V_MOD,1)==K_MOD_DEST);
-        assert(bound_view_knob(V_MOD,2)==K_NONE);
-        assert(bound_view_knob(V_MOD,3)==K_MOD_DEPTH);
-        int depth=knob_get(K_MOD_DEPTH);turn(0,bound_view_knob(V_MOD,3),1);assert(knob_get(K_MOD_DEPTH)==depth+1);
+        assert(bound_view_knob(V_MOD,3)==K_NONE);
+        assert(bound_view_knob(V_MOD,2)==K_MOD_DEPTH);
+        int depth=knob_get(K_MOD_DEPTH);turn(0,bound_view_knob(V_MOD,2),1);assert(knob_get(K_MOD_DEPTH)==depth+1);
         ui.mod_row=2;
         assert(bound_view_knob(V_MOD,0)==K_MOD_SHAPE);
         assert(bound_view_knob(V_MOD,1)==K_NONE);

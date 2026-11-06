@@ -14,6 +14,8 @@ o2_cflags = ["-fno-exceptions", "-fno-rtti", "-fno-threadsafe-statics", "-Wno-un
 o2 = [
   "dsp/amb.c",
   "fm_port/fm_port.c",
+  "monumatic/reverb.c",
+  "monumatic_reverb_port.c",
   "rings_port/rings_port.cc",
   "vendor/rings/rings/resources.cc",
   "vendor/rings/rings/dsp/part.cc",

@@ -8,8 +8,11 @@
 #   PYTHON           a Python with Pillow (and libraqm, for the fonts)
 set -e
 cd "$(dirname "$0")"
+[ "$#" -gt 0 ] || set -- --release 17.99.31 --display-version 'DUSK MONU2'
 export JIELI_TOOLCHAIN="${JIELI_TOOLCHAIN:-$HOME/.jieli/toolchain}"
-export AC79_SDK="${AC79_SDK:-$HOME/fw-AC79_AIoT_SDK}"
+export AC79_SDK="${AC79_SDK:-$PWD/build-deps/sdk}"
+export X0X_FONT_DIRS="${X0X_FONT_DIRS:-$PWD/build-deps/fonts}"
+export X0X_FONTSET="${X0X_FONTSET:-dusk}"
 PY="${PYTHON:-python3}"
 [ -f base/tools/build.py ] || { echo "build.sh: no fm1-base in base/ (git submodule update --init --recursive)"; exit 1; }
 "$PY" -c 'import PIL' 2>/dev/null || { echo "build.sh: $PY has no Pillow (pip3 install Pillow)"; exit 1; }

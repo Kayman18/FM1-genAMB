@@ -1,0 +1,97 @@
+wait 2200
+duskview 16
+spin ALGO 1
+expect par83 1
+expect view 16
+wait 1300
+shot seq-16-mode1-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-16-mode1-bank2.png
+spin K1 1
+spin SELECT 1
+spin ALGO 1
+expect par83 2
+expect view 16
+wait 1300
+shot seq-16-mode2-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-16-mode2-bank2.png
+spin K1 1
+spin SELECT 1
+spin ALGO 1
+expect par83 3
+expect view 16
+wait 1300
+shot seq-16-mode3-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-16-mode3-bank2.png
+spin K1 1
+spin SELECT 1
+spin ALGO 1
+expect par83 0
+expect view 16
+wait 1300
+shot seq-16-mode0-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-16-mode0-bank2.png
+spin K1 1
+spin SELECT 1
+duskview 23
+spin ALGO 1
+expect par96 1
+expect view 23
+wait 1300
+shot seq-23-mode1-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-23-mode1-bank2.png
+spin K1 1
+spin SELECT 1
+spin ALGO 1
+expect par96 2
+expect view 23
+wait 1300
+shot seq-23-mode2-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-23-mode2-bank2.png
+spin K1 1
+spin SELECT 1
+spin ALGO 1
+expect par96 3
+expect view 23
+wait 1300
+shot seq-23-mode3-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-23-mode3-bank2.png
+spin K1 1
+spin SELECT 1
+spin ALGO 1
+expect par96 0
+expect view 23
+wait 1300
+shot seq-23-mode0-bank1.png
+spin K1 1
+spin SELECT 1
+wait 1300
+shot seq-23-mode0-bank2.png
+spin K1 1
+spin SELECT 1
+duskview 3
+wait 1300
+shot rings-mapping.png
+duskview 7
+wait 1300
+shot lfo-mapping.png

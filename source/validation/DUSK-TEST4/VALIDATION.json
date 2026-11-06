@@ -1,0 +1,32 @@
+{
+  "release": "genAMB-DUSK-TEST4",
+  "identity": "FM-1_7179917",
+  "app_bytes": 306768,
+  "main_ram_bytes": 96980,
+  "main_ram_capacity": 98304,
+  "pool_bytes": 234464,
+  "pool_capacity": 344064,
+  "pad_filters": "One stereo filter per pad; independent controls and L/R histories",
+  "default_filter": "Clean SVF",
+  "FM_filter_removed_from_audio_path": true,
+  "mixer_order": [
+    "Pad 1",
+    "Pad 2",
+    "Rings",
+    "FM"
+  ],
+  "filter_reference_samples": 884736,
+  "reference_result": "PASS all six models, four types and cutoff/resonance extremes",
+  "project_migration": "PASS format22->23; active/slot parameters and pattern banks preserved except retired Bass slots now initialized as Pad2 filters",
+  "saved_object_size_unchanged": true,
+  "USB_parameter_count": 167,
+  "USB_metadata": "PASS",
+  "sanitizers": "PASS filters, controls/migration, pad roles/movement and 90-second audio render",
+  "audio_peak": 0.0733642578125,
+  "audio_rms": 0.011863444974781149,
+  "Pad2_max_notes": 2,
+  "Pad2_notes_held_after_stop": 0,
+  "package_validation": "PASS CRCs, loader and decrypted application",
+  "hardware_tested": false,
+  "clean_packaged_source_rebuild_byte_identical": true
+}

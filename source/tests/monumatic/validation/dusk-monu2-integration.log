@@ -1,0 +1,22 @@
+  ok view == 11
+  ok par11 == 100
+  ok par165 == 100
+  ok par9 == 100
+  ok par10 == 100
+  ok view == 12
+  ok view == 11
+  ok par11 == 100
+  ok par165 == 100
+  ok par9 == 100
+  ok par10 == 100
+  ok par57 == 100
+  ok par58 == 100
+  ok par59 == 100
+  ok par95 == 100
+  ok peak -12.2 dBFS (min -70)
+  ok peak -12.2 dBFS (max -1)
+  ok view == 11
+  ok par165 == 0
+  ok par9 == 0
+  ok peak -180.0 dBFS (max -100)
+host: 35190 ms simulated, 44 blits, render 7.8% of real time (host CPU)

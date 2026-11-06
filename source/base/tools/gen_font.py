@@ -24,6 +24,12 @@ FONTS = Path(__file__).resolve().parents[1] / "assets" / "fonts"
 # chosen so the line height stays near the layout's 12 / 16 / 24 / 32. X0X_FONTSET picks one.
 # A TTF entry "file.ttf@wght=600" sets a variable font's axis.
 FONTSETS = {
+    "dusk": [("T", "DejaVuSans.ttf", 10, 1, False, 32, 126),
+             ("XS", "DejaVuSans.ttf", 12, 1, False, 32, 126),
+             ("S", "DejaVuSans.ttf", 15, 1, False, 32, 126),
+             ("B", "DejaVuSans-Bold.ttf", 15, 1, False, 32, 126),
+             ("M", "DejaVuSans-Bold.ttf", 21, 1, False, 32, 126),
+             ("L", "DejaVuSans-Bold.ttf", 26, 1, False, 32, 95)],
     "terminus": [("T", "ter-u12n.bdf", 12, 1, True, 32, 95),
                  ("XS", "ter-u12n.bdf", 12, 1, True, 32, 126),
                  ("S", "ter-u16n.bdf", 16, 1, True, 32, 126),

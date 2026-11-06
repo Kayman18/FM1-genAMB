@@ -1,0 +1,11 @@
+genAMB GP5 build font fix
+==========================
+
+This source package includes app/build/gen/felucca_font.h, the generated bitmap
+font header required by firmware compilation.  base/tools/build.py has been
+adjusted to reuse that header when it already exists rather than requiring the
+source BarlowSemiCondensed-SemiBold.ttf file on every build machine.
+
+If felucca_font.h is intentionally deleted, the original font generator is still
+used and requires BarlowSemiCondensed-SemiBold.ttf in base/assets/fonts or a
+folder listed in X0X_FONT_DIRS.

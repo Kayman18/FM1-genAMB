@@ -4,6 +4,7 @@
 #include "amb.h"
 #include "fastmath.h"
 #include "rings_port.h"
+#include "monumatic_reverb_port.h"
 #include "rings_models.h"
 #include "fm_port.h"
 #include "fm_filter.h"
@@ -32,13 +33,13 @@ const uint8_t EN_DRUM_N[EN_NDRUM] = {16, 12, 7};
 
 static int16_t par[P_NPARAMS];
 static const en_param_t PARAMS[P_NPARAMS] = {
-    {"Pad", 0, 100, 60},      {"Bells", 0, 100, 65},    {"Bass", 0, 100, 45},     {"Pad 2", 0, 100, 40},
+    {"Pad", 0, 100, 60},      {"Bells", 0, 100, 65},    {"Pad 2 model",0,5,1},     {"Pad 2", 0, 100, 40},
     {"Density", 0, 100, 40},  {"Evolve", 0, 100, 35},   {"Drift", 0, 100, 25},    {"Swell 2", 0, 100, 60},
-    {"Damping", 0, 100, 45},  {"Rev mod", 0, 100, 25}, {"Reverb", 0, 100, 65},   {"Decay", 0, 100, 80},
+    {"Reserved damp", 0, 100, 45},  {"Rev motion", 0, 100, 100}, {"Reverb", 0, 100, 65},   {"Decay", 0, 100, 80},
     {"Bright", 0, 100, 40},   {"Swell", 0, 100, 60},    {"Low body", 0, 100, 38}, {"Motion", 0, 100, 50},
     {"Tune", -50, 50, 0},     {"MIDI out", 0, 1, 1},    {"Tempo", 30, 120, 72},   {"Root", 0, 11, 2},
     {"Mode", 0, EN_NMODES - 1, 1}, {"Rings oct", -4, 2, 0}, {"Pad tone", 0, 1, 0},
-    {"Bass oct", -1, 1, 0},   {"Glide", 0, 100, 20},    {"Fifth", 0, 100, 35},
+    {"Pad 2 type",0,3,0},   {"Pad 2 cutoff",0,100,78},    {"Pad 2 res",0,100,18},
     {"Bright 2", 0, 100, 40}, {"Low body 2", 0, 100, 38},
     {"R model", 0, 6, 0},      {"Structure", 0, 100, 45},
     {"R bright", 0, 100, 55},  {"Damping", 0, 100, 65},
@@ -54,7 +55,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"M8 dest", 0, 14, 2},      {"M8 depth", -100, 100, 25}, {"M8 speed", 0, 100, 25},
     {"M9 dest", 0, 14, 3},     {"M9 depth", -100, 100, 20}, {"M9 speed", 0, 100, 20},
     {"Character", 0, 100, 50},   {"Pad rev", 0, 100, 65}, {"Rings rev", 0, 100, 75},
-    {"Pad 2 rev", 0, 100, 65},   {"Bass rev", 0, 100, 15},
+    {"Pad 2 rev", 0, 100, 65},   {"Pad 2 mix",0,100,100},
     {"Pad2 tone", 0, 1, 0},        {"Exciter", 0, 100, 55},       {"Chorus", 0, 100, 28},
     {"Pad oct", -4, 2, 0},
     {"Pad2 oct", -4, 2, 0},        {"Character 2", 0, 100, 50},  {"Width 2", 0, 100, 28},
@@ -64,7 +65,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Oct Drift", 0, 2, 0}, {"Change", 0, 100, 0},
     {"Oct Drift", 0, 2, 0}, {"Change", 0, 100, 0},
     {"Oct Drift", 0, 2, 0}, {"Change", 0, 100, 0},
-    {"Space", 0, 100, 65}, {"Diffusion", 0, 100, 55},
+    {"Reverb type", 0, 9, 0}, {"Diffusion", 0, 100, 55},
     {"Dly motion", 0, 100, 30}, {"Delay rev", 0, 100, 65},
     {"Seq mode",0,3,0}, {"Length",2,16,16}, {"Mutation",0,100,15}, {"Density",0,100,70},
     {"Rate",-1,11,1}, {"Range",1,3,1}, {"Follow",0,1,1}, {"Pattern",1,16,1},
@@ -79,7 +80,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Length",1,32,16}, {"Density",1,100,80}, {"Patience",1,50,12}, {"Rate",-1,11,1},
     {"Gate",5,100,50}, {"Oct Prob",0,100,20}, {"Mutate",0,100,20}, {"Lock",0,2,0}, {"Range",0,2,1},
     /* Model 0 is Standard; Type 3=Bypass keeps old v19 projects byte identical. */
-    {"Filter model",0,5,0}, {"Filter type",0,3,0}, {"Cutoff",0,100,78},
+    {"Pad 1 model",0,5,1}, {"Filter type",0,3,0}, {"Cutoff",0,100,78},
     {"Resonance",0,100,25}, {"Filter mix",0,100,100},
     {"M7 shape",0,5,0}, {"M8 shape",0,5,0}, {"M9 shape",0,5,0},
     {"M10 depth",-100,100,65}, {"M10 seconds",0,180,90}, {"M10 shape",0,5,2},
@@ -91,6 +92,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Seed",0,999,42},{"Nodes",8,64,24},{"Radius",25,200,100},{"Density",0,100,60},
     {"Walk",0,2,1},{"Lock",-100,100,0},{"Gate Len",5,95,45},{"Gate Den",15,100,75},
     {"Tolerance",1,20,4},{"Range",1,4,2},{"Rate",-1,11,1},{"Polyphony",1,8,1},
+    /* Append-only IDs retained: Tone is active, former GP5 rate is reserved. */
+    {"Rev tone",0,100,85},{"Reserved rate",1,500,100},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -132,6 +135,8 @@ void en_piece(int i, int16_t *par, uint16_t *pool)
     par[P_PAD2OCT] = par[P_PADOCT];
     par[P_PAD2CHAR] = par[P_PADCHAR];
     par[P_PAD2CHORUS] = par[P_PADCHORUS];
+    const int f2[5]={P_P2FILTERMODEL,P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX};
+    for(int j=0;j<5;j++)par[f2[j]]=PARAMS[f2[j]].def;
     *pool = EN_MODE_POOL[PIECES[i].v[P_MODE]];
 }
 
@@ -180,12 +185,12 @@ void en_param_text(int i, int v, char *b)
         }
     }
     else if (i == P_FMPATCH) s = fm_port_patch_name(v);
-    else if (i == P_FFILTERMODEL) {
+    else if ((i == P_FFILTERMODEL || i==P_P2FILTERMODEL)) {
         static const char *const names[]={"Bypass","Clean SVF","SEM","Juno","Polysix","CS-80"};
         s=names[(unsigned)v<6u?v:0];
-    } else if (i == P_FFILTERTYPE) {
+    } else if ((i == P_FFILTERTYPE || i==P_P2FILTERTYPE)) {
         static const char *const names[]={"Low Pass","High Pass","Band Pass","Notch"};
-        int model=par[P_FFILTERMODEL];
+        int model=par[i==P_P2FILTERTYPE?P_P2FILTERMODEL:P_FFILTERMODEL];
         s=names[(unsigned)v<4u?v:0];
         if(model==FM_FILTER_BYPASS)s="Bypass";
         if(model==FM_FILTER_JUNO || model==FM_FILTER_POLYSIX)s="Low Pass";
@@ -194,7 +199,13 @@ void en_param_text(int i, int v, char *b)
         static const char *const nm[]={"Smooth Rnd","Step Rnd","Sine","Pulse","Triangle","Saw"};
         s=nm[(unsigned)v<6u?v:0];
     }
-    else if (i == P_EFOLLOW || i == P_FMEFOLLOW) s = v ? "Chord" : "Scale";
+    else if (i == P_REVSPACE) {
+        s = "Monumatic";
+    } else if (i == P_GP5RATE) {
+        /* Poly GP5 rate: raw value * 0.05 Hz, display with two decimals. */
+        int hz100 = v * 5;
+        b = itoa_s(hz100 / 100, b); *b++='.'; *b++=(char)('0'+(hz100/10)%10); *b++=(char)('0'+hz100%10); *b++=' '; *b++='H'; *b++='z'; *b=0; return;
+    } else if (i == P_EFOLLOW || i == P_FMEFOLLOW) s = v ? "Chord" : "Scale";
     else if (i == P_ERATE || i == P_FMERATE || i == P_RPROTRATE || i == P_FPROTRATE || i == P_RUDRATE || i == P_FUDRATE) { s=seq_rate_label(v); }
     else if (i == P_RUDRADIUS || i == P_FUDRADIUS || i == P_RUDTOL || i == P_FUDTOL) {
         /* Fixed-point decimal values keep the original UNIT-D ranges. */
@@ -253,7 +264,7 @@ void en_param_text(int i, int v, char *b)
     if (i == P_M10SPEED || i == P_M11SPEED) {
         b=itoa_s(v,b); *b++='s'; *b=0;return;
     }
-    if (i == P_FFILTERCUT) {
+    if ((i == P_FFILTERCUT || i==P_P2FILTERCUT)) {
         /* Cutoff is logarithmic from 20 Hz to about 17.5 kHz. */
         int hz=(int)(20.0f*fm_exp2f(0.0978f*(float)v)+0.5f);
         if(hz>=1000){
@@ -287,7 +298,7 @@ void en_param_text(int i, int v, char *b)
         }
         return;
     }
-    if ((i == P_TUNE || i == P_BOCT || i == P_BASSOCT || i == P_PADOCT || i == P_PAD2OCT) && v > 0)
+    if ((i == P_TUNE || i == P_BOCT || i == P_PADOCT || i == P_PAD2OCT) && v > 0)
         *b++ = '+';
     itoa_s(v, b);
 }
@@ -686,6 +697,8 @@ typedef struct {
     uint8_t voices;                             /* this breath's colour: 0 Rhodes, 1 Vintage Analog */
 } pad_t;
 static pad_t pad[EN_NPAD];
+static fm_filter_state_t pad_filters[2][2];
+static float pad_motion_phase[2][4],pad_motion_wave[2][4],pad_motion_amount;
 static float pad_gate, pad_gain, pad_vol, bright, swell, pad_body, pad_char;
 #define PAD_CHORUS_N 1024
 static int16_t pad_ch_l[PAD_CHORUS_N] EN_POOL, pad_ch_r[PAD_CHORUS_N] EN_POOL;
@@ -699,6 +712,7 @@ static float pad_chorus = 0.28f;
  * handled by a cheap stereo bus low-pass, and the old Chorus 2 parameter becomes
  * a phase-safe stereo Width control. Audio remains full-rate at 44.1 kHz. */
 static pad_t pad2[EN_NPAD];
+static float pad2_rest[EN_NPAD]; /* samples until the next sparse answer */
 static float pad2_gate, pad2_gain, pad2_vol, pad2_bright, pad2_swell, pad2_body, pad2_char;
 static float pad2_width = 0.20f;
 static float pad2_plp[4];
@@ -762,7 +776,7 @@ static int seq_note(int note, int range, int chance, float roll, float direction
 static void midi(uint32_t st, uint32_t d1, uint32_t d2);
 static void pad_breathe(pad_t *v, int i)        /* a new breath: its length, its strength, its note */
 {
-    float secs = (4.0f + 0.12f * swell) * BREATH[i] * (0.85f + 0.3f * frand());
+    float secs = (8.0f + 0.20f * swell) * BREATH[i] * (0.85f + 0.3f * frand());
     v->rate = 32.0f / (secs * EN_SR);
     v->peak = 0.6f + 0.4f * frand();
     if (en_playing && v->midi_note)
@@ -839,7 +853,7 @@ static __attribute__((noinline)) void pad_coefs(pad_t *v, int i)          /* eve
     v->vib += (4.6f + 0.4f * (float)i) * 32.0f / EN_SR;
     if (v->vib >= 1.0f)
         v->vib -= 1.0f;
-    f = mtof((float)en_pad_pitch((int)v->note, v->seq_shift, par[P_PADOCT]) + 0.035f * motion * mod_value(i));                          /* a slow drift, as tape */
+    f = mtof((float)en_pad_pitch((int)v->note, v->seq_shift, par[P_PADOCT]) + 0.035f * motion * mod_value(i) + 0.04f*pad_motion_amount*pad_motion_wave[0][i]);                          /* a slow drift, as tape */
     if (v->voices) {
         float det = fm_exp2f((1.5f + 7.0f * fm_clampf(mod_pad_char, 0.0f, 1.0f)) * (1.0f / 1200.0f));
         v->inc[0] = f / det * (1.0f / EN_SR);
@@ -851,12 +865,12 @@ static __attribute__((noinline)) void pad_coefs(pad_t *v, int i)          /* eve
     if (v->voices) {
         /* Vintage Analog: a broad, warm low-pass rather than the formant bank.
          * Bright and the slow arc open it gradually; each voice differs a touch. */
-        float tone = fm_clampf((float)bright * 0.01f + 0.18f * arcm + 0.10f * motion * mod_value((i + 2) % NMOD_PAD), 0.0f, 1.0f);
+        float tone = fm_clampf((float)bright * 0.01f + 0.18f * arcm + 0.10f * motion * mod_value((i + 2) % NMOD_PAD) + 0.16f*pad_motion_amount*pad_motion_wave[0][(i+1)&3], 0.0f, 1.0f);
         f1 = 420.0f * fm_exp2f(3.55f * tone) * (0.96f + 0.025f * (float)i);
         svf_coefs(v->c1, fm_clampf(f1, 320.0f, 5200.0f), 0.78f);
         svf_coefs(v->c2, 900.0f, 0.6f); /* kept initialized for seamless colour handoff */
     } else {
-        vw = fm_clampf((float)bright * 0.01f + 0.25f * arcm + 0.16f * motion * mod_value((i + 2) % NMOD_PAD), 0.0f, 1.0f) * 2.999f;
+        vw = fm_clampf((float)bright * 0.01f + 0.25f * arcm + 0.16f * motion * mod_value((i + 2) % NMOD_PAD) + 0.16f*pad_motion_amount*pad_motion_wave[0][(i+1)&3], 0.0f, 1.0f) * 2.999f;
         a = (int)vw;
         vw -= (float)a;
         f1 = VOWEL[a][0] + (VOWEL[a + 1][0] - VOWEL[a][0]) * vw;
@@ -885,20 +899,45 @@ static inline float blep_saw(float t, float dt)
  * cadence than Pad 1. The audio oscillators themselves still run every sample. */
 #define PAD2_CTRL_SAMPLES 128.0f
 #define PAD2_HAND_STEP (PAD2_CTRL_SAMPLES / (4.0f * EN_SR))
+/* Phrase decisions run at onset, never in the sample loop.  Four allocated
+ * voices remain, but answers admit at most two notes at once. */
+static void pad2_end_note(pad_t *v)
+{
+    if(en_playing && v->midi_note)midi(0x84,v->emitted_note,0);
+    v->midi_note=0;
+}
+static void pad2_gap(pad_t *v,int i)
+{
+    pad2_end_note(v);v->peak=0.0f;v->t=0.0f;
+    pad2_rest[i]=(3.0f+0.04f*pad2_swell+6.0f*pad2_frand())*EN_SR;
+}
 static void pad2_breathe(pad_t *v, int i)
 {
-    float secs = 2.0f * (4.0f + 0.12f * pad2_swell) * BREATH[i] * (0.85f + 0.3f * pad2_frand());
-    v->rate = PAD2_CTRL_SAMPLES / (secs * EN_SR);
-    v->peak = 0.6f + 0.4f * pad2_frand();
-    if (en_playing && v->midi_note)
-        midi(0x84, v->emitted_note, 0);             /* independent MIDI channel 5 */
-    v->note = v->target;
-    v->seq_shift = (int8_t)seq_octave(par[P_PAD2RANGE], par[P_PAD2CHANCE], pad2_frand(), pad2_frand());
-    v->voices = (uint8_t)(par[P_DRONEVOICE] != 0);
-    v->midi_note = (uint8_t)v->target;
-    v->emitted_note = (uint8_t)en_pad_pitch(v->midi_note, v->seq_shift, par[P_PAD2OCT]);
-    if (en_playing)
-        midi(0x94, v->emitted_note, (uint32_t)(50.0f + 40.0f * v->peak));
+    int active=0,nt=pad2_chord_nt;
+    float secs=(2.5f+0.055f*pad2_swell)*BREATH[i]*(0.85f+0.3f*pad2_frand());
+    pad2_end_note(v);
+    for(int j=0;j<EN_NPAD;j++)if(j!=i && pad2[j].peak>0.0f && pad2_rest[j]<=0.0f)active++;
+    if(active>=2 || !nt || pad2_frand()>0.65f){pad2_gap(v,i);return;}
+    /* Follow the foundation's chord, favour its upper tones over the root. */
+    int idx=nt>1 && pad2_frand()<0.8f?1+(int)(pad2_rnd()%(unsigned)(nt-1)):0;
+    int shift=12+seq_octave(par[P_PAD2RANGE],par[P_PAD2CHANCE],pad2_frand(),pad2_frand());
+    int note=0;
+    for(int tries=0;tries<nt;tries++){
+        int pc=pad2_chord_pcs[(idx+tries)%nt],used=0;
+        note=en_pad_pitch(pc,shift,par[P_PAD2OCT]);
+        for(int j=0;j<EN_NPAD;j++)if(j!=i && pad2[j].midi_note && pad2[j].emitted_note==note)used=1;
+        if(!used)break;
+        if(tries==nt-1){pad2_gap(v,i);return;}
+    }
+    pad2_rest[i]=0.0f;
+    v->rate=PAD2_CTRL_SAMPLES/(secs*EN_SR);
+    v->peak=0.45f+0.30f*pad2_frand();
+    v->note=(float)(note%12+60);
+    v->seq_shift=(int8_t)shift;
+    v->voices=(uint8_t)(par[P_DRONEVOICE]!=0);
+    v->midi_note=(uint8_t)v->note;
+    v->emitted_note=(uint8_t)note;
+    if(en_playing)midi(0x94,v->emitted_note,(uint32_t)(50.0f+40.0f*v->peak));
 }
 
 static void pad2_handoff(void)
@@ -934,6 +973,12 @@ static void pad2_leave(void)
 static __attribute__((noinline)) void pad2_coefs_lite(pad_t *v, int i)
 {
     float f;
+    if(pad2_rest[i]>0.0f){
+        pad2_rest[i]-=PAD2_CTRL_SAMPLES;
+        if(pad2_rest[i]>0.0f)return;
+        v->t=0.0f;pad2_breathe(v,i);
+        if(pad2_rest[i]>0.0f)return;
+    }
     if (v->hand == 1) {
         v->hf -= PAD2_HAND_STEP;
         if (v->hf <= 0.0f) {
@@ -947,9 +992,9 @@ static __attribute__((noinline)) void pad2_coefs_lite(pad_t *v, int i)
         if (v->hf >= 1.0f) { v->hf = 1.0f; v->hand = 0; }
     }
     v->t = breath_advance(v->t, v->rate);
-    if (v->t >= 1.0f) { v->t -= 1.0f; pad2_breathe(v, i); }
+    if (v->t >= 1.0f) { pad2_gap(v,i);return; }
 
-    f = mtof((float)en_pad_pitch((int)v->note, v->seq_shift, par[P_PAD2OCT]) + 0.035f * motion * pad2_mod_value(i));
+    f = mtof((float)en_pad_pitch((int)v->note, v->seq_shift, par[P_PAD2OCT]) + 0.035f * motion * pad2_mod_value(i) + 0.06f*pad_motion_amount*pad_motion_wave[1][i]);
     {
         /* Character still changes the detune/spread of the two oscillators, but
          * uses one exp2 at control rate instead of filter/timbre math per sample. */
@@ -964,7 +1009,8 @@ static __attribute__((noinline)) void pad2_coefs_lite(pad_t *v, int i)
 static void pad2_retarget(void)
 {
     int from[4], to[4], i;
-    pad2_chord_nt = en_chord_tones(pool, par[P_ROOT], pad2_deg, pad2_chord_pcs);
+    pad2_deg=deg;
+    pad2_chord_nt = en_chord_tones(pool, par[P_ROOT], deg, pad2_chord_pcs);
     for (i = 0; i < EN_NPAD; i++) from[i] = (int)(pad2[i].target + 0.5f);
     en_voice_lead(from, pad2_chord_pcs, pad2_chord_nt, to, 43, 72);
     for (i = 0; i < EN_NPAD; i++) pad2[i].target = (float)to[i];
@@ -978,23 +1024,8 @@ static void pad2_drift_reset(void)
 
 static void pad2_chord_change(void)
 {
-    static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
-    float w[12], sum = 0.0f, r;
-    int i;
-    for (i = 0; i < nsteps; i++) {
-        w[i] = i == pad2_deg ? 0.0f : nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
-        sum += w[i];
-    }
-    r = pad2_frand() * sum;
-    for (i = 0; i < nsteps; i++) {
-        r -= w[i];
-        if (r <= 0.0f && w[i] > 0.0f) break;
-    }
-    if (i >= nsteps) i = pad2_deg == 0 ? (nsteps > 1 ? 1 : 0) : 0;
-    pad2_deg = i;
-    pad2_retarget();
-    pad2_leave();
-    pad2_drift_reset();
+    /* Revisit the current foundation instead of starting a second progression. */
+    pad2_retarget();pad2_leave();pad2_drift_reset();
 }
 
 static void pad2_control_clock(uint32_t n)
@@ -1010,6 +1041,38 @@ static void pad2_control_clock(uint32_t n)
     if (en_playing && !en_frozen) {
         pad2_drift_left -= (float)n;
         if (pad2_drift_left <= 0.0f) pad2_chord_change();
+    }
+}
+
+/* Independent, low-rate movement for the two Pad layers. Polynomial-smoothed
+ * triangles avoid per-sample oscillators, libm calls and shared RNG changes.
+ * Four unequal cycles per layer drive different voices/axes. */
+
+static float pad_motion_curve(float phase)
+{
+    float x=phase<0.5f?4.0f*phase-1.0f:3.0f-4.0f*phase;
+    return x*(1.5f-0.5f*x*x);
+}
+static void pad_movement_init(void)
+{
+    for(int l=0;l<2;l++)for(int i=0;i<4;i++){
+        pad_motion_phase[l][i]=0.11f+(float)i*0.19f+(float)l*0.07f;
+        pad_motion_wave[l][i]=pad_motion_curve(pad_motion_phase[l][i]);
+    }
+    pad_motion_amount=0.0f;
+}
+static void pad_movement_step(uint32_t n)
+{
+    static const float hz[2][4]={{1.0f/13.0f,1.0f/19.0f,1.0f/29.0f,1.0f/37.0f},
+                                  {1.0f/8.0f,1.0f/11.0f,1.0f/17.0f,1.0f/23.0f}};
+    float dt=(float)n*(1.0f/EN_SR);
+    pad_motion_amount+=(motion-pad_motion_amount)*fm_minf(dt*(1.0f/0.3f),1.0f);
+    if(motion==0.0f && pad_motion_amount<0.00001f)pad_motion_amount=0.0f;
+    if(!en_playing)return;
+    for(int l=0;l<2;l++)for(int i=0;i<4;i++){
+        float p=pad_motion_phase[l][i]+dt*hz[l][i];
+        if(p>=1.0f)p-=1.0f;
+        pad_motion_phase[l][i]=p;pad_motion_wave[l][i]=pad_motion_curve(p);
     }
 }
 
@@ -1080,6 +1143,8 @@ static void pad_retarget(void)                  /* the chord's tones to the four
     }
     en_chord_root = (uint8_t)chord_pcs[0];
     en_chord_n = (uint8_t)chord_nt;
+    pad2_retarget();
+    pad2_leave();
 }
 
 static float drift_left, drift_total, evolve;   /* evolve: Evolve, 0..1 */
@@ -1542,21 +1607,9 @@ static void tick(void)
     en_bars = sixteenth;
 }
 
-#if 1 /* Full-rate Mutable Instruments Clouds-derived ambience reverb. */
-/* --------------------------------------- reverb: clean Clouds topology --- */
-/* v15 replaces the half-rate custom FDN with the original Mutable Instruments
- * Clouds Griesinger/Dattorro topology, adapted in rings_port.cc to use clean
- * 32-bit floating delay storage at the FM-1's full 44.1 kHz sample rate. This removes
- * the 22.05-kHz sample/hold and 14-bit-ish tank quantisation that made v12-v14
- * sound metallic/bitcrushed when the wet path was brought forward. The actual
- * Clouds network remains compact: four input allpasses and two feedback
- * branches, each with two allpasses and one long delay. */
-static float pl_mod_depth = 0.25f;
-
-static void plate_init(void)
-{
-    cloud_reverb_port_init();
-}
+#if 1 /* Monumatic TEST1 replacement; full-rate recovered eight-line tank. */
+static float pl_mod_depth = 1.0f;
+static void plate_init(void){monumatic_reverb_init();}
 
 #if 0 /* long tape/Echoplex intentionally remain removed. */
 /* ------------------------------------------------- echo: tape and Echoplex --- */
@@ -1879,6 +1932,7 @@ static void notes_off(void)
 
 static void quiet(void)
 {
+    monumatic_reverb_panic();
     int i;
     rings_wait_clear();
     rings_port_panic();
@@ -1898,6 +1952,7 @@ void en_init(void)
 {
     int i;
     en_playing=0;
+    pad_movement_init();
     evo_init();
     en_mod_trace_head = en_mod_trace_count = 0;
     mod_trace_samples = 0;
@@ -1907,6 +1962,7 @@ void en_init(void)
         sint[i] = fm_sinf((float)i * (FM_TWO_PI / (float)SN));
     rings_port_init();
     fm_port_init();
+    for(int layer=0;layer<2;layer++)for(int ch=0;ch<2;ch++)classic_filter_init(&pad_filters[layer][ch]);
     rings_wait_clear();
     pad_ch_w = 0;
     pad_ch_phase = 0.0f;
@@ -1939,6 +1995,8 @@ void en_init(void)
         pad2[i].note = pad2[i].target = (float)(48 + 5 * i);
         pad2[i].pan = PAD_PAN[(i + 2) & 3];
         pad2[i].amp = 0.0f;
+        pad2[i].peak = 0.0f;
+        pad2_rest[i] = 0.0f;
         pad2[i].ph[0] = 0.17f * (float)(i + 1);
         pad2[i].ph[1] = 0.37f + 0.11f * (float)i;
         pad2[i].sub_ph = 0.13f * (float)(i + 1);
@@ -2007,11 +2065,9 @@ static void play_start(int from_top)
             pad_breathe(&pad[i], i);
         }
         if (pad2[i].amp < 1e-4f) {
-            static const float START2[EN_NPAD] = {0.31f, 0.04f, 0.67f, 0.88f};
-            pad2[i].t = START2[i];
-            pad2[i].midi_note = 0;
-        pad2[i].seq_shift = 0;
-            pad2_breathe(&pad2[i], i);
+            pad2[i].t=0.0f;pad2[i].peak=0.0f;
+            pad2[i].midi_note=0;pad2[i].seq_shift=12;
+            pad2_rest[i]=(2.0f+1.75f*(float)i)*EN_SR;
         }
     }
     if (!en_ext)
@@ -2138,6 +2194,8 @@ static void pad_bus(uint32_t n)
             l = l * (1.0f - wet) + cl * wet;
             r = r * (1.0f - wet) + cr * wet;
         }
+        l=classic_filter_sample(&pad_filters[0][0],l);
+        r=classic_filter_sample(&pad_filters[0][1],r);
         mixl[j] += l * 0.8f;
         mixr[j] += r * 0.8f;
         rsend[j] += (l + r) * 0.48f * pad_rev;
@@ -2165,7 +2223,7 @@ static __attribute__((noinline)) void render_pad(uint32_t n)
             v->amp = 0.0f;
             continue;
         }
-        pn = fm_clampf(v->pan + 0.25f * motion * mod_value((i + 3) % NMOD_PAD), -1.0f, 1.0f);
+        pn = fm_clampf(v->pan + 0.25f * motion * mod_value((i + 3) % NMOD_PAD) + 0.24f*pad_motion_amount*pad_motion_wave[0][(i+2)&3], -1.0f, 1.0f);
         gl = fm_cosf((pn + 1.0f) * (FM_PI / 4.0f)) * g;
         gr = fm_sinf((pn + 1.0f) * (FM_PI / 4.0f)) * g;
         for (j = 0; j < n; j++) {
@@ -2174,9 +2232,9 @@ static __attribute__((noinline)) void render_pad(uint32_t n)
                 float br;
                 pad_coefs(v, i);
                 br = breath(v->t);
-                tgt = br * v->peak * pad_gain * v->hf;
+                tgt = br * v->peak * pad_gain * v->hf * (1.0f+0.12f*pad_motion_amount*pad_motion_wave[0][(i+3)&3]);
                 /* the Rhodes blooms: more overtones as the breath swells (index in turns) */
-                idx = (0.04f + 0.1f * bright * 0.01f + 0.1f * br) * (1.0f + 0.4f * arcm);
+                idx = (0.04f + 0.1f * bright * 0.01f + 0.1f * br + 0.035f*pad_motion_amount*pad_motion_wave[0][(i+1)&3]) * (1.0f + 0.4f * arcm);
             }
             if (!v->voices) {                    /* FM, the modulator at the carrier's pitch: a Rhodes */
                 float m = sine(p0) * idx;
@@ -2270,6 +2328,8 @@ static void pad2_bus(uint32_t n)
         l = mid + side;
         r = mid - side;
 
+        l=classic_filter_sample(&pad_filters[1][0],l);
+        r=classic_filter_sample(&pad_filters[1][1],r);
         mixl[j] += l * 0.8f;
         mixr[j] += r * 0.8f;
         rsend[j] += (l + r) * 0.48f * pad2_rev;
@@ -2301,13 +2361,14 @@ static __attribute__((noinline)) void render_pad2(uint32_t n)
             pad_t *v = &pad2[i];
             float p0 = v->ph[0], p1 = v->ph[1], subph = v->sub_ph, amp = v->amp;
             float gl, gr, pn, tgt = 0.0f;
+            float glass_air=0.10f+0.055f*pad_motion_amount*pad_motion_wave[1][(i+1)&3];
             uint32_t j;
             if (amp < 1e-5f && pad2_gain < 1e-4f) {
                 v->amp = 0.0f;
                 continue;
             }
 
-            pn = fm_clampf(v->pan + 0.20f * motion * pad2_mod_value((i + 3) % NMOD_PAD), -1.0f, 1.0f);
+            pn = fm_clampf(v->pan + 0.20f * motion * pad2_mod_value((i + 3) % NMOD_PAD) + 0.38f*pad_motion_amount*pad_motion_wave[1][(i+2)&3], -1.0f, 1.0f);
             /* Linear pan is intentionally used for Lite: the bus Width stage restores
              * stereo size and this saves two trig calls for every voice/render chunk. */
             gl = (0.72f - 0.28f * pn) * g;
@@ -2319,7 +2380,7 @@ static __attribute__((noinline)) void render_pad2(uint32_t n)
                     float br;
                     pad2_coefs_lite(v, i);
                     br = breath(v->t);
-                    tgt = br * v->peak * pad2_gain * v->hf;
+                    tgt = br * v->peak * pad2_gain * v->hf * (1.0f+0.18f*pad_motion_amount*pad_motion_wave[1][(i+3)&3]);
                 }
 
                 t0 = pad2_tri(p0);
@@ -2329,7 +2390,7 @@ static __attribute__((noinline)) void render_pad2(uint32_t n)
                      * cheap octave harmonic. Bright and airy, but still Pad-2-Lite. */
                     float hph = p0 + p0;
                     if (hph >= 1.0f) hph -= 1.0f;
-                    x = 0.76f * sine(p0) + 0.16f * t1 + 0.10f * pad2_tri(hph);
+                    x = 0.76f * sine(p0) + 0.16f * t1 + glass_air * pad2_tri(hph);
                 } else {
                     /* Strings: two wider-detuned soft triangles. Character increases
                      * spread and slightly changes the blend; the bus LP keeps it soft. */
@@ -2535,25 +2596,15 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixl[j] += dc_left[j]; mixr[j] += dc_right[j]; rsend[j] += dc_send[j];
     } /* after a worker timeout Rings and FM stay muted until reboot */
     en_fm_level = fm_port_level;
-    /* Process the mono send as a block. rsend becomes wet L and esend wet R.
-     * The Clouds core itself stays full-rate; only its LFO phase is updated at
-     * the MI engine's inexpensive control cadence. */
-    cloud_reverb_port_process(rsend, esend, n);
+    /* Monumatic processes the shared mono send at full 44.1 kHz.
+     * rsend becomes wet L and esend becomes wet R. */
+    monumatic_reverb_process(rsend, esend, n);
     {
-        /* RC2-WET2 GP5 insert-style wet/dry mix. WET1 boosted the return but
-         * deliberately left the direct path at unity, so even REVERB=100
-         * still carried the full dry signal. Use the same concave response
-         * for all ten GP5 models, but now crossfade the dry path downward:
-         *   25 -> dry 0.684x, wet return 0.458x
-         *   50 -> dry 0.413x, wet return 0.852x
-         *   65 -> dry 0.270x, wet return 1.058x
-         *   75 -> dry 0.197x, wet return 1.184x
-         *  100 -> dry 0.000x, wet return 1.450x
-         * Model decay/tone/damping are untouched; this one shared mix stage
-         * applies uniformly to Air through Sweet Space. */
+        /* Preserve WET2's true wet/dry curve. Monumatic wet is unity gain;
+         * the GP5-specific 1.45 boost is intentionally removed. */
         const float rv = fm_clampf(rev_send, 0.0f, 1.0f);
         const float wet_curve = rv * (1.35f - 0.35f * rv);
-        const float wet_gain = 1.45f * wet_curve;
+        const float wet_gain = wet_curve;
         const float dry_gain = 1.0f - wet_curve;
         float peak = 0.0f;
         for (j = 0; j < n; j++) {
@@ -2594,17 +2645,23 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     mods_step(n);
     pad2_mods_step(n);
     pad2_control_clock(n);
-    fm_filter_set(par[P_FFILTERMODEL],par[P_FFILTERTYPE],par[P_FFILTERCUT],
-                  par[P_FFILTERRES],par[P_FFILTERMIX],
-                  mod[9].v*(float)par[P_M10DEPTH]*0.01f,
-                  mod[10].v*(float)par[P_M11DEPTH]*0.01f);
-    mod_pad2_bright = fm_clampf(pad2_bright + 0.45f * route_mod(8), 0.0f, 1.0f);
+    pad_movement_step(n);
+    for(int layer=0;layer<2;layer++){
+        static const int ids[2][5]={{P_FFILTERMODEL,P_FFILTERTYPE,P_FFILTERCUT,P_FFILTERRES,P_FFILTERMIX},{P_P2FILTERMODEL,P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX}};
+        const int *id=ids[layer];
+        float cut=mod[9].v*(float)par[P_M10DEPTH]*0.01f;
+        float res=mod[10].v*(float)par[P_M11DEPTH]*0.01f;
+        cut+=(layer?0.85f:0.65f)*pad_motion_amount*pad_motion_wave[layer][0];
+        for(int ch=0;ch<2;ch++)classic_filter_set(&pad_filters[layer][ch],
+            par[id[0]],par[id[1]],par[id[2]],par[id[3]],par[id[4]],cut,res);
+    }
+    mod_pad2_bright = fm_clampf(pad2_bright + 0.45f * route_mod(8) + 0.22f*pad_motion_amount*pad_motion_wave[1][1], 0.0f, 1.0f);
     mod_pad2_body = fm_clampf(pad2_body + 0.45f * route_mod(9), 0.0f, 1.0f);
     mod_pad_body = fm_clampf(pad_body + 0.45f * route_mod(10), 0.0f, 1.0f);
     mod_pad_char = fm_clampf(pad_char + 0.45f * route_mod(11), 0.0f, 1.0f);
     mod_rev_size = fm_clampf((float)par[P_SIZE] * 0.01f + 0.45f * route_mod(12), 0.0f, 1.0f);
-    mod_rev_damp = fm_clampf((float)par[P_ECHO] * 0.01f + 0.45f * route_mod(13), 0.0f, 1.0f);
-    cloud_reverb_port_set(mod_rev_size, mod_rev_damp, pl_mod_depth, 0.01f * par[P_REVSPACE]);
+    mod_rev_damp = 0.45f * route_mod(13);
+    monumatic_reverb_set(mod_rev_size, fm_clampf((float)par[P_GP5TONE] * 0.01f - mod_rev_damp, 0.0f, 1.0f), pl_mod_depth);
     rings_port_set_modulation(
         mod[6].v, par[P_M7DEST], par[P_M7DEPTH],
         mod[7].v, par[P_M8DEST], par[P_M8DEPTH],
@@ -2679,4 +2736,6 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
 #include <assert.h>
 #include <stdio.h>
 #include "../../tests/hallucigenia/host.h"
+#include "../../tests/dusk/pad_roles_host.h"
+#include "../../tests/dusk/pad_movement_host.h"
 #endif

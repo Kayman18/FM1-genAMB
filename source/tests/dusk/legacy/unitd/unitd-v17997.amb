@@ -1,0 +1,69 @@
+# UNIT-D both synth layers and independent options, format-20 migration.
+expect format 21
+setpar 91 85
+setpar 83 3
+setpar 96 3
+setpar 152 4
+setpar 164 8
+setpar 148 100
+setpar 160 100
+setpar 151 3
+setpar 163 3
+expect par83 3
+expect par96 3
+expect par152 4
+expect par164 8
+# The merged Delay/Ambient page removes one Rings button press.
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+shot rings-unitd-main.png
+expect view 16
+tap SEQ
+expect view 30
+shot rings-options-row1.png
+spin SELECT 1
+expect unitd_options_row_r 2
+shot rings-options-row2.png
+# Switch to FM options independently.
+tap SEL
+tap SEL
+tap SEL
+expect view 23
+shot fm-unitd-main.png
+tap SEL
+expect view 31
+shot fm-options-row1.png
+spin SELECT 1
+expect unitd_options_row_f 2
+shot fm-options-row2.png
+# Original progresses chords while Unit-D is active.
+tap PLAY
+wait 11000
+expect rseq_active 3
+expect fmseq_active 3
+expect unitd_note_r >2
+expect unitd_note_f >2
+expect unitd_chord_fail 0
+shot fm-unitd-playing.png
+tap PLAY
+# SAVE + reboot retains parameter values and Unit-D mode. 
+tap SAVE
+wait 400
+reboot
+expect format 21
+expect par83 3
+expect par96 3
+expect par152 4
+expect par164 8
+expect unitd_chord_fail 0
+# Simulate older-format project: new sequencer defaults to Original.
+storev20
+reboot
+expect format 21
+expect par83 3
+expect par96 3
+expect par141 42
+expect par153 42

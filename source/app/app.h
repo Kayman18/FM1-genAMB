@@ -29,7 +29,7 @@
 enum { OBJ_PROJ, OBJ_PANEL, OBJ_NOBJ };
 #define APP_STORE_MAP {0xFC000u, 0xDC000u}
 #define PROJ_MAGIC 0x314F4E45u           /* "ENO1" */
-#define PROJ_FORMAT 22u                   /* 22: replacement filter model IDs.
+#define PROJ_FORMAT 23u                   /* 22: replacement filter model IDs.
                                           * Formats 20/21 translate filter selections; older migrations retained. */
 #define NPIECES EN_NPIECES
 

@@ -1,0 +1,12 @@
+wait 2200
+wav audio.wav
+wait 10000
+tap ENV
+wait 2000
+spin K2 10
+wait 2000
+tap FX
+wait 2000
+spin K2 -8
+wait 2000
+wavstop
