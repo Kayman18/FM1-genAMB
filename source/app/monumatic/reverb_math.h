@@ -13,10 +13,10 @@
  * in the DSP must be compiler intrinsics instead of byte-loop libc calls. */
 #define memcpy __builtin_memcpy
 #define memset __builtin_memset
-static inline int mm_target_finite(float x){fm_bits_t b;b.f=x;return (b.u&0x7f800000u)!=0x7f800000u;}
+static inline __attribute__((always_inline)) int mm_target_finite(float x){fm_bits_t b;b.f=x;return (b.u&0x7f800000u)!=0x7f800000u;}
 #undef isfinite
 #define isfinite mm_target_finite
-static inline float mm_target_madd(float a,float b,float c){return a*b+c;}
+static inline __attribute__((always_inline)) float mm_target_madd(float a,float b,float c){return a*b+c;}
 #define fmaf mm_target_madd
 #define sinf fm_sinf
 #define tanf fm_tanf

@@ -1,0 +1,2 @@
+PASS: nine-configuration engine render hash unchanged (GAGOLDEN 963138e825b936e9)
+PASS: reverb sleep/wake keeps finite audio across every DRY/WET change

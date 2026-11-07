@@ -1,0 +1,35 @@
+Command: app/build/host/amb_host tests/monumatic/integration.amb app/build/rc-integration
+  ok view == 11
+  ok par11 == 100
+  ok par165 == 100
+  ok par9 == 100
+  ok par10 == 100
+  ok view == 12
+  ok view == 11
+  ok par11 == 100
+  ok par165 == 100
+  ok par9 == 100
+  ok par10 == 100
+  ok par57 == 100
+  ok par58 == 100
+  ok par59 == 100
+  ok par95 == 100
+  ok peak -12.2 dBFS (min -70)
+  ok peak -12.2 dBFS (max -1)
+  ok view == 11
+  ok par165 == 0
+  ok par9 == 0
+  ok peak -180.0 dBFS (max -100)
+host: 35190 ms simulated, 44 blits, render 2.7% of real time (host CPU)
+
+Exit code: 0
+Elapsed seconds: 0.996
+Artifact: Monumatic-Dark-Tail.wav (882732 bytes)
+WAV measurement: Monumatic-Dark-Tail.wav; frames=220672; rate=44100; channels=2; peak=2431; peak_dBFS=-22.5933
+Artifact: Monumatic-Max-Wet.wav (3528748 bytes)
+WAV measurement: Monumatic-Max-Wet.wav; frames=882176; rate=44100; channels=2; peak=675; peak_dBFS=-33.7229
+Artifact: Monumatic-Panic.wav (353324 bytes)
+WAV measurement: Monumatic-Panic.wav; frames=88320; rate=44100; channels=2; peak=0; peak_dBFS=-inf
+Artifact: Monumatic-Reverb.png (173118 bytes)
+Artifact: Monumatic-Sends.png (173118 bytes)
+Artifact: midi_out.txt (1568 bytes)

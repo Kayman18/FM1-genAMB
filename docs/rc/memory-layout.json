@@ -1,0 +1,19 @@
+{
+  "symbols": {
+    "_bss_start": "0x1c08100",
+    "_pool_start": "0x1c20000",
+    "_bss_end": "0x1c1fad4",
+    "_dsp_hot_end": "0x1c00b98",
+    "_dsp_hot_start": "0x1c00b98",
+    "_data_start": "0x1c08000",
+    "_data_end": "0x1c080e0",
+    "_rt_end": "0x1c00b98",
+    "_pool_end": "0x1c67d68",
+    "_rt_start": "0x1c00000"
+  },
+  "dsp_hot_bytes": 0,
+  "ram_bytes": 96980,
+  "ram_budget_bytes": 98304,
+  "pool_bytes": 294248,
+  "pool_budget_bytes": 344064
+}

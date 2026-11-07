@@ -17,6 +17,28 @@
 #define PLAT_POOL __attribute__((section(".pool")))
 #endif
 
+/* The per-sample audio code runs from executable SRAM instead of in place from
+ * the flash. The pads, Rings, the pad filters and the reverb tank are the only
+ * code that runs at 44.1 kHz, and fetching it over XIP competes with the sample
+ * and table reads it makes. .dsp_hot is copied to RAM at boot beside .ram_text
+ * (device/app.ld, the copy in main_fm1.c) and covered by the same PC guard
+ * window. Unlike .ram_text it may call out, so only placement changes - never
+ * arithmetic. A call from SRAM to the flash is out of branch range, so anything
+ * a PLAT_HOT function calls must be PLAT_HOT too, inlined, or reached through a
+ * function pointer. */
+/* DISABLED after the TEST3 hardware crash: a PC-limit violation (DBG bit 12)
+ * with the PC 22 bytes past _dsp_hot_end, i.e. execution ran off the end of
+ * this section. The boot copy, the stored entry pointers and the guard window
+ * were all verified correct in the image, so the cause is not yet identified.
+ * Until it is, the audio path executes in place from the flash as it always
+ * has. Everything else in TEST3 is unaffected: the arithmetic never depended
+ * on where the code lives. Define PLAT_HOT_ENABLE to try the placement again. */
+#if defined(PLAT_HOST) || !defined(PLAT_HOT_ENABLE)
+#define PLAT_HOT
+#else
+#define PLAT_HOT __attribute__((section(".dsp_hot")))
+#endif
+
 /* panel controls, by printed label (Felucca's panel.c map turns these into matrix ids; Felucca
  * calls the second button SCL, the panel prints SEL) */
 enum { B_FX, B_SEL, B_ENV, B_LFO, B_EDIT, B_GLO, B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC,

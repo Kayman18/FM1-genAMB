@@ -1,0 +1,20 @@
+{
+  "input_archive": "FM1-genAMB-TEST3b-Source (1).zip",
+  "input_archive_sha256": "d6775ed4de427e4bbe3c41012b2a1f682e4105972f3d3e3a32bfe1a5a1dbda57",
+  "unchanged_uploaded_files": 1485,
+  "modified_uploaded_files": [
+    "app/fm1.toml",
+    "README.md",
+    "build-test.sh",
+    "BUILD-FM1-LINUX.sh",
+    "build.sh",
+    "web-editor/index.html",
+    "web-editor/README.txt"
+  ],
+  "dsp_source_changes_from_upload": [],
+  "numeric_version": "17.99.32",
+  "display_label": "RC",
+  "firmware_identity": "FM-1_7179932",
+  "toolchain": "jieli-linux-toolchains-20260730.1",
+  "historical_readme": "Original README preserved verbatim below a new archival-status heading in source/docs/history/README-before-RC.md"
+}

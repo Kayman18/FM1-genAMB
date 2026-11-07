@@ -8,7 +8,7 @@
 #   PYTHON           a Python with Pillow (and libraqm, for the fonts)
 set -e
 cd "$(dirname "$0")"
-[ "$#" -gt 0 ] || set -- --release 17.99.31 --display-version 'DUSK MONU2'
+[ "$#" -gt 0 ] || set -- --release 17.99.32 --display-version RC
 export JIELI_TOOLCHAIN="${JIELI_TOOLCHAIN:-$HOME/.jieli/toolchain}"
 export AC79_SDK="${AC79_SDK:-$PWD/build-deps/sdk}"
 export X0X_FONT_DIRS="${X0X_FONT_DIRS:-$PWD/build-deps/fonts}"

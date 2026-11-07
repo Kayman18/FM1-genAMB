@@ -27,13 +27,13 @@
 
 typedef union { float f; uint32_t u; int32_t i; } fm_bits_t;
 
-static inline float fm_fabsf(float x) { fm_bits_t b; b.f = x; b.u &= 0x7FFFFFFFu; return b.f; }
-static inline float fm_minf(float a, float b) { return a < b ? a : b; }
-static inline float fm_maxf(float a, float b) { return a > b ? a : b; }
-static inline float fm_clampf(float x, float lo, float hi) { return x < lo ? lo : x > hi ? hi : x; }
+static inline __attribute__((always_inline)) float fm_fabsf(float x) { fm_bits_t b; b.f = x; b.u &= 0x7FFFFFFFu; return b.f; }
+static inline __attribute__((always_inline)) float fm_minf(float a, float b) { return a < b ? a : b; }
+static inline __attribute__((always_inline)) float fm_maxf(float a, float b) { return a > b ? a : b; }
+static inline __attribute__((always_inline)) float fm_clampf(float x, float lo, float hi) { return x < lo ? lo : x > hi ? hi : x; }
 
 /* floor for |x| < 2^31 */
-static inline float fm_floorf(float x)
+static inline __attribute__((always_inline)) float fm_floorf(float x)
 {
     int32_t i = (int32_t)x;
     float f = (float)i;
@@ -61,7 +61,7 @@ static inline float fm_exp2_nf(int32_t n, float f)
 }
 
 /* 2^x. Split x = n + f, f in [-0.5, 0.5]; fitted polynomial for 2^f. */
-static inline float fm_exp2f(float x)
+static inline __attribute__((always_inline)) float fm_exp2f(float x)
 {
     float fl;
     if (x < -126.0f)
@@ -73,7 +73,7 @@ static inline float fm_exp2f(float x)
 }
 
 /* e^x with Cody-Waite reduction: x = n ln2 + r, so |x| * eps never reaches the result */
-static inline float fm_expf(float x)
+static inline __attribute__((always_inline)) float fm_expf(float x)
 {
     float n;
     if (x < -87.3f)
@@ -143,7 +143,7 @@ static inline float fm_tanhf(float x)
 }
 
 /* sin on [-pi, pi]: odd polynomial, degree 13 */
-static inline float fm_sin_pi(float x)
+static inline __attribute__((always_inline)) float fm_sin_pi(float x)
 {
     float x2 = x * x, p;
     p = 1.345176048e-10f;                      /* degree 13, fitted */
@@ -156,14 +156,14 @@ static inline float fm_sin_pi(float x)
     return p * x;
 }
 
-static inline float fm_wrap_pi(float x)                /* to [-pi, pi), 2pi in three parts */
+static inline __attribute__((always_inline)) float fm_wrap_pi(float x)                /* to [-pi, pi), 2pi in three parts */
 {
     float k = fm_floorf(x * (1.0f / FM_TWO_PI) + 0.5f);
     return ((x - k * 6.28125f) - k * 1.9353071693331003e-3f) - k * 1.0253131561401567e-11f;
 }
 
-static inline float fm_sinf(float x) { return fm_sin_pi(fm_wrap_pi(x)); }
-static inline float fm_cosf(float x)
+static inline __attribute__((always_inline)) float fm_sinf(float x) { return fm_sin_pi(fm_wrap_pi(x)); }
+static inline __attribute__((always_inline)) float fm_cosf(float x)
 {
     float r = fm_wrap_pi(x) + 0.5f * FM_PI;          /* reduce first: adding pi/2 to a big x loses bits */
     if (r >= FM_PI)
@@ -172,7 +172,7 @@ static inline float fm_cosf(float x)
 }
 /* tan on (-pi/2, pi/2), the filter-coefficient range: cos(x) = sin(pi/2 - |x|), which keeps
  * its relative accuracy next to the pole where cos is small */
-static inline float fm_tanf(float x)
+static inline __attribute__((always_inline)) float fm_tanf(float x)
 {
     float a = fm_fabsf(x), c = (1.57079637f - a) - 4.37113883e-8f;
     return fm_sin_pi(x) / fm_sin_pi(c);
@@ -185,7 +185,7 @@ static inline float fm_sin_turns(float ph)
     return fm_sin_pi(x * FM_TWO_PI);
 }
 
-static inline float fm_sqrtf(float x)
+static inline __attribute__((always_inline)) float fm_sqrtf(float x)
 {
     fm_bits_t b;
     float y;
@@ -214,4 +214,4 @@ static inline float fm_rsqrtf(float x)
 }
 
 /* denormal / tiny-value flush for filter states */
-static inline float fm_flush(float x) { return fm_fabsf(x) < 1e-20f ? 0.0f : x; }
+static inline __attribute__((always_inline)) float fm_flush(float x) { return fm_fabsf(x) < 1e-20f ? 0.0f : x; }

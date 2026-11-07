@@ -15,29 +15,30 @@
  * These are analog-inspired algorithms, not measured circuit replicas.
  */
 #include "fm_filter.h"
+#include "plat.h"
 #include <string.h>
 
-static float ff_bound(float x, float lo, float hi) {
+static inline __attribute__((always_inline)) float ff_bound(float x, float lo, float hi) {
     return x < lo ? lo : x > hi ? hi : x;
 }
 /* Rational tanh approximation with unity small-signal gain, continuous first
  * derivative at the +/-3 endpoints. No transcendentals in the audio loop. */
-static float ff_sat(float x) {
+static PLAT_HOT float ff_sat(float x) {
     if (x >= 3.0f) return 1.0f;
     if (x <= -3.0f) return -1.0f;
     float x2=x*x;
     return x*(27.0f+x2)/(27.0f+9.0f*x2);
 }
-static float ff_sat_derivative(float x) {
+static PLAT_HOT float ff_sat_derivative(float x) {
     if (x >= 3.0f || x <= -3.0f) return 0.0f;
     float x2=x*x, d=27.0f+9.0f*x2;
     float a=9.0f-x2;
     return 9.0f*a*a/(d*d);
 }
-static float ff_voltage(float x, float limit) {
+static PLAT_HOT float ff_voltage(float x, float limit) {
     return limit*ff_sat(x/limit);
 }
-static float ff_flush(float x) {
+static PLAT_HOT float ff_flush(float x) {
     return x < 1.0e-20f && x > -1.0e-20f ? 0.0f : x;
 }
 /* Low-frequency limit is retained; rational sin/cos expansions are accurate
@@ -60,7 +61,7 @@ static float ff_cutoff_g_scaled(float normalized, float scale) {
 static float ff_cutoff_g(float normalized) {
     return ff_cutoff_g_scaled(normalized,1.0f);
 }
-static float ff_svf(float x,float *z,float g,float damping,int type) {
+static PLAT_HOT float ff_svf(float x,float *z,float g,float damping,int type) {
     float a=1.0f/(1.0f+g*(g+damping));
     float v1=(z[0]+g*(x-z[1]))*a;
     float v2=z[1]+g*v1;
@@ -72,7 +73,7 @@ static float ff_svf(float x,float *z,float g,float damping,int type) {
     if(type==3)return hp+v2;
     return v2;
 }
-static float ff_ladder_linear(fm_filter_state_t *fs,float x,float g,float resonance) {
+static PLAT_HOT float ff_ladder_linear(fm_filter_state_t *fs,float x,float g,float resonance) {
     float G=g/(1.0f+g), b=1.0f-G;
     float G2=G*G, G3=G2*G, G4=G3*G, k=3.85f*resonance;
     float s=b*(G3*fs->z[0]+G2*fs->z[1]+G*fs->z[2]+fs->z[3]);
@@ -86,7 +87,7 @@ static float ff_ladder_linear(fm_filter_state_t *fs,float x,float g,float resona
 }
 /* Evaluate the saturated cascade without changing integrator history; used
  * for the Newton solve, then commit exactly once. */
-static float ff_poly_eval(fm_filter_state_t *fs,float u,const float *G,int commit,float *derivative) {
+static PLAT_HOT float ff_poly_eval(fm_filter_state_t *fs,float u,const float *G,int commit,float *derivative) {
     static const float limits[4]={1.65f,1.85f,2.05f,2.25f};
     float d=1.0f;
     for(int j=0;j<4;j++) {
@@ -99,7 +100,7 @@ static float ff_poly_eval(fm_filter_state_t *fs,float u,const float *G,int commi
     *derivative=d;
     return u;
 }
-static float ff_ladder_nonlinear(fm_filter_state_t *fs,float x,float g,float resonance) {
+static PLAT_HOT float ff_ladder_nonlinear(fm_filter_state_t *fs,float x,float g,float resonance) {
     static const float spread[4]={0.96f,1.02f,0.99f,1.04f};
     float G[4],product=1.0f,s=0.0f;
     for(int j=0;j<4;j++) {
@@ -116,7 +117,7 @@ static float ff_ladder_nonlinear(fm_filter_state_t *fs,float x,float g,float res
     }
     return ff_poly_eval(fs,u,G,1,&d);
 }
-static float ff_process(fm_filter_state_t *fs,float input) {
+static PLAT_HOT float ff_process(fm_filter_state_t *fs,float input) {
     float r=fs->resonance,g=fs->g,y;
     switch(fs->model) {
     case FM_FILTER_CLEAN:
@@ -159,7 +160,7 @@ void classic_filter_set(fm_filter_state_t *fs,int model,int type,int cutoff,int 
     fs->target_res=ff_bound((float)resonance*0.01f+mod_res*0.65f,0.0f,0.97f);
     fs->target_wet=ff_bound((float)wet*0.01f,0.0f,1.0f);
 }
-float classic_filter_sample(fm_filter_state_t *fs,float input) {
+PLAT_HOT float classic_filter_sample(fm_filter_state_t *fs,float input) {
     /* Fade the filtered contribution through dry before a topology switch;
      * never reset a full-wet state abruptly. 128 samples each side (~2.9ms). */
     int changing=fs->pending_model!=fs->model || fs->pending_type!=fs->type;

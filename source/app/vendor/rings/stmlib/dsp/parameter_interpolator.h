@@ -35,33 +35,33 @@ namespace stmlib {
 
 class ParameterInterpolator {
  public:
-  ParameterInterpolator() { }
-  ParameterInterpolator(float* state, float new_value, size_t size) {
+  __attribute__((always_inline)) ParameterInterpolator() { }
+  __attribute__((always_inline)) ParameterInterpolator(float* state, float new_value, size_t size) {
     Init(state, new_value, size);
   }
 
-  ParameterInterpolator(float* state, float new_value, float step) {
+  __attribute__((always_inline)) ParameterInterpolator(float* state, float new_value, float step) {
     state_ = state;
     value_ = *state;
     increment_ = (new_value - *state) * step;
   }
 
-  ~ParameterInterpolator() {
+  __attribute__((always_inline)) ~ParameterInterpolator() {
     *state_ = value_;
   }
   
-  inline void Init(float* state, float new_value, size_t size) {
+  inline __attribute__((always_inline)) void Init(float* state, float new_value, size_t size) {
     state_ = state;
     value_ = *state;
     increment_ = (new_value - *state) / static_cast<float>(size);
   }
 
-  inline float Next() {
+  inline __attribute__((always_inline)) float Next() {
     value_ += increment_;
     return value_;
   }
 
-  inline float subsample(float t) {
+  inline __attribute__((always_inline)) float subsample(float t) {
     return value_ + increment_ * t;
   }
   

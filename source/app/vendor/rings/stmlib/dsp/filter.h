@@ -62,7 +62,7 @@ enum FrequencyApproximation {
 class DCBlocker {
  public:
   DCBlocker() { }
-  ~DCBlocker() { }
+  __attribute__((always_inline)) ~DCBlocker() { }
   
   void Init(float pole) {
     x_ = 0.0f;
@@ -70,7 +70,7 @@ class DCBlocker {
     pole_ = pole;
   }
   
-  inline void Process(float* in_out, size_t size) {
+  inline __attribute__((always_inline)) void Process(float* in_out, size_t size) {
     float x = x_;
     float y = y_;
     const float pole = pole_;
@@ -92,7 +92,7 @@ class DCBlocker {
 class OnePole {
  public:
   OnePole() { }
-  ~OnePole() { }
+  __attribute__((always_inline)) ~OnePole() { }
   
   void Init() {
     set_f<FREQUENCY_DIRTY>(0.01f);
@@ -136,13 +136,13 @@ class OnePole {
   // Set frequency and resonance from true units. Various approximations
   // are available to avoid the cost of tanf.
   template<FrequencyApproximation approximation>
-  inline void set_f(float f) {
+  inline __attribute__((always_inline)) void set_f(float f) {
     g_ = tan<approximation>(f);
     gi_ = 1.0f / (1.0f + g_);
   }
   
   template<FilterMode mode>
-  inline float Process(float in) {
+  inline __attribute__((always_inline)) float Process(float in) {
     float lp;
     lp = (g_ * in + state_) * gi_;
     state_ = g_ * (in - lp) + lp;
@@ -157,7 +157,7 @@ class OnePole {
   }
   
   template<FilterMode mode>
-  inline void Process(float* in_out, size_t size) {
+  inline __attribute__((always_inline)) void Process(float* in_out, size_t size) {
     while (size--) {
       *in_out = Process<mode>(*in_out);
       ++in_out;
@@ -177,7 +177,7 @@ class OnePole {
 class Svf {
  public:
   Svf() { }
-  ~Svf() { }
+  __attribute__((always_inline)) ~Svf() { }
   
   void Init() {
     set_f_q<FREQUENCY_DIRTY>(0.01f, 100.0f);
@@ -220,14 +220,14 @@ class Svf {
   // Set frequency and resonance from true units. Various approximations
   // are available to avoid the cost of tanf.
   template<FrequencyApproximation approximation>
-  inline void set_f_q(float f, float resonance) {
+  inline __attribute__((always_inline)) void set_f_q(float f, float resonance) {
     g_ = OnePole::tan<approximation>(f);
     r_ = 1.0f / resonance;
     h_ = 1.0f / (1.0f + r_ * g_ + g_ * g_);
   }
   
   template<FilterMode mode>
-  inline float Process(float in) {
+  inline __attribute__((always_inline)) float Process(float in) {
     float hp, bp, lp;
     hp = (in - r_ * state_1_ - g_ * state_1_ - state_2_) * h_;
     bp = g_ * hp + state_1_;
@@ -247,7 +247,7 @@ class Svf {
   }
   
   template<FilterMode mode_1, FilterMode mode_2>
-  inline void Process(float in, float* out_1, float* out_2) {
+  inline __attribute__((always_inline)) void Process(float in, float* out_1, float* out_2) {
     float hp, bp, lp;
     hp = (in - r_ * state_1_ - g_ * state_1_ - state_2_) * h_;
     bp = g_ * hp + state_1_;
@@ -277,7 +277,7 @@ class Svf {
   }
   
   template<FilterMode mode>
-  inline void Process(const float* in, float* out, size_t size) {
+  inline __attribute__((always_inline)) void Process(const float* in, float* out, size_t size) {
     float hp, bp, lp;
     float state_1 = state_1_;
     float state_2 = state_2_;
@@ -341,7 +341,7 @@ class Svf {
   }
   
   template<FilterMode mode>
-  inline void Process(const float* in, float* out, size_t size, size_t stride) {
+  inline __attribute__((always_inline)) void Process(const float* in, float* out, size_t size, size_t stride) {
     float hp, bp, lp;
     float state_1 = state_1_;
     float state_2 = state_2_;
@@ -423,7 +423,7 @@ class Svf {
   }
   
   template<FilterMode mode>
-  inline void Process(
+  inline __attribute__((always_inline)) void Process(
       const float* in, float* out_1, float* out_2, size_t size,
       float gain_1, float gain_2) {
     float hp, bp, lp;
@@ -479,7 +479,7 @@ class Svf {
 class NaiveSvf {
  public:
   NaiveSvf() { }
-  ~NaiveSvf() { }
+  __attribute__((always_inline)) ~NaiveSvf() { }
   
   void Init() {
     set_f_q<FREQUENCY_DIRTY>(0.01f, 100.0f);
@@ -493,7 +493,7 @@ class NaiveSvf {
   // Set frequency and resonance from true units. Various approximations
   // are available to avoid the cost of sinf.
   template<FrequencyApproximation approximation>
-  inline void set_f_q(float f, float resonance) {
+  inline __attribute__((always_inline)) void set_f_q(float f, float resonance) {
     if (approximation == FREQUENCY_EXACT) {
       f = f < 0.497f ? f : 0.497f;
       f_ = 2.0f * sinf(M_PI_F * f);
@@ -505,7 +505,7 @@ class NaiveSvf {
   }
   
   template<FilterMode mode>
-  inline float Process(float in) {
+  inline __attribute__((always_inline)) float Process(float in) {
     float hp, notch, bp_normalized;
     bp_normalized = bp_ * damp_;
     notch = in - bp_normalized;
@@ -524,11 +524,11 @@ class NaiveSvf {
     }
   }
   
-  inline float lp() const { return lp_; }
-  inline float bp() const { return bp_; }
+  inline __attribute__((always_inline)) float lp() const { return lp_; }
+  inline __attribute__((always_inline)) float bp() const { return bp_; }
   
   template<FilterMode mode>
-  inline void Process(const float* in, float* out, size_t size) {
+  inline __attribute__((always_inline)) void Process(const float* in, float* out, size_t size) {
     float hp, notch, bp_normalized;
     float lp = lp_;
     float bp = bp_;
@@ -571,7 +571,7 @@ class NaiveSvf {
   }
 
   template<FilterMode mode>
-  inline void Process(const float* in, float* out, size_t size, size_t decimate) {
+  inline __attribute__((always_inline)) void Process(const float* in, float* out, size_t size, size_t decimate) {
     float hp, notch, bp_normalized;
     float lp = lp_;
     float bp = bp_;
@@ -617,7 +617,7 @@ class NaiveSvf {
 class ModifiedSvf {
  public:
   ModifiedSvf() { }
-  ~ModifiedSvf() { }
+  __attribute__((always_inline)) ~ModifiedSvf() { }
   
   void Init() {
     Reset();
@@ -634,7 +634,7 @@ class ModifiedSvf {
   }
   
   template<FilterMode mode>
-  inline void Process(const float* in, float* out, size_t size) {
+  inline __attribute__((always_inline)) void Process(const float* in, float* out, size_t size) {
     float lp = lp_;
     float bp = bp_;
     float x = x_;
@@ -681,7 +681,7 @@ class ModifiedSvf {
 class CrossoverSvf {
  public:
   CrossoverSvf() { }
-  ~CrossoverSvf() { }
+  __attribute__((always_inline)) ~CrossoverSvf() { }
   
   void Init() {
     Reset();
@@ -699,7 +699,7 @@ class CrossoverSvf {
   }
   
   template<FilterMode mode>
-  inline void Process(const float* in, float* out, size_t size) {
+  inline __attribute__((always_inline)) void Process(const float* in, float* out, size_t size) {
     float lp_1 = lp_[0];
     float bp_1 = bp_[0];
     float lp_2 = lp_[1];

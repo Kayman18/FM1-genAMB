@@ -1,0 +1,47 @@
+{
+  "label": "RC",
+  "numeric_version": "17.99.32",
+  "identity": "FM-1_7179932",
+  "build": {
+    "toolchain": "jieli-linux-toolchains-20260730.1",
+    "compiler": "JieLi clang 4.0.1 / PI32v2",
+    "native_build": "passed",
+    "package_validation": "passed",
+    "device_label_check": "passed",
+    "dsp_hot_bytes": 0
+  },
+  "artifacts": {
+    "genAMB-RC.fwsc": {
+      "bytes": 610108,
+      "sha256": "07a411691da750b4b3b20df61bba6b8fecc008a640ac0e487a458039c9e46ac9"
+    },
+    "genAMB-RC-app.bin": {
+      "bytes": 304860,
+      "sha256": "5aedfbdb36b96692abbb0adb859a69e9f2f193525ac127fba10e3e75ccf3fdd1"
+    },
+    "genAMB-RC-Web-Editor.zip": {
+      "bytes": 14015,
+      "sha256": "39f2d71e719b1c2dd62129a7d2835558ddacd1a40c61aef5c28c8498feece066"
+    }
+  },
+  "validation": {
+    "golden_hash": "963138e825b936e9",
+    "golden_configurations": 9,
+    "reverb_sleep_wake": "passed",
+    "asan_ubsan": "passed",
+    "adapter_frames": 4580351,
+    "host_build": "passed",
+    "host_integration_assertions": 21,
+    "host_save_reboot": "passed",
+    "host_panic_silence": "passed",
+    "hardware_tested": false
+  },
+  "resource_usage": {
+    "app_bytes": 304860,
+    "ram_bytes": 96980,
+    "ram_budget_bytes": 98304,
+    "pool_bytes": 294248,
+    "pool_budget_bytes": 344064
+  },
+  "scope": "Corrected uploaded TEST3b DSP retained. Release metadata, build entry points, documentation and license notice completeness updated."
+}

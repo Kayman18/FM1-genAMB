@@ -4,6 +4,7 @@
  * fm1-base's contract (app.h) and AMB-1's parts: the project (project.c), the UI (ui.c) and the engine (dsp/amb.c,
  * its own -O2 unit). */
 #include "project.c"
+#include "plat.h"
 #include "ui.c"
 #include "splash_genamb.h"
 

@@ -1,4 +1,5 @@
 #include "reverb_math.h"
+#include "plat.h"
 #include "reverb.h"
 #include <math.h>
 #include <string.h>
@@ -23,7 +24,7 @@ static const float maximum_delays[8]={
 };
 /* Match trunc((double)x + .5) without rounding x+.5 in float first.
  * Callers provide finite values in the source's int32 representable range. */
-static int round_half(float x){
+static inline __attribute__((always_inline)) int round_half(float x){
  int n=(int)x;float fraction=x-(float)n;
  if(x>=0)return n+(fraction>=0.5f);
  return n+(n<0 && fraction> -0.5f);
@@ -40,7 +41,7 @@ size_t mm_reverb_samples(float rate){
  if(!isfinite(rate) || rate<8000 || rate>48000)return 0;
  size_t n=0;for(unsigned k=0;k<8;k++)n+=(size_t)line_length(rate,k);return n;
 }
-static void segment(MM_Reverb *s,MM_ReverbLine *p,unsigned k){
+static inline __attribute__((always_inline)) void segment(MM_Reverb *s,MM_ReverbLine *p,unsigned k){
  int32_t seed=p->seed;if(seed<0)seed+=65536;
  uint32_t next=(uint32_t)seed*15625u+1u;
  p->seed=(int32_t)(next&65535u);if(next&32768u)p->seed-=65536;
@@ -71,7 +72,7 @@ int mm_reverb_initialize(MM_Reverb *s,float rate,float *arena,size_t capacity){
  }
  return 1;
 }
-int mm_reverb_process(MM_Reverb *s,float *arena,float left,float right,float out[2]){
+PLAT_HOT int mm_reverb_process(MM_Reverb *s,float *arena,float left,float right,float out[2]){
  if(!s || !arena || !out || s->initialized<=0)return 0;
  if(s->cutoff!=s->previous_cutoff){
   s->previous_cutoff=s->cutoff;

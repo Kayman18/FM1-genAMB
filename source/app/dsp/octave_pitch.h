@@ -8,7 +8,7 @@
  * octave -4 plus downward Oct Drift must not wrap a negative note into uint8_t.
  * Use the same pitch for the oscillator, emitted MIDI, and note display.
  */
-static inline int en_pad_pitch(int note, int drift, int octave)
+static inline __attribute__((always_inline)) int en_pad_pitch(int note, int drift, int octave)
 {
     int n = 48 + note % 12 + drift + 12 * octave;
     while (n < 0) n += 12;

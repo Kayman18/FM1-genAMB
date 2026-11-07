@@ -1,0 +1,4 @@
+# Local firmware, simulator and browser build products.
+source/app/build/
+__pycache__/
+*.py[cod]

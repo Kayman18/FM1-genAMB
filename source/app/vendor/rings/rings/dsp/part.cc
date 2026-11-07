@@ -28,6 +28,8 @@
 
 #include "rings/dsp/part.h"
 
+namespace rings { extern void (* volatile const rings_resonator_process_ptr)(class Resonator*, const float*, float*, float*, size_t); }
+
 #include "stmlib/dsp/units.h"
 
 #include "rings/resources.h"
@@ -181,7 +183,7 @@ void Part::RenderModalVoice(
   r.set_brightness(patch.brightness * patch.brightness);
   r.set_position(patch.position);
   r.set_damping(patch.damping);
-  r.Process(resonator_input_, out_buffer_, aux_buffer_, size);
+  rings_resonator_process_ptr(&r, resonator_input_, out_buffer_, aux_buffer_, size);
 }
 
 void Part::RenderStringVoice(

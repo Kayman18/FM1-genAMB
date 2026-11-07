@@ -1,4 +1,4 @@
-genAMB 1.0 RC2 WET2 WEB1 - USB-C Web MIDI Editor
+genAMB RC - USB-C Web MIDI Editor
 
 1. Connect the FM-1 to the computer over USB-C.
 2. Windows: double-click start-editor.bat

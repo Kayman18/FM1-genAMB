@@ -32,6 +32,10 @@ SECTIONS
     .ram_text : { _rt_start = .; KEEP(*(.ram_text*)) *(.volatile_ram_code) *(*.rf.text.cache.L2.rf_trim)
                   . = ALIGN(4); _rt_end = .; } > RAMTEXT AT > XIP
     _rt_load = LOADADDR(.ram_text);
+    /* The per-sample audio code (PLAT_HOT) executes from SRAM. It sits straight
+     * after .ram_text so the second PC guard window covers both as one range. */
+    .dsp_hot : { _dsp_hot_start = .; KEEP(*(.dsp_hot*)) . = ALIGN(4); _dsp_hot_end = .; } > RAMTEXT AT > XIP
+    _dsp_hot_load = LOADADDR(.dsp_hot);
     .data : { . = ALIGN(4); _data_start = .; *(.data*) *(.sdata*) *(.*_data) . = ALIGN(4); _data_end = .; } > RAM AT > XIP
     _data_load = LOADADDR(.data);
     .bss (NOLOAD) : { _bss_start = .; *(.bss*) *(.sbss*) *(COMMON) *(.*_bss) *(.bd_base) . = ALIGN(4); _bss_end = .; } > RAM

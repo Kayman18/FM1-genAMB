@@ -1,4 +1,5 @@
 #!/bin/sh
+# Compatibility entry point: build the current RC release.
 set -eu
 cd "$(dirname "$0")"
-exec sh build.sh --release 17.99.31 --display-version 'DUSK MONU2' "$@"
+exec sh build-rc.sh "$@"

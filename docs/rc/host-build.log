@@ -1,0 +1,6 @@
+Command: sh build-rc.sh --host
+words: 22 own + 51 common -> /workspace/scratch/91d6b989099c/FM1-genAMB/source/app/web/words/c1a0ae0122.json (1653 B)
+host     /workspace/scratch/91d6b989099c/FM1-genAMB/source/app/build/host/amb_host
+
+Exit code: 0
+Elapsed seconds: 3.83

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 Charles Vestal */
 /* The instrument (amb.h). One compilation unit, -O2. */
+#include "plat.h"
 #include "amb.h"
 #include "fastmath.h"
 #include "rings_port.h"
@@ -509,7 +510,7 @@ static float tunefac = 1.0f;
 static uint32_t rng = 0x9E3779B9u;
 static uint32_t pad2_rng = 0x6D2B79F5u;          /* independent Pad 2 random stream */
 
-static uint32_t rnd(void)                       /* Marsaglia's xorshift (Xorshift RNGs, 2003): shifts 13, 17, 5 */
+static inline __attribute__((always_inline)) uint32_t rnd(void)                       /* Marsaglia's xorshift (Xorshift RNGs, 2003): shifts 13, 17, 5 */
 {
     uint32_t x = rng;
     x = x ^ (x << 13);
@@ -517,29 +518,32 @@ static uint32_t rnd(void)                       /* Marsaglia's xorshift (Xorshif
     rng = x ^ (x << 5);
     return rng;
 }
-static float frand(void) { return (float)(rnd() >> 8) * (1.0f / 16777216.0f); }
+static inline __attribute__((always_inline)) float frand(void) { return (float)(rnd() >> 8) * (1.0f / 16777216.0f); }
 static int irand(int n) { return n > 0 ? (int)((rnd() >> 8) % (uint32_t)n) : 0; }
-static uint32_t pad2_rnd(void)
+static inline __attribute__((always_inline)) uint32_t pad2_rnd(void)
 {
     uint32_t x = pad2_rng;
     x ^= x << 13; x ^= x >> 17; x ^= x << 5;
     pad2_rng = x ? x : 1u;
     return pad2_rng;
 }
-static float pad2_frand(void) { return (float)(pad2_rnd() >> 8) * (1.0f / 16777216.0f); }
+static inline __attribute__((always_inline)) float pad2_frand(void) { return (float)(pad2_rnd() >> 8) * (1.0f / 16777216.0f); }
 
-static void midi(uint32_t st, uint32_t d1, uint32_t d2)
+/* Reached from the SRAM audio section; en_midi_out and the platform below it
+   stay in the flash, so go through a pointer. A note event, not a sample. */
+static void (* volatile const en_midi_out_ptr)(uint32_t,uint32_t,uint32_t) = en_midi_out;
+static inline __attribute__((always_inline)) void midi(uint32_t st, uint32_t d1, uint32_t d2)
 {
     if (par[P_MIDI])
-        en_midi_out(st, d1, d2);
+        en_midi_out_ptr(st, d1, d2);
 }
 
-static float mtof(float n) { return 440.0f * tunefac * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
+static PLAT_HOT float mtof(float n) { return 440.0f * tunefac * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
 
 /* a sine table: 1024 points a turn, plus one */
 #define SN 1024
 static float sint[SN + 1];
-static inline float sine(float ph)              /* ph in turns, any value >= 0 */
+static inline __attribute__((always_inline)) float sine(float ph)              /* ph in turns, any value >= 0 */
 {
     float x = (ph - (float)(int)ph) * (float)SN;
     int i = (int)x;
@@ -563,7 +567,7 @@ static struct {
     uint32_t left;
 } pad2_mod[NMOD_PAD];
 
-static int mod_depth_param(int i)
+static PLAT_HOT int mod_depth_param(int i)
 {
     static const uint8_t P[6] = {P_M1DEPTH,P_M2DEPTH,P_M3DEPTH,P_M4DEPTH,P_M5DEPTH,P_M6DEPTH};
     return i < 6 ? P[i] : i == 6 ? P_M7DEPTH : i == 7 ? P_M8DEPTH : i==8 ? P_M9DEPTH : i==9 ? P_M10DEPTH : P_M11DEPTH;
@@ -573,11 +577,11 @@ static int mod_speed_param(int i)
     static const uint8_t P[6] = {P_M1SPEED,P_M2SPEED,P_M3SPEED,P_M4SPEED,P_M5SPEED,P_M6SPEED};
     return i < 6 ? P[i] : i == 6 ? P_M7SPEED : i == 7 ? P_M8SPEED : i==8 ? P_M9SPEED : i==9 ? P_M10SPEED : P_M11SPEED;
 }
-static float mod_value(int i)
+static PLAT_HOT float mod_value(int i)
 {
     return mod[i].v * (float)par[mod_depth_param(i)] * 0.01f;
 }
-static float pad2_mod_value(int i)
+static PLAT_HOT float pad2_mod_value(int i)
 {
     return pad2_mod[i].v * (float)par[mod_depth_param(i)] * 0.01f;
 }
@@ -722,7 +726,7 @@ static float pad2_drift_left, pad2_drift_total;
 static float pad2_arc, pad2_arc_tgt, pad2_arcm;
 static uint32_t pad2_arc_left;
 
-static inline int16_t pad_ch_q(float x)
+static inline __attribute__((always_inline)) int16_t pad_ch_q(float x)
 {
     int32_t q = (int32_t)(fm_clampf(x, -1.0f, 1.0f) * 32767.0f);
     if (q > 32767) q = 32767;
@@ -736,7 +740,7 @@ static const float START_T[EN_NPAD] = {0.0f, 0.9f, 0.82f, 0.95f};    /* the firs
 static const float VOWEL[4][2] = {{320.0f, 800.0f}, {480.0f, 900.0f}, {730.0f, 1090.0f}, {530.0f, 1840.0f}};
 static float arcm;                              /* the slow arc, -1 sparse .. +1 full, times Motion */
 
-static float breath(float t)                    /* rise, hang, fall, a short rest */
+static PLAT_HOT float breath(float t)                    /* rise, hang, fall, a short rest */
 {
     if (t < 0.4f)
         return 0.5f - 0.5f * fm_cosf(FM_PI * t * 2.5f);
@@ -749,12 +753,12 @@ static float breath(float t)                    /* rise, hang, fall, a short res
 
 /* Let the falling 0.55..0.90 portion advance at half rate. This doubles only
  * the audible fall, leaving the attack, hang and rest timing unchanged. */
-static inline float breath_advance(float t, float rate)
+static inline __attribute__((always_inline)) float breath_advance(float t, float rate)
 {
     return t + rate * ((t >= 0.55f && t < 0.9f) ? 0.5f : 1.0f);
 }
 
-static void svf_coefs(float *c, float f, float k)
+static PLAT_HOT void svf_coefs(float *c, float f, float k)
 {
     float g = fm_tanf(FM_PI * fm_clampf(f, 40.0f, 16000.0f) * (1.0f / EN_SR));
     c[0] = 1.0f / (1.0f + g * (g + k));
@@ -763,7 +767,7 @@ static void svf_coefs(float *c, float f, float k)
     c[3] = k;
 }
 
-static int seq_octave(int range, int chance, float roll, float direction)
+static inline __attribute__((always_inline)) int seq_octave(int range, int chance, float roll, float direction)
 {
     if (!range || chance <= 0 || roll >= (float)chance * 0.01f) return 0;
     return range == 1 || direction >= 0.5f ? 12 : -12;
@@ -774,7 +778,7 @@ static int seq_note(int note, int range, int chance, float roll, float direction
     return note + seq_octave(range, chance, roll, direction);
 }
 static void midi(uint32_t st, uint32_t d1, uint32_t d2);
-static void pad_breathe(pad_t *v, int i)        /* a new breath: its length, its strength, its note */
+static inline __attribute__((always_inline)) void pad_breathe(pad_t *v, int i)        /* a new breath: its length, its strength, its note */
 {
     float secs = (8.0f + 0.20f * swell) * BREATH[i] * (0.85f + 0.3f * frand());
     v->rate = 32.0f / (secs * EN_SR);
@@ -826,7 +830,7 @@ static void pad_leave(void)
 /* pi32v2 workaround: retain call boundaries. In v17.20 the large inlined
  * render assigned r7=0 then dereferenced [r7+16] for this envelope. The device
  * reported PC 0x0200cc76 / DBG 0x10. Keep both pad control/render paths separate. */
-static __attribute__((noinline)) void pad_coefs(pad_t *v, int i)          /* every 32 samples: the breath, pitch, the vowel */
+static __attribute__((noinline)) PLAT_HOT void pad_coefs(pad_t *v, int i)          /* every 32 samples: the breath, pitch, the vowel */
 {
     float f, vw, f1, f2;
     int a;
@@ -880,7 +884,7 @@ static __attribute__((noinline)) void pad_coefs(pad_t *v, int i)          /* eve
     }
 }
 
-static inline float blep_saw(float t, float dt)
+static inline __attribute__((always_inline)) float blep_saw(float t, float dt)
 {
     float y = 2.0f * t - 1.0f;
     if (t < dt) {
@@ -901,17 +905,17 @@ static inline float blep_saw(float t, float dt)
 #define PAD2_HAND_STEP (PAD2_CTRL_SAMPLES / (4.0f * EN_SR))
 /* Phrase decisions run at onset, never in the sample loop.  Four allocated
  * voices remain, but answers admit at most two notes at once. */
-static void pad2_end_note(pad_t *v)
+static PLAT_HOT void pad2_end_note(pad_t *v)
 {
     if(en_playing && v->midi_note)midi(0x84,v->emitted_note,0);
     v->midi_note=0;
 }
-static void pad2_gap(pad_t *v,int i)
+static PLAT_HOT void pad2_gap(pad_t *v,int i)
 {
     pad2_end_note(v);v->peak=0.0f;v->t=0.0f;
     pad2_rest[i]=(3.0f+0.04f*pad2_swell+6.0f*pad2_frand())*EN_SR;
 }
-static void pad2_breathe(pad_t *v, int i)
+static PLAT_HOT void pad2_breathe(pad_t *v, int i)
 {
     int active=0,nt=pad2_chord_nt;
     float secs=(2.5f+0.055f*pad2_swell)*BREATH[i]*(0.85f+0.3f*pad2_frand());
@@ -970,7 +974,7 @@ static void pad2_leave(void)
 /* Low-cost Pad 2 control update. The original v17.3 duplicate recalculated two
  * TPT/SVF coefficient sets per voice every 32 samples. Lite has no per-voice
  * resonant filter, so this only updates the half-speed envelope state and pitch. */
-static __attribute__((noinline)) void pad2_coefs_lite(pad_t *v, int i)
+static __attribute__((noinline)) PLAT_HOT void pad2_coefs_lite(pad_t *v, int i)
 {
     float f;
     if(pad2_rest[i]>0.0f){
@@ -2163,7 +2167,7 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
 static float padl[BLK], padr[BLK];
 static float plp[4];
 
-static void pad_bus(uint32_t n)
+static PLAT_HOT void pad_bus(uint32_t n)
 {
     const float fc = fm_clampf(700.0f * fm_exp2f(bright * 0.03f + 0.6f * arcm), 300.0f, 9000.0f);
     const float c = 1.0f - fm_expf(-FM_TWO_PI * fc * (1.0f / EN_SR));
@@ -2199,13 +2203,12 @@ static void pad_bus(uint32_t n)
         mixl[j] += l * 0.8f;
         mixr[j] += r * 0.8f;
         rsend[j] += (l + r) * 0.48f * pad_rev;
-        esend[j] += (l + r) * 0.2f;
     }
     for (j = 0; j < 4; j++)
         plp[j] = fm_flush(plp[j]);
 }
 
-static __attribute__((noinline)) void render_pad(uint32_t n)
+static __attribute__((noinline)) PLAT_HOT void render_pad(uint32_t n)
 {
     int i;
     float lvl = 0.0f;
@@ -2306,7 +2309,7 @@ static __attribute__((noinline)) void render_pad(uint32_t n)
 }
 
 
-static void pad2_bus(uint32_t n)
+static PLAT_HOT void pad2_bus(uint32_t n)
 {
     /* One pole per side is enough here because Pad 2 Lite's oscillator palette is
      * already soft. Coefficient is a bilinear-style approximation to a one-pole
@@ -2333,18 +2336,17 @@ static void pad2_bus(uint32_t n)
         mixl[j] += l * 0.8f;
         mixr[j] += r * 0.8f;
         rsend[j] += (l + r) * 0.48f * pad2_rev;
-        esend[j] += (l + r) * 0.2f;
     }
     pad2_plp[0] = fm_flush(pad2_plp[0]);
     pad2_plp[2] = fm_flush(pad2_plp[2]);
 }
 
-static inline float pad2_tri(float ph)
+static inline __attribute__((always_inline)) float pad2_tri(float ph)
 {
     return ph < 0.5f ? 4.0f * ph - 1.0f : 3.0f - 4.0f * ph;
 }
 
-static __attribute__((noinline)) void render_pad2(uint32_t n)
+static __attribute__((noinline)) PLAT_HOT void render_pad2(uint32_t n)
 {
     int i;
     float lvl = 0.0f;
@@ -2452,7 +2454,6 @@ static void render_bells(uint32_t n)
             mixl[j] += x * v->gl;
             mixr[j] += x * v->gr;
             rsend[j] += x * 0.7f;
-            esend[j] += x * 0.85f;
             cph += v->cinc;
             mph += v->minc;
             if (cph >= 1.0f)
@@ -2501,7 +2502,6 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr)
         mixl[j] += x * pl;
         mixr[j] += x * pr;
         rsend[j] += x * 0.2f;
-        esend[j] += x * 0.08f;
         amp *= v->adec;
         att += (1.0f - att) * 0.3f;
     }
@@ -2574,16 +2574,35 @@ static void dc_render_rings(void *unused)
     fm_port_render_add(dc_left, dc_right, dc_send, dc_ring_job.fm_send, n);
 }
 
+/* render_chunk runs in place from the flash; the renderers it calls run from
+   SRAM, which is too far for a direct call. A volatile pointer forces a load
+   rather than letting the compiler fold it back into one. Once per chunk. */
+static void (* volatile const monumatic_reverb_process_ptr)(float *,float *,uint32_t) = monumatic_reverb_process;
+static void (* volatile const monumatic_reverb_panic_ptr)(void) = monumatic_reverb_panic;
+/* Build with -DGENAMB_REVERB_SLEEP=0 to keep the tank running while DRY/WET is
+   at zero: the output is identical either way, but the tank then still holds a
+   live tail the moment DRY/WET comes up, at the cost of about 18% of the audio
+   budget whenever the reverb is down. See TEST3-CPU-NOTES.md. */
+#ifndef GENAMB_REVERB_SLEEP
+#define GENAMB_REVERB_SLEEP 1
+#endif
+static int reverb_asleep;
+static void (* volatile const render_pad_ptr)(uint32_t) = render_pad;
+static void (* volatile const render_pad2_ptr)(uint32_t) = render_pad2;
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
     for (j = 0; j < n; j++)
-        mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
+        mixl[j] = mixr[j] = rsend[j] = 0.0f;
+    /* esend carries no input: monumatic_reverb_process() takes the mono send in
+       rsend and writes wet left into rsend and wet right into esend, so every
+       element of esend is assigned before it is read. The layer sends into it
+       were left over from an earlier stereo-send design and were dead. */
     dc_ring_job.n = n; dc_ring_job.send = ring_rev;
     dc_ring_job.fm_send = (float)par[P_FMREV] * 0.01f;
     int submitted = dc_submit(dc_render_rings, 0);
-    render_pad(n);
-    render_pad2(n);
+    render_pad_ptr(n);
+    render_pad2_ptr(n);
     int ready = 0;
     if (submitted) ready = dc_wait();
     else if (dc_status() != 3) {
@@ -2596,26 +2615,53 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixl[j] += dc_left[j]; mixr[j] += dc_right[j]; rsend[j] += dc_send[j];
     } /* after a worker timeout Rings and FM stay muted until reboot */
     en_fm_level = fm_port_level;
-    /* Monumatic processes the shared mono send at full 44.1 kHz.
-     * rsend becomes wet L and esend becomes wet R. */
-    monumatic_reverb_process(rsend, esend, n);
+    /* Preserve WET2's true wet/dry curve. Monumatic wet is unity gain;
+     * the GP5-specific 1.45 boost is intentionally removed. */
+    const float rv = fm_clampf(rev_send, 0.0f, 1.0f);
+    const float wet_curve = rv * (1.35f - 0.35f * rv);
+    const float wet_gain = wet_curve;
+    const float dry_gain = 1.0f - wet_curve;
+    /* DRY/WET at zero multiplies the whole wet return by zero, so the tank
+     * cannot reach the output: running it is 8 interpolated delay lines per
+     * sample thrown away. Skip it, and the peak loop with it - the meter
+     * reduces to en_reverb_level * 0.92 once peak is multiplied by zero, and
+     * the crossfade reduces to the dry mix. The output and the meter are
+     * identical either way. Coming back, the tank is cleared so the tail
+     * builds from silence instead of resuming a frozen one. */
+#if GENAMB_REVERB_SLEEP
+    if (wet_gain > 0.0f) {
+        if (reverb_asleep) {
+            monumatic_reverb_panic_ptr();
+            reverb_asleep = 0;
+        }
+        /* Monumatic processes the shared mono send at full 44.1 kHz.
+         * rsend becomes wet L and esend becomes wet R. */
+        monumatic_reverb_process_ptr(rsend, esend, n);
+    } else {
+        reverb_asleep = 1;
+    }
+#else
+    monumatic_reverb_process_ptr(rsend, esend, n);
+#endif
     {
-        /* Preserve WET2's true wet/dry curve. Monumatic wet is unity gain;
-         * the GP5-specific 1.45 boost is intentionally removed. */
-        const float rv = fm_clampf(rev_send, 0.0f, 1.0f);
-        const float wet_curve = rv * (1.35f - 0.35f * rv);
-        const float wet_gain = wet_curve;
-        const float dry_gain = 1.0f - wet_curve;
         float peak = 0.0f;
-        for (j = 0; j < n; j++) {
-            float a = rsend[j] < 0.0f ? -rsend[j] : rsend[j];
-            float b = esend[j] < 0.0f ? -esend[j] : esend[j];
-            if (a > peak) peak = a;
-            if (b > peak) peak = b;
+        if (wet_gain > 0.0f) {
+            for (j = 0; j < n; j++) {
+                float a = rsend[j] < 0.0f ? -rsend[j] : rsend[j];
+                float b = esend[j] < 0.0f ? -esend[j] : esend[j];
+                if (a > peak) peak = a;
+                if (b > peak) peak = b;
+            }
         }
         /* Meter the audible wet return rather than the raw tank output. */
         en_reverb_level = fm_maxf(peak * wet_gain, en_reverb_level * 0.92f);
-        for (j = 0; j < n; j++) {
+        if (wet_gain <= 0.0f) for (j = 0; j < n; j++) {
+            float l = clean_peak_guard(mixl[j] * 0.34f * gain);
+            float r = clean_peak_guard(mixr[j] * 0.34f * gain);
+            out[2 * j] = (int32_t)(l * 8388607.0f);
+            out[2 * j + 1] = (int32_t)(r * 8388607.0f);
+        }
+        else for (j = 0; j < n; j++) {
             /* Wet/dry crossfade. At zero the original mix is untouched; as
              * REVERB rises the direct path is progressively reduced, reaching
              * fully wet at 100. The clean peak guard below still protects

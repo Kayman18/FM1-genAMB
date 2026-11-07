@@ -27,6 +27,7 @@
 // Resonator.
 
 #include "rings/dsp/resonator.h"
+#include "plat.h"
 
 #include "stmlib/dsp/dsp.h"
 #include "stmlib/dsp/cosine_oscillator.h"
@@ -53,7 +54,7 @@ void Resonator::Init() {
   set_resolution(kMaxModes);
 }
 
-int32_t Resonator::ComputeFilters() {
+PLAT_HOT int32_t Resonator::ComputeFilters() {
   float stiffness = Interpolate(lut_stiffness, structure_, 256.0f);
   float harmonic = frequency_;
   float stretch_factor = 1.0f; 
@@ -98,7 +99,11 @@ int32_t Resonator::ComputeFilters() {
   return num_modes;
 }
 
-void Resonator::Process(const float* in, float* out, float* aux, size_t size) {
+/* genAMB: the modal resonator is the single hottest loop in the firmware, so it
+   runs from executable SRAM (plat.h, PLAT_HOT). Placement only - the arithmetic
+   is Emilie Gillet's unchanged. Part::Process runs from the flash and cannot
+   branch this far, so it calls through rings_resonator_process_ptr below. */
+PLAT_HOT void Resonator::Process(const float* in, float* out, float* aux, size_t size) {
   int32_t num_modes = ComputeFilters();
   
   ParameterInterpolator position(&previous_position_, position_, size);
@@ -119,4 +124,14 @@ void Resonator::Process(const float* in, float* out, float* aux, size_t size) {
   }
 }
 
+}  // namespace rings
+
+namespace rings {
+/* Trampoline out of the flash into the SRAM section. One indirect call per
+   voice per block; the volatile pointer stops the compiler folding it back. */
+PLAT_HOT void rings_resonator_process_hot(Resonator* r, const float* in, float* out, float* aux, size_t size) {
+  r->Process(in, out, aux, size);
+}
+void (* volatile const rings_resonator_process_ptr)(Resonator*, const float*, float*, float*, size_t) =
+    rings_resonator_process_hot;
 }  // namespace rings

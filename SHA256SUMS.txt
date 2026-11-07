@@ -1,2 +1,5 @@
-b05eec6d5b1c235b91778a1605ed5801c2f5f35ae156bfdcd0dfacecdc392d9c  genAMB-DUSK-Monumatic-Reverb-TEST2-Web-Editor.zip
+07a411691da750b4b3b20df61bba6b8fecc008a640ac0e487a458039c9e46ac9  genAMB-RC.fwsc
+5aedfbdb36b96692abbb0adb859a69e9f2f193525ac127fba10e3e75ccf3fdd1  genAMB-RC-app.bin
+39f2d71e719b1c2dd62129a7d2835558ddacd1a40c61aef5c28c8498feece066  genAMB-RC-Web-Editor.zip
 49e8cecada93a6f370695ddeefa944d65516c91df60f16f8fe7483b9df6bb900  genAMB-DUSK-Monumatic-Reverb-TEST2.fwsc
+b05eec6d5b1c235b91778a1605ed5801c2f5f35ae156bfdcd0dfacecdc392d9c  genAMB-DUSK-Monumatic-Reverb-TEST2-Web-Editor.zip

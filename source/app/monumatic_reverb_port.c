@@ -1,6 +1,7 @@
 /* TEST1 replacement: same recovered kernel as hardware-accepted Monumatic TEST22.
  * Mono genAMB send feeds both inputs; wet-only output retains genAMB's mix law. */
 #include "monumatic/reverb.h"
+#include "plat.h"
 #include "monumatic_reverb_port.h"
 #include "fastmath.h"
 #if defined(PLAT_HOST) || defined(EN_HOST)
@@ -27,7 +28,7 @@ void monumatic_reverb_set(float decay,float tone,float motion){
  state.cutoff=100.0f+tone*tone*(9900.0f/(.85f*.85f));
  state.pitch_mod=fm_clampf(motion,0,1);
 }
-void monumatic_reverb_process(float *mono,float *right,uint32_t n){
+PLAT_HOT void monumatic_reverb_process(float *mono,float *right,uint32_t n){
  for(uint32_t i=0;i<n;i++){
   if(clear<SAMPLES){
    uint32_t end=clear+16;if(end>SAMPLES)end=SAMPLES;

@@ -40,7 +40,7 @@ namespace stmlib {
   int32_t x ## _integral = static_cast<int32_t>(x); \
   float x ## _fractional = x - static_cast<float>(x ## _integral);
 
-inline float Interpolate(const float* table, float index, float size) {
+inline __attribute__((always_inline)) float Interpolate(const float* table, float index, float size) {
   index *= size;
   MAKE_INTEGRAL_FRACTIONAL(index)
   float a = table[index_integral];
@@ -49,7 +49,7 @@ inline float Interpolate(const float* table, float index, float size) {
 }
 
 
-inline float InterpolateHermite(const float* table, float index, float size) {
+inline __attribute__((always_inline)) float InterpolateHermite(const float* table, float index, float size) {
   index *= size;
   MAKE_INTEGRAL_FRACTIONAL(index)
   const float xm1 = table[index_integral - 1];
@@ -65,7 +65,7 @@ inline float InterpolateHermite(const float* table, float index, float size) {
   return (((a * f) - b_neg) * f + c) * f + x0;
 }
 
-inline float InterpolateWrap(const float* table, float index, float size) {
+inline __attribute__((always_inline)) float InterpolateWrap(const float* table, float index, float size) {
   index -= static_cast<float>(static_cast<int32_t>(index));
   index *= size;
   MAKE_INTEGRAL_FRACTIONAL(index)
@@ -94,15 +94,15 @@ inline float SmoothStep(float value) {
   out += error; \
 }
 
-inline float Crossfade(float a, float b, float fade) {
+inline __attribute__((always_inline)) float Crossfade(float a, float b, float fade) {
   return a + (b - a) * fade;
 }
 
-inline float SoftLimit(float x) {
+inline __attribute__((always_inline)) float SoftLimit(float x) {
   return x * (27.0f + x * x) / (27.0f + 9.0f * x * x);
 }
 
-inline float SoftClip(float x) {
+inline __attribute__((always_inline)) float SoftClip(float x) {
   if (x < -3.0f) {
     return -1.0f;
   } else if (x > 3.0f) {

@@ -43,11 +43,11 @@ enum CosineOscillatorMode {
 
 class CosineOscillator {
  public:
-  CosineOscillator() { }
-  ~CosineOscillator() { }
+  __attribute__((always_inline)) CosineOscillator() { }
+  __attribute__((always_inline)) ~CosineOscillator() { }
 
   template<CosineOscillatorMode mode>
-  inline void Init(float frequency) {
+  inline __attribute__((always_inline)) void Init(float frequency) {
     if (mode == COSINE_OSCILLATOR_APPROXIMATE) {
       InitApproximate(frequency);
     } else {
@@ -57,7 +57,7 @@ class CosineOscillator {
     Start();
   }
   
-  inline void InitApproximate(float frequency) {
+  inline __attribute__((always_inline)) void InitApproximate(float frequency) {
     float sign = 16.0f;
     frequency -= 0.25f;
     if (frequency < 0.0f) {
@@ -73,16 +73,16 @@ class CosineOscillator {
     initial_amplitude_ = iir_coefficient_ * 0.25f;
   }
   
-  inline void Start() {
+  inline __attribute__((always_inline)) void Start() {
     y1_ = initial_amplitude_;
     y0_ = 0.5f;
   }
   
-  inline float value() const {
+  inline __attribute__((always_inline)) float value() const {
     return y1_ + 0.5f;
   }
 
-  inline float Next() {
+  inline __attribute__((always_inline)) float Next() {
     float temp = y0_;
     y0_ = iir_coefficient_ * y0_ - y1_;
     y1_ = temp;

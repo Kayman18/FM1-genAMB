@@ -1,13 +1,18 @@
-# genAMB FM-1 — DUSK Monumatic Reverb TEST2
+# genAMB FM-1 — RC
 
-Custom firmware for the FM-1. Two generative pads, independent pad filters and four-channel mixer with the stereo reverb. 
+Custom firmware for the FM-1. Two generative pads, independent pad filters and a four-channel mixer with stereo reverb.
+
+**RC** is the release candidate built from the corrected **TEST3b** source. Its updater version is **17.99.32**, identity **FM-1_7179932**.
+
 | Loading screen | HOME · Garden |
 | --- | --- |
 | ![genAMB startup artwork on the FM-1](docs/screens/splash.png) | ![DUSK Garden HOME screen showing Tempo, Evolve, Motion and Drift](docs/screens/home.png) |
 
-Both images show the native 240 × 240 display. The loading screen uses the firmware’s indexed RGB565 artwork. HOME is a framebuffer capture from this build’s UI running with the default project.
+Both images show the native 240 × 240 display. The loading screen uses the firmware’s indexed RGB565 artwork; HOME is a framebuffer capture with the default project. This artwork and DUSK page layout are retained in RC.
 
-**[Download TEST2 firmware](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/main/genAMB-DUSK-Monumatic-Reverb-TEST2.fwsc)** · [Browse source](source/) · [Download source ZIP](https://github.com/Kayman18/FM1-genAMB/archive/refs/heads/main.zip) · [USB web editor](genAMB-DUSK-Monumatic-Reverb-TEST2-Web-Editor.zip) · [Checksums](SHA256SUMS.txt)
+**[Download genAMB RC firmware](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/RC/genAMB-RC.fwsc)** · [Browse source](source/) · [Download RC source ZIP](https://github.com/Kayman18/FM1-genAMB/archive/refs/heads/RC.zip) · [USB web editor](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/RC/genAMB-RC-Web-Editor.zip) · [Checksums](SHA256SUMS.txt)
+
+Use **`genAMB-RC.fwsc`** for installation. The separate [raw app binary](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/RC/genAMB-RC-app.bin) is a developer component and does not contain the complete update package.
 
 It may start in PIANO mode (this mode will let you play Rings or the FM synth Via the Keybed. Depending on Which one you have selected), only the Pad synths will run. Turn the Algorithm knob to place it in scale mode and have the sequencers trigger notes.
 
@@ -20,11 +25,21 @@ It may start in PIANO mode (this mode will let you play Rings or the FM synth Vi
 *  Four-channel mixer. K1 controls Pad 1, K2 Pad 2, K3 Rings and K4 FM.
 *  Monumatic stereo reverb at 44.1 kHz. On the FX page, K1 controls Decay, K2 Tone, K3 Motion and K4 Dry/Wet. Turn Dry/Wet to 100 for wet-only output.
 
+## RC changes
+
+RC keeps the corrected TEST3b audio engine and its CPU headroom changes. Unused reverb-send calculations are removed, and the reverb tank sleeps at Dry/Wet 0. Raising Dry/Wet from zero clears the tank and lets a new tail bloom in. The experimental audio-code placement in executable SRAM remains **disabled**, as in the supplied TEST3b source.
+
+The device and web editor now carry the **RC** label. The underlying synthesis, effects, controls and project format 23 are retained. [Release notes](source/RELEASE-RC.md)
+
 ## Build and validation
 
-From `source/`, run `sh build-test.sh` for the device or `sh build-test.sh --host` for the desktop simulator. The device build uses the JieLi PI32v2 Linux toolchain (20260730.1). Set `JIELI_TOOLCHAIN` to its extracted directory. The matching SDK boot assets and DUSK fonts are in `source/build-deps/`.
+From `source/`, run `sh build-rc.sh` for the device or `sh build-rc.sh --host` for the desktop simulator. The device build uses the JieLi PI32v2 Linux toolchain **20260730.1** (clang 4.0.1). Set `JIELI_TOOLCHAIN` to its extracted directory. The matching SDK boot assets and DUSK fonts are in `source/build-deps/`. [Complete RC build instructions](source/BUILDING-RC.md)
 
-The target rebuild matched the published firmware byte for byte. The firmware package checks and host reverb tests passed. Worst-case CPU, dropouts and listening with both pad filters active still need a run on the FM-1. [Build notes and test results](source/MONUMATIC-TEST2-NOTES.md)
+The RC device build passed its code and memory audits. Package validation passed all CRC checks and confirmed that the included loader and decrypted app match the newly built files. The disabled audio SRAM section is zero bytes. The nine-configuration audio hash, reverb sleep/wake checks, ASan/UBSan adapter test and 21 full-app simulator assertions also passed. [Validation logs](docs/rc/)
+
+Physical FM-1 timing, worst-case CPU, dropouts and listening have not been tested for this RC build. The compiler emits inherited warnings documented in the build log; the build and required audits complete successfully.
+
+The earlier [TEST2 firmware](genAMB-DUSK-Monumatic-Reverb-TEST2.fwsc) and [TEST2 editor](genAMB-DUSK-Monumatic-Reverb-TEST2-Web-Editor.zip) remain available for rollback. Older release notes are retained as history; use the RC instructions above for the current source.
 
 ## Attribution and licensing
 
@@ -33,7 +48,7 @@ Built on Charles Vestal's [fm1-amb](https://github.com/charlesvestal/fm1-amb) an
 ### Sequencers
 
 - **Original** — original AMB-1 generative sequencing by [Charles Vestal](https://github.com/charlesvestal/fm1-amb), retained and extended for genAMB (MPL-2.0 provenance).
-- **Hallucigenia / Darwinism** — ported from [Eater of Sheep's Extratone / XTRTN source](https://github.com/EaterOfSheep/Extratone/blob/main/src/Darwinism.cpp), GPL-3.0-or-later. RC2 replaces the independent Evolve implementation with this upstream-derived core.
+- **Hallucigenia / Darwinism** — ported from [Eater of Sheep's Extratone / XTRTN source](https://github.com/EaterOfSheep/Extratone/blob/main/src/Darwinism.cpp), GPL-3.0-or-later. The upstream-derived core introduced in the earlier RC2 checkpoint is retained in this RC.
 - **Proteus** — adapted from [Seaside Modular Proteus](https://github.com/abluenautilus/SeasideModularVCV/blob/master/src/Proteus.cpp), by Seaside Modular contributors (MIT).
 - **UNIT-D / UnitDistanceSeq** — adapted from [Animatek's UNIT-D](https://github.com/animatek/UZZ-VCV-RACK/blob/main/src/UnitDistanceSeq.cpp); the adaptation is GPL-3.0-or-later.
 
