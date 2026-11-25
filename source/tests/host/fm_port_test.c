@@ -100,8 +100,8 @@ static void factory_and_memory(void)
         }
     CHECK("all nine existing genAMB patches keep their exact data and indices",
           existing_hash == 0x4dd43141u);
-    CHECK("six voices and sixteen LFOs occupy the accounted 2256 bytes",
-          FM_PORT_VOICES == 6 && sizeof(fm_voice_t) == 312u && sizeof state == 2256u);
+    CHECK("six voices and sixteen LFOs occupy the accounted 2280 bytes",
+          FM_PORT_VOICES == 6 && sizeof(fm_voice_t) == 316u && sizeof state == 2280u);
     CHECK("voice + LFO pool allocation stays below ten-voice 4000-byte budget",
           sizeof state <= 4000u);
     printf("Memory: note=%zu voice=%zu pool=%zu shared buffers=%zu bytes\n",
@@ -427,6 +427,37 @@ static void init_core_voice(uint8_t *p)
     memcpy(p + FP_NAME, "TEST      ", 10);
 }
 
+/* Compare cached increments against an uncached calculation for an
+ * operator with fixed pitch, independent offsets, and a same-note retrigger. */
+static void pitch_cache_transitions(void)
+{
+    fm6_note_t n = {0};
+    uint8_t p[156];
+    int32_t offsets[6] = {0}, out[FM6_N];
+    int32_t pitch = fm6_logfreq_cents(6000.0f);
+    int ok = 1;
+    init_core_voice(p);
+    p[FP_MODE] = 1;
+    fm6_note_init(&n, p, 60, 100, 1);
+    for (int block = 0; block < 8; ++block) {
+        if (block == 2) offsets[1] = 1 << 21;
+        if (block == 3) offsets[1] = -(1 << 20);
+        if (block == 4) offsets[1] = 0;
+        if (block == 5) pitch += 1 << 23;
+        if (block == 6) {
+            p[FP_OP + FP_FC] = 4;
+            fm6_note_init(&n, p, 60, 100, 0);
+        }
+        fm6_note_compute(&n, p, out, 1 << 23, 0, pitch, 4, 0, offsets, 0);
+        for (unsigned k = 0; k < 6; ++k) {
+            int32_t f = n.base[k];
+            if (k != 0) f += pitch + offsets[k];
+            if (n.op[k].freq != fm6_freq(f)) ok = 0;
+        }
+    }
+    CHECK("FM pitch cache tracks per-operator detune, tune and same-note patch reinitialization", ok);
+}
+
 static void all_algorithms(void)
 {
     uint8_t p[156];
@@ -490,6 +521,62 @@ static void all_algorithms(void)
     CHECK("128 arbitrary sanitized packed voices render without invalid arithmetic", 1);
 }
 
+static void algorithm_controls(void)
+{
+    int factory_five=1, nonzero=1, distinct=1;
+    uint64_t signatures[32];
+    for (int p=0; p<FM_PORT_PATCHES; ++p)
+        factory_five &= FM_FACTORY[p][FP_ALG]==4;
+    for (int a=1; a<=32; ++a) {
+        fm_port_init();
+        fm_port_set_patch(7); /* Bamboo uses feedback. */
+        fm_port_set_level(80);
+        fm_port_set_algorithm(a);
+        fm_port_trigger(60,108,0);
+        nonzero &= render_samples(4096,4096)>0 && state.voice[0].algorithm==a-1;
+        fm_port_set_algorithm(33-a);
+        render_samples(4096,4096);
+        fm_port_trigger(67,108,0);
+        nonzero &= state.voice[0].algorithm==a-1 && state.voice[1].algorithm==32-a;
+        /* A deliberately asymmetric six-operator fixture exercises routings
+         * that can coincide with a particular factory voice or zero feedback. */
+        fm6_op_t ops[6] = {0};
+        int32_t fb[2]={0}, samples[FM6_N];
+        uint64_t hash=1469598103934665603ull;
+        for (int i=0;i<6;++i) {
+            ops[i].phase=393751*i;
+            ops[i].freq=85371+46213*i;
+            ops[i].level_in=(14<<24)-1371543*i;
+        }
+        for(int b=0;b<24;++b) {
+            nonzero &= fm6_core_render(samples,ops,a-1,fb,1);
+            for(int j=0;j<FM6_N;++j)hash=(hash^(uint32_t)samples[j])*1099511628211ull;
+        }
+        for(int i=0;i<a-1;++i)distinct &= signatures[i]!=hash;
+        signatures[a-1]=hash;
+    }
+    int tails_match=1;
+    for (int a=1; a<=32; ++a) {
+        for (int change=0; change<=1; ++change) {
+            fm_port_init();
+            fm_port_set_patch(7);
+            fm_port_set_algorithm(a);
+            fm_port_set_level(80);
+            fm_port_trigger(60,108,0);
+            render_samples(2048,2048);
+            if (change) fm_port_set_algorithm(33-a);
+            fm_port_note_off(60);
+            render_samples(8192,8192);
+            if (change) tails_match &= !memcmp(reference,left,8192*sizeof(float));
+            else memcpy(reference,left,8192*sizeof(float));
+        }
+    }
+    CHECK("changing algorithm preserves each of the 32 release tails sample for sample", tails_match);
+    CHECK("all 16 factory voices select algorithm 5", factory_five);
+    CHECK("all 32 selectable algorithms sound, holding their routing across new notes", nonzero);
+    CHECK("all 32 routings have distinct audio on an asymmetric feedback fixture", distinct);
+}
+
 int main(void)
 {
     factory_and_memory();
@@ -498,7 +585,9 @@ int main(void)
     allocation();
     six_voice_audio();
     block_continuity();
+    pitch_cache_transitions();
     all_algorithms();
+    algorithm_controls();
     printf("FM port: %u passed, %u failed\n", passed, failed);
     return failed ? 1 : 0;
 }

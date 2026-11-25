@@ -1,0 +1,75 @@
+expect animal_bank 7
+data assets/nature/animal-wave.bin 0x97000
+reboot
+expect animal_bank 10
+master 4096
+wait 2500
+tap GLO
+expect view 8
+tap GLO
+expect view 34
+expect format 25
+expect par167 0
+expect par168 70
+expect par169 60
+expect par170 55
+expect par171 35
+spin K1 31
+spin K2 11
+spin K3 -13
+spin K4 12
+spin SELECT 29
+wait 1500
+expect par167 31
+expect par168 81
+expect par169 47
+expect par170 67
+expect par171 64
+shot nature.png
+listen
+where
+wait 80
+said Select animal density 64
+tap PLAY
+expect playing 0
+wait 5500
+expect dirty 1
+expect store_writes 0
+tap SAVE
+wait 100
+expect store_writes 1
+reboot
+wait 100
+expect par167 31
+expect par168 81
+expect par169 47
+expect par170 67
+expect par171 64
+tap GLO
+tap GLO
+expect view 34
+tap GLO
+expect view 13
+tap GLO
+expect view 17
+tap GLO
+expect view 8
+tap GLO
+spin PRESET 1
+expect piece 1
+expect par167 0
+expect par171 35
+spin SELECT -100
+expect par171 0
+spin SELECT 110
+expect par171 100
+spin PRESET -1
+expect piece 0
+expect par171 64
+tap PLAY
+expect playing 0
+spin K1 -100
+expect par167 0
+wait 60000
+expect store_writes 2
+expect dirty 0

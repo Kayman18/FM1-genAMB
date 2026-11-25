@@ -28,17 +28,40 @@ void monumatic_reverb_set(float decay,float tone,float motion){
  state.cutoff=100.0f+tone*tone*(9900.0f/(.85f*.85f));
  state.pitch_mod=fm_clampf(motion,0,1);
 }
+/* genAMB: the tank's per-sample guards, cutoff test and eight-line feedback
+ * re-sum are block-rate work; mm_reverb_begin() does them once and hands back
+ * the running sum, which mm_reverb_sample() then carries. The arena clear and
+ * the live tank never share a sample, so the clear is peeled out of the hot
+ * loop instead of being tested on every one. highpass/previous/wet_gain are
+ * held in locals for the block - nothing observes them mid-block. */
 PLAT_HOT void monumatic_reverb_process(float *mono,float *right,uint32_t n){
- for(uint32_t i=0;i<n;i++){
-  if(clear<SAMPLES){
-   uint32_t end=clear+16;if(end>SAMPLES)end=SAMPLES;
-   while(clear<end)arena[clear++]=0;
-   mono[i]=right[i]=0;continue;
-  }
-  float input=mono[i],wet[2];
-  highpass=input-previous+.99715453f*highpass;previous=input;
-  mm_reverb_process(&state,arena,highpass,highpass,wet);
-  wet_gain+=(1.0f-wet_gain)*.004f;
-  mono[i]=wet[0]*wet_gain;right[i]=wet[1]*wet_gain;
+ uint32_t i=0;
+ for(;i<n && clear<SAMPLES;i++){
+  uint32_t end=clear+16;if(end>SAMPLES)end=SAMPLES;
+  while(clear<end)arena[clear++]=0;
+  mono[i]=right[i]=0;
  }
+ if(i>=n)return;
+ float carry;
+ if(!mm_reverb_begin(&state,arena,&carry)){
+  /* Unusable state: keep the original one-shot path and its observable
+   * behaviour rather than inventing output for it. */
+  for(;i<n;i++){
+   float input=mono[i],wet[2];
+   highpass=input-previous+.99715453f*highpass;previous=input;
+   mm_reverb_process(&state,arena,highpass,highpass,wet);
+   wet_gain+=(1.0f-wet_gain)*.004f;
+   mono[i]=wet[0]*wet_gain;right[i]=wet[1]*wet_gain;
+  }
+  return;
+ }
+ float hp=highpass,pv=previous,wg=wet_gain;
+ for(;i<n;i++){
+  float input=mono[i],wet[2];
+  hp=input-pv+.99715453f*hp;pv=input;
+  mm_reverb_sample(&state,arena,hp,hp,wet,&carry);
+  wg+=(1.0f-wg)*.004f;
+  mono[i]=wet[0]*wg;right[i]=wet[1]*wg;
+ }
+ highpass=hp;previous=pv;wet_gain=wg;
 }

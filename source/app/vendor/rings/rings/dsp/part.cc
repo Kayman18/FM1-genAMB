@@ -164,18 +164,20 @@ void Part::RenderModalVoice(
     const Patch& patch,
     float frequency,
     float filter_cutoff,
+    bool has_external_input,
     size_t size) {
   // Internal exciter is a pulse, pre-filter.
-  if (performance_state.internal_exciter &&
-      voice == active_voice_ &&
-      performance_state.strum) {
+  const bool strike = performance_state.internal_exciter &&
+      voice == active_voice_ && performance_state.strum;
+  if (strike) {
     resonator_input_[0] += 0.25f * SemitonesToRatio(
         filter_cutoff * filter_cutoff * 24.0f) / filter_cutoff;
   }
   
-  // Process through filter.
-  excitation_filter_[voice].Process<FILTER_MODE_LOW_PASS>(
-      resonator_input_, resonator_input_, size);
+  if (has_external_input || strike || !excitation_filter_[voice].silent()) {
+    excitation_filter_[voice].Process<FILTER_MODE_LOW_PASS>(
+        resonator_input_, resonator_input_, size);
+  }
 
   Resonator& r = resonator_[voice];
   r.set_frequency(frequency);
@@ -192,6 +194,7 @@ void Part::RenderStringVoice(
     const Patch& patch,
     float frequency,
     float filter_cutoff,
+    bool has_external_input,
     size_t size) {
   // Compute number of strings and frequency.
   int32_t num_strings = 1;
@@ -212,16 +215,17 @@ void Part::RenderStringVoice(
     frequencies[0] = frequency;
   }
 
-  if (voice == active_voice_) {
+  if (has_external_input) {
     const float gain = 1.0f / Sqrt(static_cast<float>(num_strings) * 2.0f);
     for (size_t i = 0; i < size; ++i) {
       resonator_input_[i] *= gain;
     }
   }
 
-  // Process external input.
-  excitation_filter_[voice].Process<FILTER_MODE_LOW_PASS>(
-      resonator_input_, resonator_input_, size);
+  if (has_external_input || !excitation_filter_[voice].silent()) {
+    excitation_filter_[voice].Process<FILTER_MODE_LOW_PASS>(
+        resonator_input_, resonator_input_, size);
+  }
 
   // Add noise burst.
   if (performance_state.internal_exciter) {
@@ -301,8 +305,13 @@ void Part::Process(
 
   // Copy inputs to outputs when bypass mode is enabled.
   if (bypass_) {
-    copy(&in[0], &in[size], &out[0]);
-    copy(&in[0], &in[size], &aux[0]);
+    if (in) {
+      copy(in, in + size, out);
+      copy(in, in + size, aux);
+    } else {
+      fill(out, out + size, 0.0f);
+      fill(aux, aux + size, 0.0f);
+    }
     return;
   }
   
@@ -342,7 +351,8 @@ void Part::Process(
 
     // Process input with excitation filter. Inactive voices receive silence.
     excitation_filter_[voice].set_f_q<FREQUENCY_DIRTY>(filter_cutoff, filter_q);
-    if (voice == active_voice_) {
+    const bool has_external_input = in && voice == active_voice_;
+    if (has_external_input) {
       copy(&in[0], &in[size], &resonator_input_[0]);
     } else {
       fill(&resonator_input_[0], &resonator_input_[size], 0.0f);
@@ -350,10 +360,10 @@ void Part::Process(
     
     if (model_ == RESONATOR_MODEL_MODAL) {
       RenderModalVoice(
-          voice, performance_state, patch, frequency, filter_cutoff, size);
+          voice, performance_state, patch, frequency, filter_cutoff, has_external_input, size);
     } else {
       RenderStringVoice(
-          voice, performance_state, patch, frequency, filter_cutoff, size);
+          voice, performance_state, patch, frequency, filter_cutoff, has_external_input, size);
     }
     
     if (polyphony_ == 1) {

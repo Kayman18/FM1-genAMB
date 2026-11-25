@@ -29,3 +29,6 @@ tagline = "A generative ambient machine for the FM-1"
 repo = "https://github.com/Kayman18/FM1-genAMB"
 licence = "GPL-3.0-only (combined firmware); MPL-2.0, MIT and Apache-2.0 components"
 credits = "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments)."
+
+# The updater installs this sector-aligned bank in the wave partition.
+animal_wave = "../assets/nature/animal-wave.bin"

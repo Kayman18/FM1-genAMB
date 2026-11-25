@@ -7,8 +7,8 @@
 static uint32_t seed=912345;
 static float noise(void) {seed=seed*1664525u+1013904223u;return (float)(int32_t)seed*(0.20f/2147483648.0f);}
 static void state_ok(void) {
-    for(int i=0;i<4;i++)assert(isfinite(fs.z[i]) && fabsf(fs.z[i])<1000.0f);
-    for(int i=0;i<2;i++)assert(isfinite(fs.sv[i]) && isfinite(fs.high[i]));
+    for(int i=0;i<4;i++)assert(isfinite(legacy_fm_state.history.z[i]) && fabsf(legacy_fm_state.history.z[i])<1000.0f);
+    for(int i=0;i<2;i++)assert(isfinite(legacy_fm_state.history.sv[i]) && isfinite(legacy_fm_state.history.high[i]));
 }
 static double energy(int model,int type,float hz) {
     fm_filter_init();fm_filter_set(model,type,50,0,100,0,0);

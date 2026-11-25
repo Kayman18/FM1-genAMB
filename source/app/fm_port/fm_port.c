@@ -1,255 +1,297 @@
-/* SPDX-License-Identifier: GPL-3.0-only
- * genAMB: a separate six-voice FM layer using ZEN-1's compact msfa port.
- * No heap, no large patch bank, no duplicated effects or platform code.
- */
+/* SPDX-License-Identifier: MPL-2.0
+ * genAMB Nature VA layer. The existing keyboard, sequencer and worker
+ * entry points retain their names for compatibility with the other layers. */
 #include "fm_port.h"
+#include "amb.h"
+#include "fastmath.h"
 #include "fm_filter.c"
 #include <string.h>
-#include "../vendor/zen_fm/fm6_core.c"
-#include "../vendor/zen_fm/fm6_patch.c"
-#include "fm_factory.h"
 
-#if defined(PLAT_HOST) || defined(EN_HOST)
-#define FM_POOL
-#else
-#define FM_POOL __attribute__((section(".pool")))
-#endif
-
+enum { IDLE, ATTACK, DECAY, SUSTAIN, RELEASE };
+typedef struct { float value, release_start; unsigned stage; } envelope_t;
+typedef struct { float attack, decay, sustain, release; } adsr_t;
 typedef struct {
-    fm6_note_t core;
+    envelope_t amp, filter;
+    fm_filter_history_t poles;
+    float phase, subphase, increment, inverse_increment, velocity, last, residual;
     uint32_t gate, age;
-    int32_t logfreq;
-    uint8_t note, patch, timed, reserved;
-} fm_voice_t;
+    int note;
+} va_voice_t;
 
-/* Keep the six voices and the small per-preset LFOs in the existing pool.
- * A voice keeps its preset index, so changing the selector leaves its tail
- * intact. All voices on one preset share its LFO, as ZEN-1's parts do.
- */
-static struct {
-    fm_voice_t voice[FM_PORT_VOICES];
-    fm6_lfo_t lfo[FM_PORT_PATCHES];
-} state FM_POOL;
-/* The former 1832-byte allowance plus the 576 bytes reclaimed by removing
- * Rings' internal FMVoice array gives 2408 bytes. Six voices and sixteen
- * LFOs use 2256 bytes, leaving 152 of that allowance unused. The whole-device
- * pool reserve and the separately sized UI canvas remain build-time checks.
- */
-typedef char fm_pool_budget[(sizeof state <= 4000u) ? 1 : -1];
-
-static int32_t temporary[FM6_N];
-static float cached[FM6_N];
+static va_voice_t voices[FM_PORT_VOICES];
+static adsr_t amp_env, filter_env;
+static float blend, sub, pwm, lfo_phase, lfo_step, lfo_cut;
+static float cutoff, resonance, env_amount, key_track, gain, target_gain;
+static int limit, tuning;
 static uint32_t serial;
-static int32_t tune;
-static uint8_t position, current_patch, polyphony;
-static float target_gain, gain;
 volatile float fm_port_level;
 volatile uint8_t fm_port_active_voices;
-static const int32_t DT0[6] = {0, 0, 0, 0, 0, 0};
 
-static int bounded(int n, int lo, int hi)
+static float time_step(float knob)
 {
-    return n < lo ? lo : n > hi ? hi : n;
+    return 1.0f/(44.1f*(2.0f+0.8f*knob*knob));
 }
-
-void fm_port_init(void)
+static adsr_t settings(float a,float d,float s,float r)
 {
-    unsigned k;
-    memset(&state, 0, sizeof state);
-    memset(cached, 0, sizeof cached);
-    memset(temporary, 0, sizeof temporary);
-    memset(fm6_bus, 0, sizeof fm6_bus);
-    for (k = 0; k < FM_PORT_PATCHES; ++k)
-        fm6_lfo_reset(&state.lfo[k], FM_FACTORY[k]);
-    serial = 0;
-    tune = 0;
-    position = FM6_N;
-    current_patch = 0;
-    polyphony = FM_PORT_DEFAULT_VOICES;
-    target_gain = gain = fm_port_level = 0.0f;
-    fm_port_active_voices = 0;
-
+    adsr_t e={time_step(a),time_step(d),s*0.01f,time_step(r)};
+    return e;
 }
-
+void va_controls(const int16_t *p,const volatile float *targets)
+{
+    blend=p[P_VABLEND]*0.01f;
+    sub=p[P_VASUB]*0.01f;
+    pwm=targets[5]*0.0044f;
+    lfo_step=1.0f/(EN_SR*fm_maxf(1,p[P_VALFORATE]));
+    lfo_cut=p[P_VALFOCUT]*0.004f;
+    cutoff=targets[1]*0.01f;
+    resonance=targets[2]*0.01f;
+    env_amount=targets[3]*0.006f;
+    key_track=targets[4]*(0.01f/(12*9.78f));
+    amp_env=settings(p[P_VAAMPA],p[P_VAAMPD],p[P_VAAMPS],p[P_VAAMPR]);
+    filter_env=settings(targets[6],targets[7],targets[8],targets[9]);
+}
+/* A stage normally lasts many slices. Run one loop per stage and only
+ * write values for the amp envelope. The VCF needs its endpoint. */
+static unsigned envelope_block(envelope_t *e,const adsr_t *settings,float *out,unsigned n)
+{
+    unsigned i=0;
+    while(i<n){
+        float x=e->value;
+        float delta, target;
+        unsigned next;
+        switch(e->stage){
+        case ATTACK:
+            delta=settings->attack;target=1;next=DECAY;break;
+        case DECAY:
+            delta=-settings->decay*(1-settings->sustain);
+            target=settings->sustain;next=SUSTAIN;break;
+        case RELEASE:
+            delta=-settings->release*e->release_start;target=0;next=IDLE;break;
+        default:
+            e->value=e->stage==SUSTAIN?settings->sustain:0;
+            if(e->stage==IDLE)return i;
+            if(out)while(i<n)out[i++]=e->value;
+            return n;
+        }
+        unsigned left=n-i;
+        /* A conservative endpoint check keeps stage transitions sample-exact. */
+        float end=x+delta*(float)left;
+        if((next==DECAY && end<target-0.00001f) ||
+           (next!=DECAY && end>target+0.00001f)){
+            if(out)while(i<n){x+=delta;out[i++]=x;}
+            else for(;i<n;i++)x+=delta;
+        }else{
+            do{
+                x+=delta;
+                if(next==DECAY?x>=target:x<=target){x=target;e->stage=next;}
+                if(out)out[i]=x;
+                i++;
+            }while(i<n && e->stage!=next);
+        }
+        e->value=x;
+    }
+    return n;
+}
+static void release_voice(va_voice_t *v)
+{
+    if(v->amp.stage==IDLE || v->amp.stage==RELEASE)return;
+    v->gate=0;
+    v->amp.release_start=v->amp.value;
+    v->filter.release_start=v->filter.value;
+    v->amp.stage=v->filter.stage=RELEASE;
+}
 void fm_port_panic(void)
 {
-    /* An explicit panic intentionally discards queued sound, including cache. */
-    memset(state.voice, 0, sizeof state.voice);
-    memset(cached, 0, sizeof cached);
-    position = FM6_N;
-    fm_port_level = 0.0f;
-    fm_port_active_voices = 0;
+    memset(voices,0,sizeof voices);
+    fm_port_active_voices=0;
+    fm_port_level=0;
 }
-
-static void release(fm_voice_t *v)
+void fm_port_init(void)
 {
-    if (v->core.live && v->core.down)
-        fm6_note_key(&v->core, FM_FACTORY[v->patch], 0);
-    v->timed = 0;
+    fm_port_panic();
+    serial=0;
+    limit=FM_PORT_DEFAULT_VOICES;
+    tuning=0;
+    lfo_phase=gain=target_gain=0;
 }
-
+void fm_port_note_off(int note)
+{
+    for(int i=0;i<FM_PORT_VOICES;i++)if(voices[i].note==note)release_voice(&voices[i]);
+}
 void fm_port_all_notes_off(void)
 {
-    unsigned k;
-    for (k = 0; k < FM_PORT_VOICES; ++k)
-        release(&state.voice[k]);
+    for(int i=0;i<FM_PORT_VOICES;i++)release_voice(&voices[i]);
 }
-
-void fm_port_note_off(int midi_note)
+void fm_port_set_polyphony(int count)
 {
-    unsigned k;
-    for (k = 0; k < FM_PORT_VOICES; ++k)
-        if ((int)state.voice[k].note == midi_note)
-            release(&state.voice[k]);
+    limit=count<1?1:count>FM_PORT_VOICES?FM_PORT_VOICES:count;
+    for(int i=limit;i<FM_PORT_VOICES;i++)release_voice(&voices[i]);
 }
-
-void fm_port_set_patch(int index)
+float fm_port_set_level_modulated(int base,float offset)
 {
-    current_patch = (uint8_t)bounded(index, 0, FM_PORT_PATCHES - 1);
+    float level=fm_clampf(base+offset,0,100);
+    target_gain=0.0001f*level*level;
+    return level;
 }
-
-const char *fm_port_patch_name(int index)
+void fm_port_set_level(int level){fm_port_set_level_modulated(level,0);}
+static void set_pitch(va_voice_t *v)
 {
-    return (const char *)(FM_FACTORY[bounded(index, 0, FM_PORT_PATCHES - 1)] + FP_NAME);
+    v->increment=440.0f/EN_SR*fm_exp2f(((v->note-69)+0.01f*tuning)/12.0f);
+    v->inverse_increment=1.0f/v->increment;
 }
-
-void fm_port_set_level(int value)
-{
-    value = bounded(value, 0, 100);
-    target_gain = (float)(value * value) * 0.0001f;
-}
-
-void fm_port_set_polyphony(int voices)
-{
-    unsigned k;
-    polyphony = (uint8_t)bounded(voices, 1, FM_PORT_VOICES);
-    for (k = polyphony; k < FM_PORT_VOICES; ++k)
-        release(&state.voice[k]);
-}
-
 void fm_port_set_tune(int cents)
 {
-    tune = (int32_t)((float)bounded(cents, -1200, 1200) * 13981.0133f);
+    tuning=cents;
+    for(int i=0;i<FM_PORT_VOICES;i++)set_pitch(&voices[i]);
+}
+void fm_port_trigger(int note,int velocity,uint32_t gate)
+{
+    int slot=0;
+    for(int i=0;i<limit;i++){
+        va_voice_t *v=&voices[i], *best=&voices[slot];
+        if(v->amp.stage==IDLE){slot=i;break;}
+        if(v->amp.stage==RELEASE && best->amp.stage!=RELEASE)slot=i;
+        else if((v->amp.stage==RELEASE)==(best->amp.stage==RELEASE) &&
+                serial-v->age>serial-best->age)slot=i;
+    }
+    va_voice_t *v=&voices[slot];
+    float residual=v->last;
+    memset(v,0,sizeof *v);
+    v->residual=residual;
+    v->note=note;
+    v->velocity=fm_clampf(velocity/127.0f,0,1);
+    set_pitch(v);
+    v->gate=gate;
+    v->age=++serial;
+    v->amp.stage=v->filter.stage=ATTACK;
+}
+/* Polynomial band-limited step corrections at the saw and pulse edges. */
+static inline float blep(float phase,float step,float inverse)
+{
+    if(phase<step){float t=phase*inverse-1;return -t*t;}
+    if(phase>1-step){float t=(phase-1)*inverse+1;return t*t;}
+    return 0;
+}
+/* The cutoff envelope and LFO are sampled once per 16 frames. Compute
+ * the four-pole feedback coefficients on that same boundary. */
+typedef struct {
+    float pole, complement, square, cube, feedback, makeup, inverse_divisor;
+} va_ladder_t;
+
+static inline va_ladder_t ladder_coefficients(float g,float resonance_value)
+{
+    va_ladder_t c;
+    c.pole=g/(1.0f+g);
+    c.complement=1.0f-c.pole;
+    c.square=c.pole*c.pole;
+    c.cube=c.square*c.pole;
+    c.feedback=3.85f*resonance_value;
+    c.makeup=1.0f+0.65f*c.feedback;
+    c.inverse_divisor=1.0f/(1.0f+c.feedback*(c.cube*c.pole));
+    return c;
 }
 
-void fm_port_trigger(int midi_note, int velocity, uint32_t gate_samples)
+/* Keep the four integrator histories in registers across the whole slice.
+ * The filter loop has no voice allocation, gate or envelope work. */
+static void ladder_block(float *history,const va_ladder_t *c,float *audio,unsigned n)
 {
-    unsigned k, slot = 0;
-    uint32_t greatest_age = 0;
-    int found = 0, note, fresh;
-    fm_voice_t *v;
-    const uint8_t *p;
-    if (midi_note < 0 || midi_note > 127)
+    float z0=history[0],z1=history[1],z2=history[2],z3=history[3];
+    for(unsigned i=0;i<n;i++){
+        float feedback=c->complement*(c->cube*z0+c->square*z1+c->pole*z2+z3);
+        float u=(ff_voltage(audio[i],2.5f)*c->makeup-c->feedback*feedback)*c->inverse_divisor;
+        float delta=(u-z0)*c->pole;
+        u=z0+delta; z0=u+delta;
+        delta=(u-z1)*c->pole;
+        u=z1+delta; z1=u+delta;
+        delta=(u-z2)*c->pole;
+        u=z2+delta; z2=u+delta;
+        delta=(u-z3)*c->pole;
+        u=z3+delta; z3=u+delta;
+        audio[i]=u;
+    }
+    history[0]=ff_flush(z0);history[1]=ff_flush(z1);history[2]=ff_flush(z2);history[3]=ff_flush(z3);
+}
+
+void fm_port_render_add(float *left,float *right,float *send,float amount,uint32_t n)
+{
+    float meter=fm_port_level;
+    int sounding=0;
+    for(int i=0;i<FM_PORT_VOICES;i++)sounding|=voices[i].amp.stage;
+    if(!sounding){
+        fm_port_active_voices=0;
+        lfo_phase+=n*lfo_step;
+        lfo_phase-=fm_floorf(lfo_phase);
+        gain=target_gain;
+        fm_port_level=meter<1e-7f?0:meter*fm_exp2f(-0.00072153f*n);
         return;
-    if (velocity <= 0) {
-        fm_port_note_off(midi_note);
-        return;
     }
-    /* Re-strike an already-held identical note; otherwise free, released-oldest,
-     * then oldest-held. Subtraction makes age ordering safe across wraparound.
-     */
-    for (k = 0; k < polyphony; ++k)
-        if (state.voice[k].core.live && state.voice[k].core.down &&
-            state.voice[k].note == midi_note && state.voice[k].patch == current_patch) {
-            slot = k;
-            found = 1;
-            break;
+    for(uint32_t pos=0;pos<n;){
+        unsigned count=n-pos<16?n-pos:16;
+        float sum[16]={0};
+        float tri=1-4*fm_fabsf(lfo_phase-0.5f);
+        lfo_phase+=count*lfo_step;
+        if(lfo_phase>=1)lfo_phase-=1;
+        unsigned active=0;
+        for(int j=0;j<FM_PORT_VOICES;j++){
+            va_voice_t *v=&voices[j];
+            if(v->amp.stage==IDLE)continue;
+            float dt=v->increment, inv=v->inverse_increment;
+            float width=fm_clampf(0.5f+pwm*tri,dt,1-dt);
+            float g=ff_cutoff_g(cutoff+env_amount*v->filter.value+
+                                (v->note-60)*key_track+lfo_cut*tri);
+            const va_ladder_t coeff=ladder_coefficients(g,resonance);
+            float audio[16];
+            for(unsigned k=0;k<count;k++){
+                float p=v->phase, edge=blep(p,dt,inv), shifted=p-width;
+                if(shifted<0)shifted+=1;
+                float saw=2*p-1-edge;
+                float pulse=(p<width?1.0f:-1.0f)+edge-blep(shifted,dt,inv)-(2*width-1);
+                audio[k]=saw+blend*(pulse-saw)+sub*(1-4*fm_fabsf(v->subphase-0.5f));
+                v->phase+=dt;
+                if(v->phase>=1)v->phase-=1;
+                v->subphase+=0.5f*dt;
+                if(v->subphase>=1)v->subphase-=1;
+            }
+            ladder_block(v->poles.z,&coeff,audio,count);
+            float amplitude[16];
+            unsigned held=(v->gate && v->gate<count)?v->gate:count;
+            envelope_block(&v->filter,&filter_env,0,held);
+            unsigned live=envelope_block(&v->amp,&amp_env,amplitude,held);
+            if(v->gate){
+                v->gate-=held;
+                if(!v->gate)release_voice(v);
+            }
+            if(held<count){
+                envelope_block(&v->filter,&filter_env,0,count-held);
+                live+=envelope_block(&v->amp,&amp_env,amplitude+held,count-held);
+            }
+            if(v->residual!=0){
+                for(unsigned k=0;k<live;k++){
+                    v->last=0.23f*audio[k]*amplitude[k]*v->velocity+v->residual;
+                    sum[k]+=v->last;
+                    v->residual*=0.975f;
+                }
+            }else{
+                for(unsigned k=0;k<live;k++){
+                    v->last=0.23f*audio[k]*amplitude[k]*v->velocity;
+                    sum[k]+=v->last;
+                }
+            }
+            if(v->amp.stage==IDLE)v->last=0;
+            /* Voice stealing leaves a very short de-click tail. Flush it
+             * before subnormal arithmetic can persist for a held note. */
+            if(fm_fabsf(v->residual)<1.0e-20f)v->residual=0;
+            active+=v->amp.stage!=IDLE;
         }
-    if (!found)
-        for (k = 0; k < polyphony; ++k)
-            if (!state.voice[k].core.live) {
-                slot = k;
-                found = 1;
-                break;
-            }
-    if (!found) {
-        for (k = 0; k < polyphony; ++k)
-            if (!state.voice[k].core.down &&
-                (!found || serial - state.voice[k].age >= greatest_age)) {
-                greatest_age = serial - state.voice[k].age;
-                slot = k;
-                found = 1;
-            }
-    }
-    if (!found)
-        for (k = 0; k < polyphony; ++k)
-            if (serial - state.voice[k].age >= greatest_age) {
-                greatest_age = serial - state.voice[k].age;
-                slot = k;
-            }
-    v = &state.voice[slot];
-    p = FM_FACTORY[current_patch];
-    note = bounded(midi_note + (int)p[FP_TRNSP] - 24, 0, 127);
-    fresh = !v->core.live;
-    fm6_note_init(&v->core, p, note, bounded(velocity, 1, 127), fresh);
-    v->note = (uint8_t)midi_note;
-    v->patch = current_patch;
-    v->gate = gate_samples;
-    v->timed = gate_samples != 0u;
-    v->age = ++serial;
-    v->logfreq = fm6_logfreq_cents((float)note * 100.0f);
-    fm6_lfo_key(&state.lfo[current_patch]);
-}
-
-static void make_block(void)
-{
-    unsigned k, j, active = 0;
-    int32_t lfo_value[FM_PORT_PATCHES], lfo_delay[FM_PORT_PATCHES];
-    for (j = 0; j < FM6_N; ++j)
-        cached[j] = 0.0f;
-    for (k = 0; k < FM_PORT_PATCHES; ++k) {
-        lfo_value[k] = fm6_lfo_sample(&state.lfo[k]);
-        lfo_delay[k] = fm6_lfo_delay(&state.lfo[k]);
-    }
-    for (k = 0; k < FM_PORT_VOICES; ++k) {
-        fm_voice_t *v = &state.voice[k];
-        const uint8_t *p;
-        if (!v->core.live)
-            continue;
-        p = FM_FACTORY[v->patch];
-        if (v->timed && !v->gate)
-            release(v);
-        if (fm6_note_compute(&v->core, p, temporary, lfo_value[v->patch],
-                            lfo_delay[v->patch], v->logfreq + tune,
-                            p[FP_ALG], p[FP_FB], DT0, 0)) {
-            for (j = 0; j < FM6_N; ++j) {
-                int32_t sample = temporary[j] - v->core.dc;
-                v->core.dc += sample >> 9;
-                cached[j] += (float)sample * (0.12f / 16777216.0f);
-            }
+        fm_port_active_voices=(uint8_t)active;
+        for(unsigned k=0;k<count;k++){
+            gain+=(target_gain-gain)*0.004f;
+            float x=sum[k]*gain;
+            left[pos+k]+=x;right[pos+k]+=x;
+            if(send)send[pos+k]+=x*amount;
+            meter=fm_maxf(0.9995f*meter,fm_fabsf(x));
         }
-        if (v->timed)
-            v->gate = v->gate > FM6_N ? v->gate - FM6_N : 0;
-        if (fm6_note_done(&v->core, p, p[FP_ALG]))
-            v->core.live = 0;
-        active += v->core.live != 0;
+        pos+=count;
     }
-    fm_port_active_voices = (uint8_t)active;
-    position = 0;
-}
-
-void fm_port_render_add(float *left, float *right, float *reverb_send,
-                        float send_amount, uint32_t n)
-{
-    uint32_t i;
-    float meter = fm_port_level;
-    send_amount = send_amount < 0.0f ? 0.0f : send_amount > 1.0f ? 1.0f : send_amount;
-    for (i = 0; i < n; ++i) {
-        float sample, magnitude;
-        if (position >= FM6_N)
-            make_block();
-        gain += (target_gain - gain) * 0.004f;
-        if (target_gain == 0.0f && gain < 0.000001f)
-            gain = 0.0f;
-        sample = cached[position++] * gain;
-        left[i] += sample;
-        right[i] += sample;
-        if (reverb_send)
-            reverb_send[i] += sample * send_amount;
-        magnitude = sample < 0.0f ? -sample : sample;
-        meter *= 0.9995f;
-        if (magnitude > meter)
-            meter = magnitude;
-    }
-    fm_port_level = meter;
+    fm_port_level=meter;
 }

@@ -17,7 +17,7 @@
  */
 /* genAMB v17.99 modifications (2026): define phase wrapping and signed arithmetic
  * without C overflow/negative-shift undefined behavior; corrected note size comment.
- * Audio formulas, tables and algorithm routing are otherwise retained.
+ * Nature TEST4 renders the multi-operator feedback paths in algorithms 4 and 6.
  */
 /* FM6 core: msfa (the 6-operator FM synthesis core of Dexed, Source/msfa) ported to C.
  * Kept from msfa: its envelope (env.cc, with ACCURATE_ENVELOPE), pitch envelope (pitchenv.cc), LFO (lfo.cc),
@@ -390,6 +390,55 @@ static __attribute__((noinline)) void fm6_op_fb(int32_t *out, int32_t phase, int
     fb[1] = y;
 }
 
+/* Algorithms 4 and 6 return the last operator of their first stack to
+ * operator 6. The feedback crosses sample boundaries, so this stack must
+ * run sample-by-sample. The remaining operators still render in blocks. */
+typedef struct {
+    uint32_t phase, frequency;
+    int32_t gain, increment;
+} fm6_stack_op_t;
+
+static inline int32_t fm6_stack_sample(fm6_stack_op_t *o, int32_t modulation)
+{
+    o->gain += o->increment;
+    int32_t y = fm6_mul_q15(fm6_sin((int32_t)(o->phase + (uint32_t)modulation)), o->gain);
+    o->phase += o->frequency;
+    return y;
+}
+
+static int fm6_feedback_stack(int32_t *out, fm6_op_t *op, unsigned count,
+                              int32_t *history, unsigned shift)
+{
+    fm6_stack_op_t stack[3];
+    int audible = 0;
+    for (unsigned k = 0; k < count; ++k) {
+        int32_t begin = op[k].gain_out;
+        int32_t end = fm6_exp2(op[k].level_in - (14 << 24));
+        op[k].gain_out = end;
+        audible = begin >= FM6_THRESH || end >= FM6_THRESH;
+        stack[k].gain = audible ? begin : 0;
+        stack[k].increment = audible ? (end - begin + (FM6_N >> 1)) >> FM6_LG_N : 0;
+        stack[k].phase = (uint32_t)op[k].phase;
+        stack[k].frequency = (uint32_t)op[k].freq;
+        op[k].phase = (int32_t)(stack[k].phase + (stack[k].frequency << FM6_LG_N));
+    }
+    if (!audible) {
+        history[0] = history[1] = 0;
+        return 0;
+    }
+    int32_t previous = history[0], last = history[1];
+    for (unsigned j = 0; j < FM6_N; ++j) {
+        int32_t y = fm6_stack_sample(&stack[0], (previous + last) >> (shift + 1));
+        previous = last;
+        last = fm6_stack_sample(&stack[1], y);
+        if (count == 3u) last = fm6_stack_sample(&stack[2], last);
+        out[j] = last;
+    }
+    history[0] = previous;
+    history[1] = last;
+    return 1;
+}
+
 /* msfa FmCore::render: the six operators of algorithm alg into out (Q24). Unlike msfa, out starts empty:
  * the first carrier sounding writes it, the next ones add. Returns 0 when none sounded (out untouched) */
 static int32_t fm6_bus[2][FM6_N];
@@ -397,8 +446,12 @@ static int fm6_core_render(int32_t *out, fm6_op_t *op, uint32_t alg, int32_t *fb
 {
     const uint8_t *a = FM6_ALG[alg & 31u];
     uint8_t has[3] = {0, 0, 0};
-    uint32_t k;
-    for (k = 0; k < 6u; k++) {
+    uint32_t k = 0;
+    if (fb_shift < 16 && (alg == 3u || alg == 5u)) {
+        k = alg == 3u ? 3u : 2u;
+        has[0] = (uint8_t)fm6_feedback_stack(out, op, k, fb, (unsigned)fb_shift);
+    }
+    for (; k < 6u; k++) {
         uint32_t f = a[k], inbus = (f >> 4) & 3u, outbus = f & 3u;
         int add = (f & FM6_OADD) != 0;
         int32_t *o = outbus ? fm6_bus[outbus - 1u] : out;
@@ -425,14 +478,15 @@ static int fm6_core_render(int32_t *out, fm6_op_t *op, uint32_t alg, int32_t *fb
 }
 
 /* ------------------------------------------------------------ the note --- */
-typedef struct {                 /* a sounding note (msfa's note): 296 bytes on the FM-1 / host */
+typedef struct {                 /* a sounding note (msfa's note): 300 bytes on the FM-1 / host */
     fm6_env_t env[6];
     fm6_op_t op[6];
+    int32_t previous_pitch;
     int32_t base[6];             /* the operator's pitch: ratio: log2 offset from the note's (Q24); fixed: log2 Hz */
     int32_t fb[2];
     fm6_penv_t penv;
     uint8_t fixed;               /* bit k: operator k has a fixed frequency */
-    uint8_t live, down, rsv;
+    uint8_t live, down, pitch_cached;
     int32_t dc;                  /* (eng_fm6.c) the output's DC blocker */
 } fm6_note_t;
 
@@ -500,6 +554,7 @@ static void fm6_note_init(fm6_note_t *n, const uint8_t *p, int32_t note, int32_t
         n->fb[0] = n->fb[1] = 0;
         n->dc = 0;
     }
+    n->pitch_cached = 0;
     n->fixed = 0;
     for (k = 0; k < 6u; k++) {
         const uint8_t *op = p + k * FP_OP;
@@ -543,13 +598,26 @@ static int fm6_note_compute(fm6_note_t *n, const uint8_t *p, int32_t *out, int32
     uint32_t amd = (uint32_t)((p[FP_LAMD] % 100u) * 165u >> 6), amod, car = fm6_carriers(alg), k;
     pmod = pmod < 0 ? -pmod : pmod;
     pitch_mod = fm6_penv_get(&n->penv, p) + (senslfo < 0 ? -pmod : pmod);
+    /* Per-operator offsets require independent updates. Returning to zero
+     * offsets must refresh the whole voice, even if the note is still held. */
+    int32_t pitch = logfreq + pitch_mod;
+    int has_detune = dt[0] | dt[1] | dt[2] | dt[3] | dt[4] | dt[5];
+    if (!n->pitch_cached || n->previous_pitch != pitch || has_detune) {
+        for (k = 0; k < 6u; ++k) {
+            int32_t frequency = n->base[k];
+            if (!((n->fixed >> k) & 1u))
+                frequency += pitch + dt[k];
+            n->op[k].freq = fm6_freq(frequency);
+        }
+        n->previous_pitch = pitch;
+        n->pitch_cached = !has_detune;
+    }
     amod = fm6_mul_ushift(amd, (uint32_t)lfo_delay, 8);                 /* Q24 */
     amod = fm6_mul_ushift(amod, (uint32_t)((1 << 24) - lfo_val), 24);
     for (k = 0; k < 6u; k++) {
         const uint8_t *op = p + k * FP_OP;
         int32_t level = fm6_env_get(&n->env[k], op);
         uint32_t ams = FM6_AMSENS[op[FP_AMS] & 3u];
-        n->op[k].freq = fm6_freq((n->fixed >> k) & 1u ? n->base[k] : logfreq + n->base[k] + pitch_mod + dt[k]);
         if (ams) {                                 /* msfa: pt = exp(sensamp / 262144 * 0.07 + 12.2) */
             uint32_t sensamp = fm6_mul_ushift(amod, ams, 24);
             int32_t lg = FM6_AMS_C0 + (int32_t)fm6_mul_ushift(sensamp, FM6_AMS_K, 10);

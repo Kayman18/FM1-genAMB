@@ -20,14 +20,14 @@ static void pending_layout_tests(void) {
         ui.mod_route=r;ui.mod_row=1;
         assert(bound_view_knob(V_MOD,0)==K_MOD_ROUTE);
         assert(bound_view_knob(V_MOD,1)==K_MOD_DEST);
-        assert(bound_view_knob(V_MOD,3)==K_NONE);
+        assert(bound_view_knob(V_MOD,3)==K_MOD_SPEED);
         assert(bound_view_knob(V_MOD,2)==K_MOD_DEPTH);
         int depth=knob_get(K_MOD_DEPTH);turn(0,bound_view_knob(V_MOD,2),1);assert(knob_get(K_MOD_DEPTH)==depth+1);
         ui.mod_row=2;
         assert(bound_view_knob(V_MOD,0)==K_MOD_SHAPE);
         assert(bound_view_knob(V_MOD,1)==K_NONE);
         assert(bound_view_knob(V_MOD,2)==K_MOD_SPEED);
-        assert(bound_view_knob(V_MOD,3)==K_NONE);
+        assert(bound_view_knob(V_MOD,3)==K_MOD_SPEED);
         knob_set(K_MOD_SHAPE,0);turn(0,bound_view_knob(V_MOD,0),1);assert(knob_get(K_MOD_SHAPE)==1);
         int speed=knob_get(K_MOD_SPEED);turn(0,bound_view_knob(V_MOD,2),1);assert(knob_get(K_MOD_SPEED)==speed+1);
     }
@@ -42,7 +42,7 @@ static void pending_layout_tests(void) {
             for(int i=0;i<NPIECES;i++)proj.slot[i].par[params[p]]=id;
         }
         project_t expected=proj;
-        assert(plat_store_save(OBJ_PROJ,&proj,sizeof proj)==0);
+        assert(write_record()==0);
         memset(&proj,0,sizeof proj);assert(project_load()==0);
         assert(!memcmp(&proj,&expected,sizeof proj));
     }

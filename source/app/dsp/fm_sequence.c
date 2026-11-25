@@ -181,10 +181,10 @@ static void fm_seq_fire_due(void)
         }
     for (int i = 0; i < FM_NWAIT; ++i)
         if (fm_seq_wait[i].active && fm_seq_wait[i].wait <= 0) {
-            if (par[P_FMLEVEL] > 0 && par[P_MODE] != MODE_PIANO) {
+            if (en_fm_enabled(par) && par[P_MODE] != MODE_PIANO) {
                 uint32_t gate = en_fm_seq_active_mode == 3 ? ud_gate_samples() : en_fm_seq_active_mode == 2 ? prot_gate_samples() : fm_seq_gate_samples();
                 int note = fm_seq_wait[i].note, velocity = fm_seq_wait[i].velocity;
-                fm_port_trigger(note, velocity, gate);
+                fm_trigger(note, velocity, gate);
                 fm_seq_midi_on(note, velocity, gate);
             }
             fm_seq_wait[i].active = 0;
@@ -373,7 +373,7 @@ static void fm_evo_tick(void)
         hall_store(&fm_evo_core,fm_evo_bank.step[en_fm_evo_pattern]);
         BARRIER();fm_evo_version++;fm_evo_publish();
     }
-    if(triggered && par[P_FMLEVEL]>0) {
+    if(triggered && en_fm_enabled(par)) {
         int n = seq_note(fm_evo_pitch(note), par[P_FMRANGE], par[P_FMCHANCE],
                          fm_seq_frand(), fm_seq_frand());
         while (n > 127) n -= 12;
@@ -432,7 +432,7 @@ static void fm_seq_tick(uint32_t grid)
     } else if ((grid & 3u) == 0u) {
         for (int l = 0; l < EN_NLOOP; ++l) {
             int s = fm_loop_pos[l];
-            if (par[P_FMLEVEL] > 0 && fm_loop_note[l][s] >= 0 && !fm_loop_rest[l]) {
+            if (en_fm_enabled(par) && fm_loop_note[l][s] >= 0 && !fm_loop_rest[l]) {
                 int n = seq_note(fm_original_pitch(l, fm_loop_note[l][s]),
                                  par[P_FMRANGE], par[P_FMCHANCE], fm_seq_frand(), fm_seq_frand());
                 fm_sequence_strike(n, (float)fm_loop_vel[l][s] * 0.01f, l);

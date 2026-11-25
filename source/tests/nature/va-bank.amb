@@ -1,0 +1,49 @@
+wait 50
+tap SEL
+expect view 21
+spin K1 1
+expect par188 1
+expect par92 12
+expect par172 35
+spin K1 39
+expect par188 40
+expect par92 61
+tap SEL
+expect view 35
+spin K1 5
+expect par172 43
+tap SEL
+expect view 36
+tap SEL
+expect view 37
+tap SEL
+expect view 38
+tap SEL
+expect view 23
+tap LFO
+spin K1 6
+spin K2 100
+expect par47 24
+tap SAVE
+wait 100
+reboot
+wait 100
+expect par188 40
+expect par172 43
+expect par47 24
+tap SEL
+spin ALGO -1
+spin ALGO -1
+expect par20 8
+key 3 down
+wait 25
+expect fm_manual_count 1
+key 3 up
+wait 25
+expect fm_manual_count 0
+midi USB 92 3c 68
+wait 25
+expect fm_midi60 60
+midi USB 82 3c 00
+wait 25
+expect fm_manual_count 0

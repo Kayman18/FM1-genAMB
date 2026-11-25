@@ -80,6 +80,9 @@ class Resonator {
   
  private:
   int32_t ComputeFilters();
+  int32_t cached_modes_, cached_resolution_;
+  float cached_frequency_, cached_structure_, cached_brightness_, cached_damping_;
+
   float frequency_;
   float structure_;
   float brightness_;
@@ -89,7 +92,12 @@ class Resonator {
   
   int32_t resolution_;
   
-  stmlib::Svf f_[kMaxModes];
+  // Separate coefficient and state arrays keep adjacent partials together.
+  float g_[kMaxModes], r_[kMaxModes], h_[kMaxModes];
+  float state1_[kMaxModes], state2_[kMaxModes];
+  inline float BandPass(int mode, float input);
+  template<int lanes> void AddFixedModes(int first, const float* weights,
+      const float* input, float* odd, float* even, size_t size);
   
   DISALLOW_COPY_AND_ASSIGN(Resonator);
 };

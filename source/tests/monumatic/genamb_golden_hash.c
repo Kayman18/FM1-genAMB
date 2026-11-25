@@ -20,7 +20,8 @@ static void run(unsigned blocks){
   for(unsigned i=0;i<512;i++){uint32_t x=(uint32_t)pcm[i];h^=x;h*=1099511628211ull;}}
 }
 struct cfg{const char*name;int pad,bells,fm,pulse,rev,padrev,ringrev,fmrev,chorus,p2mix,ffmix,echo,rmodel,rfx,width;};
-int main(void){
+int main(int argc, char **argv){
+ (void)argv;
  static const struct cfg cfgs[]={
   {"all",90,90,90,70,80,80,80,80,60,60,60,60,0,40,50},
   {"pad-only",100,0,0,0,70,90,0,0,80,0,0,0,0,0,0},
@@ -43,6 +44,11 @@ int main(void){
   en_set(P_DENSITY,70);en_set(P_EVOLVE,50);en_set(P_HITS,60);en_set(P_TEMPO,80);
   en_set(P_P2FILTERCUT,70);en_set(P_P2FILTERRES,60);en_set(P_FFILTERCUT,50);en_set(P_FFILTERRES,70);
   en_set(P_BRIGHT,70);en_set(P_SWELL,60);en_set(P_MOTION,50);en_set(P_SIZE,70);en_set(P_BTONE,60);
+  if (argc>1) {
+    const int depth[]={P_M1DEPTH,P_M2DEPTH,P_M3DEPTH,P_M4DEPTH,P_M5DEPTH,P_M6DEPTH,
+                       P_M7DEPTH,P_M8DEPTH,P_M9DEPTH,P_M10DEPTH,P_M11DEPTH};
+    for (unsigned i=0;i<sizeof depth/sizeof *depth;++i) en_set(depth[i],0);
+  }
   en_play(1);
   run(40);
   en_rings_note(48,100);en_fm_note(60,110);run(12);

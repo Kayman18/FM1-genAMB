@@ -79,19 +79,34 @@ static void ota_commit(const uint8_t *parm) { (void)parm; }
 #include "../bsp/chip/ota.c"
 
 static int ldr_fread(uint32_t off, void *p, uint32_t n) { memcpy(p, nor + off, n); return 0; }
+#ifdef ANIMAL_WAVE_BASE
+static unsigned wave_erases, wave_programs;
+#endif
 static int ldr_erase(uint32_t off)
 {
+#ifdef ANIMAL_WAVE_BASE
+    wave_erases += off >= ANIMAL_WAVE_BASE && off < ANIMAL_WAVE_END;
+#endif
     if (off < 0x4000u || off >= 0xFC000u || (off & 0xFFFu)) bad_range++;
     if (off < 0x4000u) { printf("ERASE IN THE HEAD %#x\n", off); exit(1); }
     erases++;
     memset(nor + off, 0xFF, 0x1000);
     return 0;
 }
+#ifdef ANIMAL_WAVE_BASE
+static int interrupt_bank;
+#endif
 static int ldr_prog(uint32_t off, const void *p, uint32_t n)
 {
     const uint8_t *s = p;
     uint32_t i;
-    if (off < 0x4000u || off + n > 0x93000u || ((off & 0xFFu) + n) > 256u) bad_range++;
+    int allowed = off >= 0x4000u && off + n <= 0x93000u;
+#ifdef ANIMAL_WAVE_BASE
+    allowed |= off >= ANIMAL_WAVE_BASE && off + n <= ANIMAL_WAVE_END;
+    wave_programs += off >= ANIMAL_WAVE_BASE && off < ANIMAL_WAVE_END;
+    if (interrupt_bank && off == ANIMAL_WAVE_BASE + 0x4100u) return -1;
+#endif
+    if (!allowed || ((off & 0xFFu) + n) > 256u) bad_range++;
     for (i = 0; i < n; i++) nor[off + i] &= s[i];
     return 0;
 }
@@ -153,6 +168,23 @@ int main(int argc, char **argv)
         ota_wr16(r, ota_crc16(r + 2, 78, 0));
         memcpy(nor + 0xE4F00, r, sizeof r);
     }
+#ifdef ANIMAL_WAVE_BASE
+    /* Sentinels in the gaps, high wave sectors, panel-calibration pairs,
+     * storage and the key sector make an accidental erase observable. */
+    static uint8_t before[sizeof nor];
+    for (uint32_t k=0x93000u; k<sizeof nor; ++k)
+        if ((k < ANIMAL_WAVE_BASE || k >= ANIMAL_WAVE_END) && (k & ~4095u) != 0xe4000u)
+            nor[k]=(uint8_t)((k*37u+11u)>>3);
+    memcpy(before,nor,sizeof nor);
+    logical[nfo+ANIMAL_WAVE_BASE+1234] ^= 0x55;
+    rc = ldr_session();
+    bad += check("damaged wave bank rejected before any sector erase",rc<0 && erases==0);
+    logical[nfo+ANIMAL_WAVE_BASE+1234] ^= 0x55;
+    interrupt_bank=1;
+    rc=ldr_session();
+    bad += check("interrupted bank write keeps recovery record",rc==-10 && !record_cleared && nor[0xe4f06]==0x41);
+    interrupt_bank=0;
+#endif
     rc = ldr_session();
     printf("  rc %d, %u requests, %u sector erases\n", rc, requests, erases);
     bad += check("install completes", rc == 0);
@@ -161,10 +193,34 @@ int main(int argc, char **argv)
     bad += check("finish asked (0xF0000000)", f0_asked >= 1);
     bad += check("update record cleared (RAM + flash)", record_cleared && nor[0xE4F06] == 0xFF);
     bad += check("no write outside the allowed windows", bad_range == 0);
+#ifdef ANIMAL_WAVE_BASE
+    bad += check("entire external wave allocation equals served image",!memcmp(nor+ANIMAL_WAVE_BASE,logical+nfo+ANIMAL_WAVE_BASE,ANIMAL_WAVE_END-ANIMAL_WAVE_BASE));
+    int unchanged=1;
+    for (uint32_t k=0; k<sizeof nor; ++k) {
+        if (k>=0x4000u && k<0x93000u) continue;
+        if (k>=ANIMAL_WAVE_BASE && k<ANIMAL_WAVE_END) continue;
+        if ((k & ~4095u)==0xe4000u) continue;
+        if (before[k]!=nor[k]) { unchanged=0;break; }
+    }
+    bad += check("all bytes outside app, wave bank and update record preserved",unchanged);
+#endif
     /* same package again: nothing to erase */
     erases = 0; requests = 0;
     rc = ldr_session();
     bad += check("re-run with the same package erases nothing", rc == 0 && erases == 0);
+#ifdef ANIMAL_WAVE_BASE
+    /* Repeat with an actual older application and its already installed
+     * matching bank. Count NOR erase and program commands independently. */
+    if (olen >= ofo + ANIMAL_WAVE_END &&
+        !memcmp(old+ofo+ANIMAL_WAVE_BASE,logical+nfo+ANIMAL_WAVE_BASE,ANIMAL_WAVE_END-ANIMAL_WAVE_BASE)) {
+        memcpy(nor,before,sizeof nor);
+        memcpy(nor+ANIMAL_WAVE_BASE,old+ofo+ANIMAL_WAVE_BASE,ANIMAL_WAVE_END-ANIMAL_WAVE_BASE);
+        wave_erases=wave_programs=0;
+        rc=ldr_session();
+        bad+=check("existing wave bank: zero erase/program operations on upgrade",rc==0 && wave_erases==0 && wave_programs==0);
+        bad+=check("upgraded app exactly matches the new image",!memcmp(nor+0x4000,logical+nfo+0x4000,0x93000-0x4000));
+    }
+#endif
     /* a package for another chip key is refused before any erase */
     {
         uint8_t save = logical[nfo + 0x4000 + 5];

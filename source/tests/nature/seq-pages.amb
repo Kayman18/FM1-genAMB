@@ -1,0 +1,12 @@
+wait 100
+tap SEQ
+expect view 3
+tap SEQ
+expect view 4
+tap SEQ
+expect view 5
+tap SEQ
+expect view 16
+tap SEQ
+expect view 3
+dusk2_ui_controls_tests

@@ -1,0 +1,4 @@
+bf7b1cfb4be9fb9b05292b4f088a5e2c8485cddf27fe4b38656d8db2927410f7  genAMB-Nature-1.0-256-M-Flasher.bin
+fef397fae7fc3abb6582637eab6ac87112f7353d8d456780d6c4410ca21bc107  genAMB-Nature-1.0-512-M-Flasher.bin
+21ac5e90e04656af99158d416713b99daf289831fe66cae5a513c02f0db3be20  genAMB-Nature-1.0-256.fwsc
+85b1f2fe96baf7a07d4d960e454948abfea349f4566fe1f481c44f07b5bdf2b7  genAMB-Nature-1.0-512.fwsc

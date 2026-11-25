@@ -8,7 +8,10 @@
 #   PYTHON           a Python with Pillow (and libraqm, for the fonts)
 set -e
 cd "$(dirname "$0")"
-[ "$#" -gt 0 ] || set -- --release 17.99.32 --display-version RC
+if [ "$#" -eq 0 ]; then
+    export FM1B_AUDIO_FRAMES=256
+    set -- --release 17.99.46 --display-version 1.0-256
+fi
 export JIELI_TOOLCHAIN="${JIELI_TOOLCHAIN:-$HOME/.jieli/toolchain}"
 export AC79_SDK="${AC79_SDK:-$PWD/build-deps/sdk}"
 export X0X_FONT_DIRS="${X0X_FONT_DIRS:-$PWD/build-deps/fonts}"

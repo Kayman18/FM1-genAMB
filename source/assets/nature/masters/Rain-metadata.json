@@ -1,0 +1,99 @@
+{
+  "conversion_revision": 1,
+  "source": {
+    "file": "Rain.wav",
+    "sha256": "cfc262fbd7059d38c4c8a1e7b66efc14314fcdb4a2ae775941d7b03de98f8d61",
+    "duration_seconds": 7.5,
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "pcm_bits": 24
+  },
+  "reference": {
+    "repository": "https://github.com/aceyprime/zen-1",
+    "commit": "ec9295233ea64ddac224b58b4d07216706c1b8ee",
+    "encoder": "tools/zen_samples.py:adpcm_block",
+    "decoder": "tools/zen_samples.py:adpcm_decode",
+    "common_nature_rms_target_dbfs": -18.94045287639728
+  },
+  "format": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "decoded_samples": 95232,
+    "duration_seconds": 5.952,
+    "encoding": "Zen-1 block IMA ADPCM, 4-bit",
+    "block_samples": 1024,
+    "block_bytes": 516,
+    "blocks": 93,
+    "payload_bytes": 47988,
+    "payload_sha256": "5d4d232ff3b6374d4d6f01310e02db135393413dcd8ff3f6cfd96960babc5818",
+    "wav_format": "16-bit signed PCM little-endian, mono, 16000 Hz"
+  },
+  "replacement_map": {
+    "ZN_BREEZE": "ZN_RAIN",
+    "ZN_INSECTS": "ZN_RAIN",
+    "unique_arrays": 1,
+    "old_combined_payload_bytes": 95976,
+    "new_combined_payload_bytes": 47988,
+    "payload_bytes_saved": 47988,
+    "water_plus_rain_payload_bytes": 116100
+  },
+  "processing": {
+    "source_start_seconds": 0.524,
+    "source_end_including_crossfade_seconds": 6.976,
+    "crossfade_seconds": 0.5,
+    "crossfade_curve": "equal power",
+    "extended_by_crossfaded_repetition": false,
+    "time_stretch": false,
+    "pitch_shift": false,
+    "dc_removed_before_gain": -6.5123442397730065e-09,
+    "gain_db": 11.2860498977499,
+    "loudness_target": "RMS of the decoded original Brook, with a 0.89 pre-encode peak cap",
+    "gain_capped_for_peak_headroom": true,
+    "extra_high_pass_filter": false,
+    "dynamic_compression": false
+  },
+  "verification": {
+    "pre_encode_peak_dbfs": -1.012354742194992,
+    "pre_encode_rms_dbfs": -23.167063043252316,
+    "decoded_peak_dbfs": -0.8872736408987313,
+    "decoded_rms_dbfs": -23.240761087002806,
+    "adpcm_snr_db": 16.442613207731792,
+    "decoded_clipped_samples": 0,
+    "loop_boundary_step_pcm": -1965,
+    "max_adjacent_step_pcm": 18665,
+    "p99_adjacent_step_pcm": 6238.799999999988,
+    "max_adpcm_block_boundary_step_pcm": 8195,
+    "independent_decoder_exact_match": true,
+    "independent_preprocessing_source_match": true,
+    "header_payload_exact_match": true,
+    "single_array_aliases_verified": true,
+    "three_loop_preview_exact_match": true,
+    "independent_decoded_pcm_sha256": "66e40b9bf1ffc766cddda499df1ea7ccedf6e5dd7be542e719eb116a6f72a61d"
+  },
+  "files": {
+    "Rain-16k-mono.wav": {
+      "bytes": 190508,
+      "sha256": "209006b4845d3f2060446db8f7efbba6172baa78255313066f4a14ccaaf871af"
+    },
+    "Rain-decoded.wav": {
+      "bytes": 190508,
+      "sha256": "280237879d39f82362232ebac2e2da758f4e34a4c030abcadee62b5dd2a8a937"
+    },
+    "Rain-preview-3-loops.wav": {
+      "bytes": 571436,
+      "sha256": "fbf88680e0ab38f451171a631eb40918a7ffed948cb52d963e2dbfe057af1d0d"
+    },
+    "Rain.adpcm": {
+      "bytes": 47988,
+      "sha256": "5d4d232ff3b6374d4d6f01310e02db135393413dcd8ff3f6cfd96960babc5818"
+    },
+    "Rain.h": {
+      "bytes": 220801,
+      "sha256": "c0482b9ae33ccab52ceaa37e8a01099671d3977a8c1a5f818a66e0f67579fd2d"
+    },
+    "README.txt": {
+      "bytes": 4190,
+      "sha256": "6ff70a310e62fc592bf6f3929f19d28f5c07bbf9439f186fe82f9aeba8a5915e"
+    }
+  }
+}

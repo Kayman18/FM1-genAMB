@@ -1,55 +1,49 @@
-# genAMB FM-1 — RC
+# genAMB Nature 1.0 for FM-1
 
-Custom firmware for the FM-1. Two generative pads, independent pad filters and a four-channel mixer with stereo reverb.
+Build an ambient piece from two evolving pads, a Rings resonator, a virtual analog synth and a layer of rain, river and animal calls. A stereo mixer feeds the layers into the Monumatic reverb.
 
-**RC** is the release candidate built from the corrected **TEST3b** source. Its updater version is **17.99.32**, identity **FM-1_7179932**.
+## Install
 
-| Loading screen | HOME · Garden |
-| --- | --- |
-| ![genAMB startup artwork on the FM-1](docs/screens/splash.png) | ![DUSK Garden HOME screen showing Tempo, Evolve, Motion and Drift](docs/screens/home.png) |
+Download the firmware from [Releases · genAMB Nature 1.0](https://github.com/Kayman18/FM1-genAMB/releases/tag/v1.0). Both buffer sizes contain the same instruments, patches and editor support.
 
-Both images show the native 240 × 240 display. The loading screen uses the firmware’s indexed RGB565 artwork; HOME is a framebuffer capture with the default project. This artwork and DUSK page layout are retained in RC.
+| Buffer | Normal firmware update | Full M-Flasher image |
+|---|---|---|
+| 512 samples · more CPU headroom | [512 FWSC](firmware/genAMB-Nature-1.0-512.fwsc) | [512 BIN](firmware/genAMB-Nature-1.0-512-M-Flasher.bin) |
+| 256 samples · lower latency | [256 FWSC](firmware/genAMB-Nature-1.0-256.fwsc) | [256 BIN](firmware/genAMB-Nature-1.0-256-M-Flasher.bin) |
 
-**[Download genAMB RC firmware](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/RC/genAMB-RC.fwsc)** · [Browse source](source/) · [Download RC source ZIP](https://github.com/Kayman18/FM1-genAMB/archive/refs/heads/RC.zip) · [USB web editor](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/RC/genAMB-RC-Web-Editor.zip) · [Checksums](SHA256SUMS.txt)
+Use the FWSC package with the FM-1 firmware updater. For a clean install with M-Flasher, back up the device first. Each BIN writes the full 1 MiB flash, including the settings and calibration region from the clean-install reference. The device updater IDs are 17.99.46 (256) and 17.99.47 (512).
 
-Use **`genAMB-RC.fwsc`** for installation. The separate [raw app binary](https://github.com/Kayman18/FM1-genAMB/raw/refs/heads/RC/genAMB-RC-app.bin) is a developer component and does not contain the complete update package.
+## Playing a piece
 
-It may start in PIANO mode (this mode will let you play Rings or the FM synth Via the Keybed. Depending on Which one you have selected), only the Pad synths will run. Turn the Algorithm knob to place it in scale mode and have the sequencers trigger notes.
+| Layer or control | What it does |
+|---|---|
+| Pad 1 and Pad 2 | Layer two independently voiced pads. Set their colour and filters, then add slow movement with the LFOs. |
+| Rings | Choose Modal, Sympathetic or String for struck and resonating tones. |
+| Virtual analog | Blend saw, pulse and triangle colours with a sub oscillator. Shape the sound with pulse width, a resonant filter and separate amp and filter ADSRs. Choose Slow Canopy or one of 20 plucks and 20 basses. For dense pieces, start with two VA voices. |
+| Modulation | Assign M7–M9 to VA destinations including filter controls. M10 and M11 control pad filter modulation. |
+| Sequencing | Choose Original, Hallucigenia, Proteus or UNIT-D for the sequenced layers. Use Piano mode to play manually or send MIDI on channel 3 to the VA. |
+| Nature | Blend river and rain with a selection of ten animal calls. |
+| Mixer and reverb | Balance the layers and adjust their sends to the shared stereo reverb. |
+| Piece memory | Store and recall pieces in eight slots with SAVE. |
 
-*  2 Pad Synths (Both have different Characters Pad 1 - Vintage and Rhodes. Pad 2 - Strings and Glass. Pad 1 has a Chorus Effect, Pad 2 has a Stereo Width setting (cpu maxing out)
-*  Rings port - 4 Voice and Modes Kept - Modal, Sympathetic strings, and Strings the rest had to go for space and memory and weren't distinct enough to keep
-*  6Voice FM synth, with 16 Presets - Koto, Harp, Brt Harp, Drop, Mallet, Bell, Rin, Bamboo, Furin, Marimba, Celeste, Kalimba, Xylophone, Glockenspiel, Warm Bass, Reso Bass.
-*  3 Ported Sequencers from VCVrack: Hallucigenia, Proteus, UNIT-D
-*  Burst Setting, to simulate Chords strums
-*  Delay on Rings (too costly to add everywhere, may try to add it to FM later)
-*  Four-channel mixer. K1 controls Pad 1, K2 Pad 2, K3 Rings and K4 FM.
-*  Monumatic stereo reverb at 44.1 kHz. On the FX page, K1 controls Decay, K2 Tone, K3 Motion and K4 Dry/Wet. Turn Dry/Wet to 100 for wet-only output.
+Use **SEL** to step through the VA main, filter, amp envelope, filter envelope, motion and sequence pages. **GLO** cycles through Mixer, Nature, Setup and the performance display. The [offline web editor](source/web-editor/) provides computer editing through Web MIDI. Open index.html in Chrome or Edge and allow SysEx access.
 
-## RC changes
+## On-screen controls
 
-RC keeps the corrected TEST3b audio engine and its CPU headroom changes. Unused reverb-send calculations are removed, and the reverb tank sleeps at Dry/Wet 0. Raising Dry/Wet from zero clears the tank and lets a new tail bloom in. The experimental audio-code placement in executable SRAM remains **disabled**, as in the supplied TEST3b source.
+These are native 240 × 240 framebuffer captures from the 1.0 firmware running in its desktop simulator.
 
-The device and web editor now carry the **RC** label. The underlying synthesis, effects, controls and project format 23 are retained. [Release notes](source/RELEASE-RC.md)
+| Garden | VA preset browser | VA filter |
+|---|---|---|
+| ![Garden performance display](docs/screens-1.0/garden.png) | ![VA preset browser](docs/screens-1.0/va-preset.png) | ![VA filter controls](docs/screens-1.0/va-filter.png) |
 
-## Build and validation
+| Modulation | Nature mixer | Rings |
+|---|---|---|
+| ![LFO modulation page](docs/screens-1.0/lfo.png) | ![Nature controls](docs/screens-1.0/nature.png) | ![Rings controls](docs/screens-1.0/rings.png) |
 
-From `source/`, run `sh build-rc.sh` for the device or `sh build-rc.sh --host` for the desktop simulator. The device build uses the JieLi PI32v2 Linux toolchain **20260730.1** (clang 4.0.1). Set `JIELI_TOOLCHAIN` to its extracted directory. The matching SDK boot assets and DUSK fonts are in `source/build-deps/`. [Complete RC build instructions](source/BUILDING-RC.md)
+## Source and verification
 
-The RC device build passed its code and memory audits. Package validation passed all CRC checks and confirmed that the included loader and decrypted app match the newly built files. The disabled audio SRAM section is zero bytes. The nine-configuration audio hash, reverb sleep/wake checks, ASan/UBSan adapter test and 21 full-app simulator assertions also passed. [Validation logs](docs/rc/)
+Browse the [firmware source](source/), [DSP](source/app/dsp/), [build instructions](source/BUILDING-RC.md) and [M-Flasher packer](source/tools/make_nature_mflasher.py). Both firmware variants were built and their packaged payloads checked. The host tests cover the VA bank, routing, sequencers, MIDI, keys and save/recall. Physical FM-1 flashing and timing of the 1.0 images remain unverified.
 
-Physical FM-1 timing, worst-case CPU, dropouts and listening have not been tested for this RC build. The compiler emits inherited warnings documented in the build log; the build and required audits complete successfully.
+## Credits
 
-The earlier [TEST2 firmware](genAMB-DUSK-Monumatic-Reverb-TEST2.fwsc) and [TEST2 editor](genAMB-DUSK-Monumatic-Reverb-TEST2-Web-Editor.zip) remain available for rollback. Older release notes are retained as history; use the RC instructions above for the current source.
-
-## Attribution and licensing
-
-Built on Charles Vestal's [fm1-amb](https://github.com/charlesvestal/fm1-amb) and [fm1-base](https://github.com/charlesvestal/fm1-base), with [felucca-bsp](https://github.com/hugelton/felucca-bsp) by Leo Kuroshita / Hügelton Instruments. Synthesis components include Mutable Instruments Rings/stmlib by Emilie Gillet and the [Zen-1](https://github.com/aceyprime/zen-1) six-operator FM engine and its msfa-derived core.
-
-### Sequencers
-
-- **Original** — original AMB-1 generative sequencing by [Charles Vestal](https://github.com/charlesvestal/fm1-amb), retained and extended for genAMB (MPL-2.0 provenance).
-- **Hallucigenia / Darwinism** — ported from [Eater of Sheep's Extratone / XTRTN source](https://github.com/EaterOfSheep/Extratone/blob/main/src/Darwinism.cpp), GPL-3.0-or-later. The upstream-derived core introduced in the earlier RC2 checkpoint is retained in this RC.
-- **Proteus** — adapted from [Seaside Modular Proteus](https://github.com/abluenautilus/SeasideModularVCV/blob/master/src/Proteus.cpp), by Seaside Modular contributors (MIT).
-- **UNIT-D / UnitDistanceSeq** — adapted from [Animatek's UNIT-D](https://github.com/animatek/UZZ-VCV-RACK/blob/main/src/UnitDistanceSeq.cpp); the adaptation is GPL-3.0-or-later.
-
-Original copyright and component license notices are retained in the complete source archive. See [LICENSING.md](source/LICENSING.md) for component provenance and combined-firmware licensing.
+Based on Charles Vestal’s fm1-amb and fm1-base, with felucca-bsp by Leo Kuroshita / Hügelton Instruments and Rings/stmlib by Emilie Gillet. Sequencer credits include Charles Vestal (Original), Eater of Sheep (Hallucigenia/Darwinism), Seaside Modular (Proteus) and Animatek (UNIT-D). See [component credits and licensing](source/LICENSING.md).

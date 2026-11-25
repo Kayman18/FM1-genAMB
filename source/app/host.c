@@ -12,6 +12,7 @@
 void hallucigenia_tests(void);
 #include "../tests/pending/layout_host.h"
 #include "../tests/filter/classic_migration_host.h"
+#include "../tests/nature/migration.h"
 
 
 #include "../tests/dusk/ui_controls_host.h"
@@ -23,7 +24,8 @@ static uint32_t host_chord_stamp;
 int app_expect(const char *what, int *got)
 {
     int g;
-    if (!strcmp(what,"chord_changed")) {
+    if (!strcmp(what,"animal_bank")) g=(int)en_nature_calls();
+    else if (!strcmp(what,"chord_changed")) {
         uint32_t cur=0;
         for(int i=0;i<4;++i)cur=(cur<<8)|(uint32_t)en_chord[i];
         g=cur!=host_chord_stamp;
@@ -47,8 +49,8 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what,"unitd_note_r")) g=(int)ud_note_count[0];
     else if (!strcmp(what,"unitd_note_f")) g=(int)ud_note_count[1];
     else if (!strcmp(what,"unitd_chord_fail")) g=(int)(ud_chord_fail[0]+ud_chord_fail[1]);
-    else if (!strcmp(what,"unitd_options_row_r")) g=(int)ui.unit_row[0];
-    else if (!strcmp(what,"unitd_options_row_f")) g=(int)ui.unit_row[1];
+    else if (!strcmp(what,"unitd_options_row_r")) g=grid_row(V_RUNITOPT);
+    else if (!strcmp(what,"unitd_options_row_f")) g=grid_row(V_FUNITOPT);
     else if (!strcmp(what,"prot_count_r")) g=(int)prot_note_count[0];
     else if (!strcmp(what,"prot_count_f")) g=(int)prot_note_count[1];
     else if (!strcmp(what,"fm_evo_mode")) g=en_fm_evo_active;
@@ -112,7 +114,9 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     if (!strcmp(cmd,"pad_filter_controls_tests")) {pad_filter_controls_tests();return 1;}
     if (!strcmp(cmd,"dusk2_ui_controls_tests")) {dusk2_ui_controls_tests();return 1;}
     if (!strcmp(cmd,"pad_movement_tests")) {extern void pad_movement_tests(void);pad_movement_tests();return 1;}
+    if (!strcmp(cmd,"pad_timing_tests")) {extern void pad_timing_tests(void); pad_timing_tests(); return 1;}
     if (!strcmp(cmd,"pad_roles_tests")) {extern void pad_roles_tests(void);pad_roles_tests();return 1;}
+    if (!strcmp(cmd,"nature_migration")) { nature_migration(); return 1; }
     if (!strcmp(cmd,"duskview")) { int v=atoi(a);assert(v>=0 && v<NVIEWS);set_view(v);return 1; }
     if (!strcmp(cmd,"hallucigenia_tests")) {hallucigenia_tests();return 1;}
     if (!strcmp(cmd,"wide_layout_tests")) {wide_layout_tests();return 1;}

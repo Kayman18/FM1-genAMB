@@ -296,7 +296,7 @@ static void ud_tick(int layer){
             int ok=0;for(int j=0;j<chord_nt;j++)if(note%12==chord_pcs[j])ok=1;
             if(!ok)ud_chord_fail[layer]++;
 #endif
-            if(layer){if(par[P_FMLEVEL]>0)fm_seq_schedule(note,vel,0);}
+            if(layer){if(en_fm_enabled(par))fm_seq_schedule(note,vel,0);}
             else {ring_schedule(note,vel+(int)(gs*12.f),v);midi(0x91,(uint32_t)note,(uint32_t)vel);midi(0x81,(uint32_t)note,0);}
         }
     }

@@ -17,7 +17,13 @@
  * Pixels are uint16_t: this saves 5760 bytes versus the shared 144-row default.
  */
 #define APP_CANVAS_PX (240u * 132u)
-#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
+#define APP_RENDER_FRAMES 256u
+#ifndef APP_BLOCK
+#define APP_BLOCK APP_RENDER_FRAMES
+#endif
+#if APP_BLOCK != 256 && APP_BLOCK != 512
+#error "genAMB supports 256- and 512-frame I2S halves"
+#endif
 #ifdef APP_VERSION                       /* a release build passes its own (tools/build.py --release) */
 #define EN_VERSION APP_VERSION
 #else
@@ -29,8 +35,7 @@
 enum { OBJ_PROJ, OBJ_PANEL, OBJ_NOBJ };
 #define APP_STORE_MAP {0xFC000u, 0xDC000u}
 #define PROJ_MAGIC 0x314F4E45u           /* "ENO1" */
-#define PROJ_FORMAT 23u                   /* 22: replacement filter model IDs.
-                                          * Formats 20/21 translate filter selections; older migrations retained. */
+#define PROJ_FORMAT 26u                   /* Compact Nature and FM controls on flash. */
 #define NPIECES EN_NPIECES
 
 typedef struct {
@@ -46,7 +51,6 @@ typedef struct {
     uint8_t piece;                       /* which piece */
     uint8_t rsv0[2];
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
-    uint8_t rsv[16];                     /* room to grow */
     en_evo_bank_t evo;
     en_evo_bank_t fm_evo;
     en_proteus_bank_t proteus;

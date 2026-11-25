@@ -102,21 +102,27 @@ int dc_submit(void (*fn)(void *), void *arg)
 }
 int dc_wait(void)
 {
-    uint32_t t = fm1_ticks();
+    uint32_t start = fm1_ticks(), end = start;
+    uint32_t fault = DC_FAULT_NONE;
     while (dc_out.done != dc_in.request) {
-        if (dc_out.bad || (uint32_t)(fm1_ticks() - dc_start_tick) > DC_HANG_US * FM1_TICKS_PER_US) {
-            uint32_t reason = dc_out.bad ? DC_FAULT_MAILBOX : DC_FAULT_TIMEOUT;
-            dc_stop(); dc_fault_code = reason; dc_mode = 3; ++dc_timeouts;
-            return 0; /* never rerun a partially rendered Rings block */
+        end = fm1_ticks();
+        if (dc_out.bad || (uint32_t)(end - dc_start_tick) > DC_HANG_US * FM1_TICKS_PER_US) {
+            fault = dc_out.bad ? DC_FAULT_MAILBOX : DC_FAULT_TIMEOUT;
+            break;
         }
     }
     fm1_cpu1_sync();
-    t = (fm1_ticks() - t) / FM1_TICKS_PER_US;
-    if (t > dc_max_wait_us) dc_max_wait_us = t;
+    if (!fault) end = fm1_ticks();
+    uint32_t wait_us = (end - start) / FM1_TICKS_PER_US;
+    if (wait_us > dc_max_wait_us) dc_max_wait_us = wait_us;
+    dc_block_wait_us += wait_us; /* Record blocked time even if the worker stalled. */
+    if (fault) {
+        dc_stop(); dc_fault_code = fault; dc_mode = 3; ++dc_timeouts;
+        return 0; /* never rerun a partially rendered Rings block */
+    }
+    dc_block_work_us += dc_out.ticks / FM1_TICKS_PER_US;
     for (uint32_t *p = _cpu1_stack_guard; p < _cpu1_stack_low; ++p)
         if (*p != 0xC1A5CAFEu) { dc_stop(); dc_fault_code = DC_FAULT_STACK; dc_mode = 3; ++dc_timeouts; return 0; }
-    dc_block_work_us += dc_out.ticks / FM1_TICKS_PER_US;
-    dc_block_wait_us += t;
     ++dc_jobs;
     return 1;
 }

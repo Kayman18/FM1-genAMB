@@ -41,8 +41,9 @@ using namespace std;
 using namespace stmlib;
 
 void Resonator::Init() {
+  cached_modes_ = -1;
   for (int32_t i = 0; i < kMaxModes; ++i) {
-    f_[i].Init();
+    state1_[i] = state2_[i] = 0.0f;
   }
 
   set_frequency(220.0f / kSampleRate);
@@ -55,6 +56,16 @@ void Resonator::Init() {
 }
 
 PLAT_HOT int32_t Resonator::ComputeFilters() {
+  if (cached_modes_ >= 0 && cached_resolution_ == resolution_ &&
+      cached_frequency_ == frequency_ && cached_structure_ == structure_ &&
+      cached_brightness_ == brightness_ && cached_damping_ == damping_) {
+    return cached_modes_;
+  }
+  cached_resolution_ = resolution_;
+  cached_frequency_ = frequency_;
+  cached_structure_ = structure_;
+  cached_brightness_ = brightness_;
+  cached_damping_ = damping_;
   float stiffness = Interpolate(lut_stiffness, structure_, 256.0f);
   float harmonic = frequency_;
   float stretch_factor = 1.0f; 
@@ -79,9 +90,11 @@ PLAT_HOT int32_t Resonator::ComputeFilters() {
     } else {
       num_modes = i + 1;
     }
-    f_[i].set_f_q<FREQUENCY_FAST>(
-        partial_frequency,
-        1.0f + partial_frequency * q);
+    float g = OnePole::tan<FREQUENCY_FAST>(partial_frequency);
+    float r = 1.0f / (1.0f + partial_frequency * q);
+    g_[i] = g;
+    r_[i] = r;
+    h_[i] = 1.0f / (1.0f + r * g + g * g);
     stretch_factor += stiffness;
     if (stiffness < 0.0f) {
       // Make sure that the partials do not fold back into negative frequencies.
@@ -96,7 +109,55 @@ PLAT_HOT int32_t Resonator::ComputeFilters() {
     q *= q_loss;
   }
   
+  cached_modes_ = num_modes;
   return num_modes;
+}
+
+// Upstream Svf::Process<BAND_PASS> arithmetic and addition order. With a
+// stationary pickup, four independent partials can run through a block
+// together while their histories stay local.
+static inline __attribute__((always_inline)) float ModalBand(float input, float g, float r, float h,
+                                                            float& state1, float& state2) {
+  float hp = (input - r * state1 - g * state1 - state2) * h;
+  float v = g * hp;
+  float bp = v + state1;
+  state1 = v + bp;
+  float w = g * bp;
+  float lp = w + state2;
+  state2 = w + lp;
+  return bp;
+}
+
+inline float Resonator::BandPass(int i, float input) {
+  return ModalBand(input, g_[i], r_[i], h_[i], state1_[i], state2_[i]);
+}
+
+template<int lanes>
+void Resonator::AddFixedModes(int first, const float* weights, const float* input,
+                              float* odd, float* even, size_t size) {
+  float g[lanes], r[lanes], h[lanes], s1[lanes], s2[lanes];
+  for (int k = 0; k < lanes; ++k) {
+    g[k] = g_[first+k]; r[k] = r_[first+k]; h[k] = h_[first+k];
+    s1[k] = state1_[first+k]; s2[k] = state2_[first+k];
+  }
+  for (size_t j = 0; j < size; ++j) {
+    float y[lanes];
+    for (int k = 0; k < lanes; ++k)
+      y[k] = weights[k] * ModalBand(input[j], g[k], r[k], h[k], s1[k], s2[k]);
+    /* genAMB: hold the two partial sums in registers across the lane pairs
+       rather than reading and writing odd[j] and even[j] once per pair. The
+       additions keep their order, so this is bit-exact. */
+    float o = odd[j], e = even[j];
+    for (int k = 0; k < lanes; k += 2) {
+      o += y[k];
+      e += y[k+1];
+    }
+    odd[j] = o;
+    even[j] = e;
+  }
+  for (int k = 0; k < lanes; ++k) {
+    state1_[first+k] = s1[k]; state2_[first+k] = s2[k];
+  }
 }
 
 /* genAMB: the modal resonator is the single hottest loop in the firmware, so it
@@ -106,6 +167,30 @@ PLAT_HOT int32_t Resonator::ComputeFilters() {
 PLAT_HOT void Resonator::Process(const float* in, float* out, float* aux, size_t size) {
   int32_t num_modes = ComputeFilters();
   
+  if (!size) return;
+  if (size <= kMaxBlockSize &&
+      previous_position_ + (position_ - previous_position_) / static_cast<float>(size) == previous_position_) {
+    // Each partial then has one pickup weight for the entire block. The
+    // addition order and SVF state updates match the interpolated path.
+    float excitation[kMaxBlockSize];
+    for (size_t j = 0; j < size; ++j) {
+      excitation[j] = in[j] * 0.125f;
+      out[j] = aux[j] = 0.0f;
+    }
+    CosineOscillator amplitudes;
+    amplitudes.Init<COSINE_OSCILLATOR_APPROXIMATE>(previous_position_);
+    int32_t i = 0;
+    for (; i + 2 < num_modes; i += 4) {
+      float weights[4];
+      for (int j = 0; j < 4; ++j) weights[j] = amplitudes.Next();
+      AddFixedModes<4>(i, weights, excitation, out, aux, size);
+    }
+    if (i < num_modes) {
+      float weights[2] = {amplitudes.Next(), amplitudes.Next()};
+      AddFixedModes<2>(i, weights, excitation, out, aux, size);
+    }
+    return;
+  }
   ParameterInterpolator position(&previous_position_, position_, size);
   while (size--) {
     CosineOscillator amplitudes;
@@ -116,8 +201,8 @@ PLAT_HOT void Resonator::Process(const float* in, float* out, float* aux, size_t
     float even = 0.0f;
     amplitudes.Start();
     for (int32_t i = 0; i < num_modes;) {
-      odd += amplitudes.Next() * f_[i++].Process<FILTER_MODE_BAND_PASS>(input);
-      even += amplitudes.Next() * f_[i++].Process<FILTER_MODE_BAND_PASS>(input);
+      odd += amplitudes.Next() * BandPass(i++, input);
+      even += amplitudes.Next() * BandPass(i++, input);
     }
     *out++ = odd;
     *aux++ = even;

@@ -33,7 +33,7 @@ static void retained_models_and_legacy_projects(void)
         expected.par[P_RMODEL] = (int16_t)mapped[id];
         for (int s = 0; s < NPIECES; ++s)
             expected.slot[s].par[P_RMODEL] = (int16_t)mapped[(s + id) % 7];
-        assert(plat_store_save(OBJ_PROJ, &proj, sizeof proj) == 0);
+        assert(write_record() == 0);
         memset(&proj, 0, sizeof proj);
         assert(project_load() == 0 && !memcmp(&proj, &expected, sizeof proj));
         project_apply(); drain();
@@ -68,7 +68,7 @@ static void reject_corrupt_models_before_mapping(void)
             project_defaults(); project_t defaults = proj;
             if (where < 0) proj.par[P_RMODEL] = (int16_t)invalid;
             else proj.slot[where].par[P_RMODEL] = (int16_t)invalid;
-            assert(plat_store_save(OBJ_PROJ, &proj, sizeof proj) == 0);
+            assert(write_record() == 0);
             assert(project_load() == -1);
             assert(!memcmp(&proj, &defaults, sizeof proj));
         }
@@ -95,7 +95,7 @@ static void six_voice_parameter_and_persistence(void)
     apply(P_FMPOLY, 7); assert(par[P_FMPOLY] == 6);
     apply(P_FMPOLY, 0); assert(par[P_FMPOLY] == 1);
     project_defaults(); proj.par[P_FMPOLY] = 7;
-    assert(plat_store_save(OBJ_PROJ, &proj, sizeof proj) == 0);
+    assert(write_record() == 0);
     assert(project_load() == -1 && proj.par[P_FMPOLY] == 4);
     puts("PASS FM 1..6 persists/applies, default four retained, runtime clamps and corrupt saved seven rejected");
 }

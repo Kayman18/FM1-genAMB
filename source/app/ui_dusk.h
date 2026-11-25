@@ -23,7 +23,6 @@ static int dusk_bank(void)
     if(v==V_RINGSEQ || v==V_FMSEQ)return ui.seq_zone[v==V_FMSEQ]==2?2:1;
     if((v==V_FMFILTER || v==V_PAD2FILTER))return ui.fm_filter_row==2?2:1;
     if(v==V_MOD && ui.mod_route<11)return ui.mod_row==2?2:1;
-    if(v==V_FUNITOPT)return ui.unit_row[1]==2?2:1;
     if(grid_page(v) && !wide_grid_page(v))return grid_row(v);
     return 1;
 }
@@ -72,9 +71,43 @@ static void dusk_perf(void)
         cv_text(x,y,&FONT_T,names[j],D_LABEL);
         itoa_u(vals[j],b);cv_text(x,y+10,&FONT_XS,b,(j>=6 && vals[j])?D_ACC:D_TEXT);
     }
+    /* All three footer readings describe the single slowest callback since reset. */
+    const char *peak_labels[] = {"PK C0", "PK C1", "PK WAIT"};
+    uint32_t active = s.worst_total_us >= s.worst_wait_us ? s.worst_total_us - s.worst_wait_us : 0;
+    uint32_t peak_values[] = {active, s.worst_work_us, s.worst_wait_us};
+    for (int j=0; j<3; ++j) {
+        int x=12 + 74*j;
+        cv_text(x,224,&FONT_T,peak_labels[j],D_LABEL);
+        itoa_u(peak_values[j],b);
+        cv_text(x+68-text_w(&FONT_T,b),224,&FONT_T,b,D_TEXT);
+    }
     for(int j=0;j<4;j++)dusk_cell(j,160+(j/2)*28,dusk_knob(j),dusk_label(j,dusk_knob(j)),1);
 }
-static void dusk_paint(void)
+/* The saved knobs stay editable at their base values. Only this 16-pixel
+ * band follows an audible FM assignment, at a maximum of eight updates/s. */
+static int dusk_fm_destination(void)
+{
+    if (ui.view!=V_MOD || ui.help || ui.mod_route<6 || ui.mod_route>8) return 0;
+    int dest=knob_get(K_MOD_DEST);
+    return dest>=DEST_FM_VOLUME && dest<=DEST_VA_R ? dest : 0;
+}
+
+static int dusk_fm_live(int dest)
+{
+    float v=va_live[dest-DEST_FM_VOLUME];
+    return (int)(v+(v<0?-0.5f:0.5f));
+}
+static void dusk_fm_readout(int dest,int value)
+{
+    char label[12],number[16];
+    static const int ids[]={P_FMLEVEL,P_VACUT,P_VARES,P_VAENV,P_VATRACK,P_VAPWM,P_VAVCFA,P_VAVCFD,P_VAVCFS,P_VAVCFR};
+    en_param_text(P_M7DEST,dest,label);
+    en_param_text(ids[dest-DEST_FM_VOLUME],value,number);
+    cv_text(12,67,&FONT_T,label,D_LABEL);
+    cv_text(228-text_w(&FONT_T,number),67,&FONT_T,number,D_ACC);
+}
+
+static void dusk_paint(int live_dest, int live_value)
 {
     char title[48],b[24],root[48];const felucca_font_t *tf=&FONT_L;
     int bp=plat_battery_pct();
@@ -88,13 +121,27 @@ static void dusk_paint(void)
     if(text_w(tf,title)>216)tf=&FONT_B;
     if(text_w(tf,title)>216)tf=&FONT_XS;
     dusk_fit(12,34,216,tf,title,D_TEXT);
-    if(ui.view!=V_PERF){
+    if (ui.view == V_NATURE) {
+        unsigned density = (unsigned)proj.par[P_NATURE_DENSITY];
+        char *end = b;
+        itoa_u(density, b);
+        while (*end) ++end;
+        *end++ = '%'; *end = 0;
+        cv_text(12,67,&FONT_T,"SELECT: ANIMAL DENSITY",D_LABEL);
+        cv_text(228-text_w(&FONT_XS,b),65,&FONT_XS,b,D_ACC);
+        cv_line(12,82,227,82,D_ACC);
+    } else if(ui.view!=V_PERF){
         if(ui.view==V_RINGSEQ || ui.view==V_FMSEQ){
             static const char *const modes[]={"Original","Hallucigenia","Proteus","Unit-D"};
             int mode=proj.par[ui.view==V_FMSEQ?P_FMSEQMODE:P_RSEQMODE];
             dusk_fit(12,67,216,&FONT_T,modes[(unsigned)mode<4u?mode:0],D_ACC);
             cv_text(150,67,&FONT_T,"ALGO MODE",D_DIM);
-        }else dusk_fit(12,67,216,&FONT_T,plat_ms()<ui.msg_until?ui.msg:piece_name(proj.piece),plat_ms()<ui.msg_until?D_ACC:D_DIM);
+        }else if(ui.view==V_FM){
+            int p=proj.par[P_VAPRESET];
+            dusk_fit(12,67,216,&FONT_T,va_preset_name(p),D_ACC);
+            cv_text(184,67,&FONT_T,p==0?"PAD":p<=20?"PLUCK":"BASS",D_DIM);
+        }else if(live_dest) dusk_fm_readout(live_dest,live_value);
+        else dusk_fit(12,67,216,&FONT_T,plat_ms()<ui.msg_until?ui.msg:piece_name(proj.piece),plat_ms()<ui.msg_until?D_ACC:D_DIM);
         cv_line(12,82,227,82,D_ACC);
     }
     if(ui.help){
@@ -104,6 +151,18 @@ static void dusk_paint(void)
     }else if(ui.view==V_PERF)dusk_perf();
     else for(int j=0;j<4;j++)dusk_cell(j,94+(j/2)*63,dusk_knob(j),dusk_label(j,dusk_knob(j)),0);
     cv_line(12,217,227,217,D_RULE);
+    if (ui.view == V_PERF && !ui.help) return;
+    if (ui.view == V_NATURE) {
+        static const char *const weather[] = {"R OFF","R FADE IN","R WET","R FADE OUT","R DRY"};
+        uint32_t status = nature_status;
+        char calls[] = "CALLS 0/2";
+        calls[6] += (char)NATURE_BIRDS(status);
+        cv_text(12,224,&FONT_T,NATURE_WATER_ON(status) ? "RIVER ON" : "RIVER OFF",D_DIM);
+        cv_text(76,224,&FONT_T,weather[NATURE_RAIN_PHASE(status)],D_DIM);
+        const char *footer = en_nature_calls() == 10u ? calls : "BANK 7/10";
+        cv_text(228-text_w(&FONT_T,footer),224,&FONT_T,footer,D_LABEL);
+        return;
+    }
     /* Existing root + scale remain visible without an animated chord display. */
     unsigned n=0;const char *s=EN_NOTE_NAME[proj.par[P_ROOT]];
     while(*s && n<sizeof root-1)root[n++]=*s++;
@@ -135,11 +194,32 @@ static void dusk_draw(void)
     for(int j=0;j<4;j++){int k=dusk_knob(j);h=hash(h,k);if(k!=K_NONE)h=hash(h,knob_get(k));}
     /* Fault/status can change the worker text without changing its numeric state. */
     h=hash(h,dc_fault());
+    if (ui.view == V_NATURE) {
+        h=hash(h,(uint32_t)proj.par[P_NATURE_DENSITY]);
+        h=hash(h,nature_status);
+    }
     if(ui.view==V_PERF)h=hash(h,now/500u);
-    if(ui.sig[0]==h)return;
+    int dest=dusk_fm_destination();
+    static uint32_t live_at;
+    static int last_value;
+    h=hash(h,(unsigned)dest);
+    if(ui.sig[0]==h) {
+        if (dest && now-live_at>=125u) {
+            live_at=now;
+            int value=dusk_fm_live(dest);
+            if (value!=last_value) {
+                last_value=value;
+                cv_begin(240,16,D_BG);cv_oy=-65;
+                dusk_fm_readout(dest,value);cv_blit(0,65);
+            }
+        }
+        return;
+    }
+    live_at=now;
+    last_value=dest ? dusk_fm_live(dest) : 0;
     ui.sig[0]=h;
     for(int band=0;band<240;band+=120){
         cv_begin(240,120,D_BG);cv_oy=-band;
-        dusk_paint();cv_blit(0,(uint32_t)band);
+        dusk_paint(dest,last_value);cv_blit(0,(uint32_t)band);
     }
 }

@@ -148,6 +148,8 @@ static void test_timeout(uint32_t initial_tick)
     uint32_t elapsed = (fake_tick - dc_start_tick) / FM1_TICKS_PER_US;
     CHECK("hang remains bounded at the new deadline", elapsed > DC_HANG_US && elapsed <= DC_HANG_US + 2u);
     CHECK("timeout records no completed job", dc_timeouts == 1 && dc_jobs == 0 && value == 0);
+    CHECK("peak callback retains a failed wait across timer wrap",
+          dc_block_wait_us >= DC_HANG_US - 1u && dc_block_wait_us <= elapsed && dc_block_work_us == 0);
     check_sticky(DC_FAULT_TIMEOUT, 0);
     if (initial_tick > UINT32_MAX / 2u)
         CHECK("timeout test crosses timer wrap", fake_tick < initial_tick);

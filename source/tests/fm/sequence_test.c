@@ -35,6 +35,7 @@ static int tick_time[1024];
 static void record_tick(void){if(capture_ticks){assert(tick_count<1024);tick_time[tick_count++]=test_clock;}}
 static void ud_tick(int layer){(void)layer;record_tick();}
 static void prot_tick(int layer){(void)layer;record_tick();}
+#define fm_trigger fm_port_trigger  /* sequencer-only test sink */
 #include "../../app/dsp/fm_sequence.c"
 static void init(void){
     memset(par,0,sizeof par);memset(active,0,sizeof active);en_ext=0;triggers=midi_on=midi_off=0;

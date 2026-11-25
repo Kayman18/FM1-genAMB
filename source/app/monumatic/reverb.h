@@ -22,4 +22,11 @@ int mm_reverb_initialize(MM_Reverb *s,float sample_rate,float *arena,size_t samp
 /* Reference arithmetic by default; isolated reverb_target_math.h selects the
  * float-only adaptation. Caller must retain valid initialized metadata. */
 int mm_reverb_process(MM_Reverb *s,float *arena,float left,float right,float out[2]);
+/* Block-rate preparation + lean per-sample step. mm_reverb_begin() validates
+ * the state, refreshes damping if the cutoff moved and seeds the running
+ * feedback sum; mm_reverb_sample() then steps the tank with no per-sample
+ * guards and no re-summation. Together they are bit-exact to calling
+ * mm_reverb_process() once per sample. */
+int mm_reverb_begin(MM_Reverb *s,float *arena,float *carry);
+void mm_reverb_sample(MM_Reverb *s,float *arena,float left,float right,float out[2],float *carry);
 #endif

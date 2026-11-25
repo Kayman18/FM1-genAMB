@@ -1,7 +1,7 @@
 static void pad_filter_controls_tests(void)
 {
     project_t saved=proj;project_defaults();
-    assert(sizeof(project_t)==sizeof(project_v22_t));
+    assert(sizeof(disk_project_t)==3840 && sizeof(project_v22_t)==3764);
     assert(VIEW_KNOB[V_MIXER][0]==P_PAD && VIEW_KNOB[V_MIXER][1]==P_PULSE);
     assert(VIEW_KNOB[V_MIXER][2]==P_BELLS && VIEW_KNOB[V_MIXER][3]==P_FMLEVEL);
     for(int layer=0;layer<2;layer++){
@@ -17,7 +17,10 @@ static void pad_filter_controls_tests(void)
         knob_set(dusk_knob(0),FM_FILTER_SEM);
         button(btn);assert(ui.view==(layer?V_PAD2SEQ:V_PADSEQ));
     }
-    set_view(V_FM);button(B_SEL);assert(ui.view==V_FMSEQ && ui.seq_zone[1]==1);
+    set_view(V_FM);
+    const int pages[]={V_VCF,V_AMPENV,V_VCFENV,V_VAMOD};
+    for(int i=0;i<4;i++){button(B_SEL);assert(ui.view==pages[i] && fm_view(ui.view));}
+    button(B_SEL);assert(ui.view==V_FMSEQ && ui.seq_zone[1]==1);
     project_defaults();project_v22_t old={0};
     old.magic=PROJ_MAGIC;old.format=22;old.pool=proj.pool;old.leds=proj.leds;old.piece=proj.piece;
     memcpy(old.par,proj.par,sizeof old.par);old.par[P_FFILTERMODEL]=0;
@@ -29,9 +32,9 @@ static void pad_filter_controls_tests(void)
     old.evo=proj.evo;old.fm_evo=proj.fm_evo;old.proteus=proj.proteus;old.unitd=proj.unitd;
     old.evo.step[0][0]=67;old.fm_evo.step[0][1]=72;
     assert(plat_store_save(OBJ_PROJ,&old,sizeof old)==0);
-    memset(&proj,0,sizeof proj);assert(project_load()==0 && proj.format==23);
+    memset(&proj,0,sizeof proj);assert(project_load()==0 && proj.format==PROJ_FORMAT);
     const int reused[5]={P_P2FILTERMODEL,P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX};
-    for(int id=0;id<P_NPARAMS;id++){
+    for(int id=0;id<V22_NPARAMS;id++){
         int skip=id==P_FFILTERMODEL;for(int j=0;j<5;j++)skip|=id==reused[j];
         if(!skip){assert(proj.par[id]==old.par[id]);for(int i=0;i<NPIECES;i++)assert(proj.slot[i].par[id]==old.slot[i].par[id]);}
     }
@@ -43,5 +46,5 @@ static void pad_filter_controls_tests(void)
     assert(project_save()==0);project_t expected=proj;memset(&proj,0,sizeof proj);assert(project_load()==0);
     assert(!memcmp(&expected,&proj,sizeof proj));
     proj=saved;project_apply();set_view(V_GARDEN);
-    puts("PASS stereo pad filter controls, moved page navigation, mixer Pad1/Pad2/Rings/FM, format22 migration and format23 save roundtrip; unchanged save size");
+    puts("PASS stereo pad filter controls, moved page navigation, mixer Pad1/Pad2/Rings/FM, format22 migration and current-format save roundtrip");
 }

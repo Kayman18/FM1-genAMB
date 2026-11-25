@@ -16,10 +16,10 @@ Top-level fields written by WEB1:
   playing         Play/Rest state
   frozen          Freeze state
   pool            12-bit custom scale mask relative to the root
-  parameterCount  167
+  parameterCount  172
   params          object keyed by the exact firmware P_* parameter names
 
-The 167 parameter keys are stable append-only firmware IDs. Loading a preset
+The 172 parameter keys are stable append-only firmware IDs. Loading a preset
 restores every value that is present in the file, then restores piece identity,
 lights, scale pool, Play/Rest and Freeze. The restore is literal: it does not
 invoke model-selection convenience defaults that would change other values.
@@ -30,3 +30,9 @@ to the FM-1 project flash.
 A .genamb preset intentionally does NOT replace the other seven saved piece
 slots and does not attempt to serialize hidden generated note-history/random
 engine state. It captures every exposed control/settings value.
+
+NATURE (RC 17.99.33)
+Appended IDs 167..171 are P_NATURE_MASTER, P_NATURE_WATER, P_NATURE_RAIN,
+P_NATURE_ANIMALS and P_NATURE_DENSITY. When these keys are absent from an
+older snapshot, their values default to 0, 70, 60, 55 and 35 respectively.
+Thus an old snapshot does not accidentally enable Nature from the live state.

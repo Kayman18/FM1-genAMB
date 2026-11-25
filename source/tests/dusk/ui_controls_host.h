@@ -7,11 +7,11 @@ static void dusk2_ui_controls_tests(void)
     assert(VIEW_KNOB[V_RINGS][3]==K_NONE);
     ui.mod_route=0;ui.mod_row=1;
     assert(bound_view_knob(V_MOD,2)==K_MOD_DEPTH);
-    assert(bound_view_knob(V_MOD,3)==K_NONE);
+    assert(bound_view_knob(V_MOD,3)==K_MOD_SPEED);
     for(int fi=0;fi<2;fi++)for(int mode=0;mode<4;mode++){
         int view=fi?V_FMSEQ:V_RINGSEQ;
         knob_set(fi?P_FMSEQMODE:P_RSEQMODE,mode);
-        set_view(fi?V_FM:V_DAMBIENT);
+        set_view(fi?V_FM:V_RINGEXC);
         button(fi?B_SEL:B_SEQ);
         assert(ui.view==view && ui.seq_zone[fi]==1 && dusk_bank()==1);
         int want[4]={fi?P_FMOCT:P_BOCT,fi?P_FMELENGTH:P_ELENGTH,
@@ -29,6 +29,15 @@ static void dusk2_ui_controls_tests(void)
                 }
             }
         }
+    }
+    for (int fm=0; fm<2; ++fm) {
+        knob_set(fm?P_FMSEQMODE:P_RSEQMODE,1);
+        set_view(fm?V_FMSEQ:V_RINGSEQ);
+        button(fm?B_SEL:B_SEQ);
+        assert(ui.view==(fm?V_FMESETUP:V_ESETUP));
+        const int ids[2][4]={{P_BOCT,P_RINGRANGE,P_RINGCHANCE,P_RBURST},
+                             {P_FMOCT,P_FMRANGE,P_FMCHANCE,P_FMBURST}};
+        for(int k=0;k<4;++k) assert(dusk_knob(k)==ids[fm][k]);
     }
     proj=saved;project_apply();set_view(V_GARDEN);
     puts("PASS DUSK2 controls: Rings Model/Burst/Voices/blank, LFO Depth K3; SEQ and SEL enter active banks and edit all four sequencer modes");

@@ -190,7 +190,7 @@ static void prot_tick(int layer)
         if(!ok)prot_chord_failure[layer]++;
 #endif
         if(layer) {
-            if(par[P_FMLEVEL]>0) fm_seq_schedule(pitch,92,0);
+            if(en_fm_enabled(par)) fm_seq_schedule(pitch,92,0);
         } else {
             float strike=0.35f+0.65f*(float)par[P_RPROTGATE]*0.01f;
             ring_schedule(pitch,(int)(strike*110.0f),0);

@@ -39,6 +39,7 @@ extern volatile uint32_t fm1_startup_stage;
 void app_init(void)
 {
     BOOT_STAGE(10);
+    en_nature_mount(plat_data(ANIMAL_WAVE_BASE), ANIMAL_WAVE_END - ANIMAL_WAVE_BASE);
     en_init();
     BOOT_STAGE(20);
     project_load();                      /* defaults when nothing (or another format) is saved */
@@ -69,7 +70,7 @@ void app_say(const char *a, const char *b) { ui_say(a, b); }
  *   F0 7D 'G' 'A' 01 <command> ... F7
  * app_sysex() receives the bytes between F0/F7.
  *
- * All 167 engine parameters use the exact P_* IDs from amb.h. Signed values
+ * All 174 engine parameters use the exact P_* IDs from amb.h. Signed values
  * are carried as 14-bit unsigned values biased by 8192 so every data byte
  * remains MIDI-safe. State is returned in short parameter chunks to stay well
  * inside the FM-1 USB-MIDI SysEx queues.
@@ -211,9 +212,9 @@ static int ga_action(unsigned a)
     case GA_ACT_SAVE_PROJECT: button(B_SAVE); break;
     case GA_ACT_PANIC: app_panic(); break;
     case GA_ACT_RINGS_EVOLVE_NEW: en_evo_new(); mark_dirty(); say("PATTERN", "RANDOMIZED"); break;
-    case GA_ACT_FM_EVOLVE_NEW: en_fmevo_new(); mark_dirty(); say("FM PATTERN", "RANDOMIZED"); break;
+    case GA_ACT_FM_EVOLVE_NEW: en_fmevo_new(); mark_dirty(); say("VA PATTERN", "RANDOMIZED"); break;
     case GA_ACT_RINGS_PROTEUS_NEW: en_proteus_new(0); mark_dirty(); say("PROTEUS", "NEW MELODY"); break;
-    case GA_ACT_FM_PROTEUS_NEW: en_proteus_new(1); mark_dirty(); say("FM PROTEUS", "NEW MELODY"); break;
+    case GA_ACT_FM_PROTEUS_NEW: en_proteus_new(1); mark_dirty(); say("VA PROTEUS", "NEW MELODY"); break;
     case GA_ACT_PERF_RESET: perf_reset(); break;
     default: return 0;
     }

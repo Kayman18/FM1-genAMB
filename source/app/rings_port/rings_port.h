@@ -47,8 +47,6 @@ void rings_port_set_damping(int value_0_100);
 void rings_port_set_position(int value_0_100);
 void rings_port_set_string_fx(int fx_0_5); /* Legacy project field; now a no-op. */
 void rings_port_set_exciter(int value);
-void rings_port_set_delay(int time_0_100, int feedback_0_85, int mix_0_100, int repeats_0_8);
-void rings_port_set_ambient(int diffusion, int motion, int reverb_send);
 void rings_port_set_modulation(
     float src7, int dest7, int depth7,
     float src8, int dest8, int depth8,

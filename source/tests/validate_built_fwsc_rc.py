@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Verify the genAMB RC (17.99.32) package built using the correct FM-1 cross-toolchain.
-Usage: python3 tests/validate_built_fwsc_rc.py app/build/amb-17.99.32.fwsc
+"""Verify the genAMB RC (17.99.46) package built using the correct FM-1 cross-toolchain.
+Usage: python3 tests/validate_built_fwsc_rc.py app/build/amb-17.99.46.fwsc
 """
 from pathlib import Path
 import hashlib
@@ -10,15 +10,17 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'base/tools'))
 import fm1pkg_make as pkg
-fw=Path(sys.argv[1] if len(sys.argv)>1 else ROOT/'app/build/amb-17.99.32.fwsc')
+fw=Path(sys.argv[1] if len(sys.argv)>1 else ROOT/'app/build/amb-17.99.46.fwsc')
 app=ROOT/'app/build/amb.bin'
 ldr=ROOT/'app/build/loader/ota.bin'
 if not fw.is_file() or not app.is_file() or not ldr.is_file():
     raise SystemExit('Missing target artifact; build with the JieLi toolchain and SDK first.')
 r=fw.read_bytes()
-assert len(r)==610108,len(r)
+assert len(r) == 20 + 0x400 + 0xB3000 + ldr.stat().st_size, len(r)
 id=''.join(chr((r[i*48+47]-i-1)&255) for i in range(20) if r[i*48+47]!=0x7d)
-assert id=='FM-1_7179932',id
+version = sys.argv[2] if len(sys.argv)>2 else "17.99.46"
+assert version in ("17.99.46", "17.99.47")
+assert id == 'FM-1_7'+version.replace('.',''),id
 p=b''.join(r[i*48:i*48+47] for i in range(20))+r[960:]
 h=bytearray(p[:64]);pkg.enc(h,0,64)
 assert pkg.crc16(h[2:])==struct.unpack_from('<H',h)[0]
@@ -33,7 +35,11 @@ for i in range(count):
     assert len(payload)==n and pkg.crc16(payload)==struct.unpack_from('<H',entry,4)[0]
     files[entry[64:].split(b'\x00')[0].decode()]=payload
 assert files['ota.bin']==ldr.read_bytes()
-flash=bytearray(files['flash.bin'][0x4000:]);pkg.sfc(flash,0,len(flash),0,pkg.KEY)
+whole=files['flash.bin']
+bank=(ROOT/'assets/nature/animal-wave.bin').read_bytes()
+assert len(whole)==0xB3000 and whole[0x97000:]==bank
+assert whole[0x93000:0x97000] == b'\xff'*0x4000
+flash=bytearray(whole[0x4000:0x93000]);pkg.sfc(flash,0,len(flash),0,pkg.KEY)
 binary=app.read_bytes()
 assert flash[0x120:0x120+len(binary)]==binary
 assert flash[0x120+len(binary):0x120+pkg.APP_SLOT]==b'\xff'*(pkg.APP_SLOT-len(binary))

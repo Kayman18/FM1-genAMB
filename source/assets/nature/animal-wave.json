@@ -1,0 +1,35 @@
+[
+  {
+    "recording": "043_G2_V1_Finch1.wav",
+    "frames": 40280,
+    "bytes": 20640,
+    "decoded_rms_dbfs": -17.893,
+    "decoded_peak_dbfs": -1.076,
+    "sha256": "530d8c30127fc0bf90be857bc26b61db2119681fe91e7b6a57386b25c3f5b186",
+    "recording_sha256": "88609d7f797da15b16bbb9903c54d444b80a5b3221379e92f149befea3f85ddc",
+    "name": "Finch 1",
+    "offset": 64
+  },
+  {
+    "recording": "044_G#2_V1_Finch2.wav",
+    "frames": 34566,
+    "bytes": 17544,
+    "decoded_rms_dbfs": -17.896,
+    "decoded_peak_dbfs": -4.184,
+    "sha256": "842c64815ebfe131941158e4f8911c0226aa4ddcf4b52231815b2ee05ca154f9",
+    "recording_sha256": "a03a990dbd4b570db5f34d19ddb87f90e4e20cba4f1a1f21f389ee94e37ae564",
+    "name": "Finch 2",
+    "offset": 20704
+  },
+  {
+    "recording": "054_F#3_V1_Squirrel3.wav",
+    "frames": 145488,
+    "bytes": 73788,
+    "decoded_rms_dbfs": -22.365,
+    "decoded_peak_dbfs": -0.726,
+    "sha256": "eff6a4ebbf94ebacac6ffcef012a63a3c6fbb438e2bc57ce75b5ca0d7710c79e",
+    "recording_sha256": "cab8e1055035707b205a320e8cfde30e389a7cca763b5bf3f1509de6b9b75a76",
+    "name": "Squirrel 3",
+    "offset": 38248
+  }
+]

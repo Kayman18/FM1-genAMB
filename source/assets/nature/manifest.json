@@ -1,0 +1,85 @@
+[
+  {
+    "name": "water",
+    "frames": 135168,
+    "bytes": 68112,
+    "offset": 270700,
+    "sha256": "ad22aac7a64f6fbc099d794c0530aacc46b42409fc058e8cb4d03142b062ba36",
+    "recording": "Water(1).wav",
+    "recording_sha256": "dc5e90ad50460c139e515b4465be51978803561d7539947ab2f1395a3cc60049"
+  },
+  {
+    "name": "rain",
+    "frames": 95232,
+    "bytes": 47988,
+    "offset": 338824,
+    "sha256": "c40ff258971fcd75b2e7a30d2fb51117df2adafd9b61719aeadae9cfec6228b7",
+    "recording": "Rain.wav",
+    "recording_sha256": "cfc262fbd7059d38c4c8a1e7b66efc14314fcdb4a2ae775941d7b03de98f8d61",
+    "normalized_rms_dbfs": -18.966,
+    "normalized_peak_dbfs": -1.41
+  },
+  {
+    "name": "chickadee2",
+    "frames": 19273,
+    "bytes": 9804,
+    "offset": 386824,
+    "sha256": "08fb96b9a49bbce410c498119aa134195929193307d7301d4ffcacc25986bfc8",
+    "recording": "042_F#2_V1_Chickadee2.wav",
+    "recording_sha256": "256980b3bfb042494e2fadd82805861ba43c07ceeda3e7f711484995d1184ce3"
+  },
+  {
+    "name": "cardinal1",
+    "frames": 52661,
+    "bytes": 26832,
+    "offset": 396628,
+    "sha256": "2f34a388b7e78270f7c1ce10d250866c63ba6599b151cd521248bf740672e8b4",
+    "recording": "038_D2_V1_Cardinal1.wav",
+    "recording_sha256": "8ae5398dad37e4ef9c094159172e6aa5ce3300a4181db4668760dd413e41009d"
+  },
+  {
+    "name": "robin1",
+    "frames": 31300,
+    "bytes": 15996,
+    "offset": 423460,
+    "sha256": "47d6f6d1b045ceaba6f3e6a1d41f957f623b409433662a135a70d63cf1b77df3",
+    "recording": "046_A#2_V1_Robin1.wav",
+    "recording_sha256": "89c0824031bd0af1db5357521247a079de931bf7c82aa22cc27076119adb79fa"
+  },
+  {
+    "name": "woodthrush1",
+    "frames": 21795,
+    "bytes": 11352,
+    "offset": 439456,
+    "sha256": "b6f96b9c3a4a03417f52370395fc9842a097f59cd9e0ef0d47a64966e1a08b9a",
+    "recording": "048_C3_V1_Woodthrush1.wav",
+    "recording_sha256": "ad829230c79121988b79cf2758dae5ad7eb9964f31b6432bc755ec1120761366"
+  },
+  {
+    "name": "redwingedblackbird",
+    "frames": 19841,
+    "bytes": 10320,
+    "offset": 450808,
+    "sha256": "9996ed422aca68d4a40687c59c60c7a6e53ebf7fa99edd5c16af339f0d051eef",
+    "recording": "058_A#3_V1_RedWingedBlackbird.wav",
+    "recording_sha256": "81d2c331556aaf75867ef83e8edc15e22ea5b6a8049838d72b52c9267ede02e6"
+  },
+  {
+    "name": "woodpecker3",
+    "frames": 38147,
+    "bytes": 19608,
+    "offset": 461128,
+    "sha256": "92c447d331fdb5413e3f2054c9ff81a01fbb09a0501641beb7629092d0645adc",
+    "recording": "057_A3_V1_Woodpecker3.wav",
+    "recording_sha256": "2583e41d34cb8f325d193ee2472c97a54636168bb6946becdb1c88d2e9465aa6"
+  },
+  {
+    "name": "woodpecker2",
+    "frames": 18749,
+    "bytes": 9804,
+    "offset": 480736,
+    "sha256": "f56fc5f62e4a63061937bec47a03413cccbf14e0c8a8e92f51852a892e8b5518",
+    "recording": "056_G#3_V1_Woodpecker2.wav",
+    "recording_sha256": "111e947fc346f64edd767a89542259b3e467aba6eddee049dcafda37e0350b6b"
+  }
+]

@@ -22,8 +22,6 @@ static void setup(int model, int poly, int fx)
     rings_port_set_damping(64);
     rings_port_set_position(37);
     rings_port_set_exciter(55);
-    rings_port_set_delay(57, 32, 44, 4);
-    rings_port_set_ambient(50, 55, 32);
 }
 
 int main(int argc, char **argv)

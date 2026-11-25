@@ -1,0 +1,89 @@
+{
+  "conversion_revision": 2,
+  "source": {
+    "file": "Water(1).wav",
+    "sha256": "dc5e90ad50460c139e515b4465be51978803561d7539947ab2f1395a3cc60049",
+    "duration_seconds": 7.5,
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "pcm_bits": 24
+  },
+  "reference": {
+    "repository": "https://github.com/aceyprime/zen-1",
+    "commit": "ec9295233ea64ddac224b58b4d07216706c1b8ee",
+    "encoder": "tools/zen_samples.py:adpcm_block",
+    "decoder": "tools/zen_samples.py:adpcm_decode",
+    "brook_decoded_rms_dbfs": -18.94045287639728
+  },
+  "format": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "decoded_samples": 135168,
+    "duration_seconds": 8.448,
+    "encoding": "Zen-1 block IMA ADPCM, 4-bit",
+    "block_samples": 1024,
+    "block_bytes": 516,
+    "blocks": 132,
+    "payload_bytes": 68112,
+    "payload_sha256": "ad22aac7a64f6fbc099d794c0530aacc46b42409fc058e8cb4d03142b062ba36",
+    "wav_format": "16-bit signed PCM little-endian, mono, 16000 Hz"
+  },
+  "processing": {
+    "source_start_seconds": 0.0,
+    "source_end_including_crossfade_seconds": 7.5,
+    "crossfade_seconds": 0.5,
+    "crossfade_curve": "equal power",
+    "extended_by_crossfaded_repetition": true,
+    "base_cycle_seconds": 7.0,
+    "time_stretch": false,
+    "pitch_shift": false,
+    "dc_removed_before_gain": 1.0280414319463844e-08,
+    "gain_db": 9.17767463673471,
+    "loudness_target": "RMS of the decoded original Brook, with a 0.89 pre-encode peak cap",
+    "extra_high_pass_filter": false
+  },
+  "verification": {
+    "pre_encode_peak_dbfs": -1.308329747343785,
+    "pre_encode_rms_dbfs": -18.940716905226623,
+    "decoded_peak_dbfs": -1.1944429139869768,
+    "decoded_rms_dbfs": -18.96385451550004,
+    "adpcm_snr_db": 20.434963181077514,
+    "decoded_clipped_samples": 0,
+    "loop_boundary_step_pcm": 948,
+    "max_adjacent_step_pcm": 22893,
+    "p99_adjacent_step_pcm": 6542.0,
+    "max_adpcm_block_boundary_step_pcm": 7178,
+    "independent_decoder_exact_match": true,
+    "independent_preprocessing_source_match": true,
+    "header_payload_exact_match": true,
+    "three_loop_preview_exact_match": true,
+    "internal_repeat_join_step_pcm": 1660,
+    "independent_decoded_pcm_sha256": "ac6154ba2149281d3efabfb5192be148b37397c0b50eec265f5fdef0ad5b0e62"
+  },
+  "files": {
+    "Water-Brook-16k-mono.wav": {
+      "bytes": 270380,
+      "sha256": "3a42214ad5aa6c75e25efe2b8e8ae525defc32452025740053cd38cd125d34c6"
+    },
+    "Water-Brook-decoded.wav": {
+      "bytes": 270380,
+      "sha256": "8621f2b65f34876b3d79c594843c9412d4b8708e356e8db10ed227bc2fcfa25f"
+    },
+    "Water-Brook-preview-3-loops.wav": {
+      "bytes": 811052,
+      "sha256": "35253fbb500ba243db0d55decf1edf64210ddb43bfc94aa595db0230152efd43"
+    },
+    "Water-Brook.adpcm": {
+      "bytes": 68112,
+      "sha256": "ad22aac7a64f6fbc099d794c0530aacc46b42409fc058e8cb4d03142b062ba36"
+    },
+    "Water-Brook.h": {
+      "bytes": 312784,
+      "sha256": "362cf40979f09525ae4500582d61f42d5e225201ea571dc6dc08bb93cfd0f399"
+    },
+    "README.txt": {
+      "bytes": 3581,
+      "sha256": "aeab09d7b48c933bed4249cf22364e5e58552fee672f52c2f12cca4696b76c03"
+    }
+  }
+}

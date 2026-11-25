@@ -18,6 +18,7 @@
 #else
 #define EN_POOL __attribute__((section(".pool")))
 #endif
+#include "nature.inc"
 #define BARRIER() __asm__ volatile("" ::: "memory")
 
 const char *const EN_NOTE_NAME[12] = {"C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"};
@@ -33,6 +34,8 @@ const uint8_t EN_LOOP_LEN[EN_NLOOP] = {13, 17, 23, 29};
 const uint8_t EN_DRUM_N[EN_NDRUM] = {16, 12, 7};
 
 static int16_t par[P_NPARAMS];
+volatile float en_fm_volume_target;
+volatile float va_live[10];
 static const en_param_t PARAMS[P_NPARAMS] = {
     {"Pad", 0, 100, 60},      {"Bells", 0, 100, 65},    {"Pad 2 model",0,5,1},     {"Pad 2", 0, 100, 40},
     {"Density", 0, 100, 40},  {"Evolve", 0, 100, 35},   {"Drift", 0, 100, 25},    {"Swell 2", 0, 100, 60},
@@ -46,15 +49,15 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"R bright", 0, 100, 55},  {"Damping", 0, 100, 65},
     {"Position", 0, 100, 35},  {"Polyphony", 1, 4, 4},
     {"String FX", 0, 5, 4},
-    {"M1 depth", 0, 100, 45}, {"M1 speed", 0, 100, 30},
-    {"M2 depth", 0, 100, 45}, {"M2 speed", 0, 100, 30},
-    {"M3 depth", 0, 100, 45}, {"M3 speed", 0, 100, 30},
-    {"M4 depth", 0, 100, 45}, {"M4 speed", 0, 100, 30},
-    {"M5 depth", 0, 100, 45}, {"M5 speed", 0, 100, 30},
-    {"M6 depth", 0, 100, 45}, {"M6 speed", 0, 100, 30},
-    {"M7 dest", 0, 14, 1},      {"M7 depth", -100, 100, 25}, {"M7 speed", 0, 100, 25},
-    {"M8 dest", 0, 14, 2},      {"M8 depth", -100, 100, 25}, {"M8 speed", 0, 100, 25},
-    {"M9 dest", 0, 14, 3},     {"M9 depth", -100, 100, 20}, {"M9 speed", 0, 100, 20},
+    {"M1 depth", 0, 100, 45}, {"M1 speed", 0, 115, 30},
+    {"M2 depth", 0, 100, 45}, {"M2 speed", 0, 115, 30},
+    {"M3 depth", 0, 100, 45}, {"M3 speed", 0, 115, 30},
+    {"M4 depth", 0, 100, 45}, {"M4 speed", 0, 115, 30},
+    {"M5 depth", 0, 100, 45}, {"M5 speed", 0, 115, 30},
+    {"M6 depth", 0, 100, 45}, {"M6 speed", 0, 115, 30},
+    {"M7 dest", 0, DEST_VA_R, 1},      {"M7 depth", -100, 100, 25}, {"M7 speed", 0, 115, 25},
+    {"M8 dest", 0, DEST_VA_R, 2},      {"M8 depth", -100, 100, 25}, {"M8 speed", 0, 115, 25},
+    {"M9 dest", 0, DEST_VA_R, 3},     {"M9 depth", -100, 100, 20}, {"M9 speed", 0, 115, 20},
     {"Character", 0, 100, 50},   {"Pad rev", 0, 100, 65}, {"Rings rev", 0, 100, 75},
     {"Pad 2 rev", 0, 100, 65},   {"Pad 2 mix",0,100,100},
     {"Pad2 tone", 0, 1, 0},        {"Exciter", 0, 100, 55},       {"Chorus", 0, 100, 28},
@@ -70,11 +73,11 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Dly motion", 0, 100, 30}, {"Delay rev", 0, 100, 65},
     {"Seq mode",0,3,0}, {"Length",2,16,16}, {"Mutation",0,100,15}, {"Density",0,100,70},
     {"Rate",-1,11,1}, {"Range",1,3,1}, {"Follow",0,1,1}, {"Pattern",1,16,1},
-    {"FM level",0,100,0}, {"FM patch",0,FM_PORT_PATCHES-1,0}, {"FM voices",1,FM_PORT_VOICES,FM_PORT_DEFAULT_VOICES}, {"FM gate",10,200,75}, {"FM reverb",0,100,65},
-    {"FM seq",0,3,0}, {"FM octave",-4,2,0}, {"Oct Drift",0,2,0}, {"Chance",0,100,0},
-    {"FM density",0,100,40}, {"FM burst",0,100,0},
-    {"FM length",2,16,16}, {"FM mutate",0,100,15}, {"FM dens",0,100,70},
-    {"FM rate",-1,11,1}, {"FM range",1,3,1}, {"FM follow",0,1,1}, {"FM pattern",1,16,1},
+    {"VA level",0,100,55}, {"Saw/Pulse",0,100,48}, {"VA voices",1,FM_PORT_VOICES,FM_PORT_DEFAULT_VOICES}, {"VA gate",10,200,75}, {"VA reverb",0,100,65},
+    {"VA seq",0,3,0}, {"VA octave",-4,2,0}, {"Oct Drift",0,2,0}, {"Chance",0,100,0},
+    {"VA density",0,100,40}, {"VA burst",0,100,0},
+    {"VA length",2,16,16}, {"VA mutate",0,100,15}, {"VA dens",0,100,70},
+    {"VA rate",-1,11,1}, {"VA range",1,3,1}, {"VA follow",0,1,1}, {"VA pattern",1,16,1},
     /* Proteus uses 32-note sequences and the source module's Poisson patience. */
     {"Length",1,32,16}, {"Density",1,100,80}, {"Patience",1,50,12}, {"Rate",-1,11,1},
     {"Gate",5,100,50}, {"Oct Prob",0,100,20}, {"Mutate",0,100,20}, {"Lock",0,2,0}, {"Range",0,2,1},
@@ -95,7 +98,26 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Tolerance",1,20,4},{"Range",1,4,2},{"Rate",-1,11,1},{"Polyphony",1,8,1},
     /* Append-only IDs retained: Tone is active, former GP5 rate is reserved. */
     {"Rev tone",0,100,85},{"Reserved rate",1,500,100},
+    {"Nature master",0,100,0}, {"River",0,100,70}, {"Rain",0,100,60},
+    {"Animals",0,100,55}, {"Animal density",0,100,35},
+    {"VA cutoff",0,100,42}, {"VA res",0,100,22},
+    {"Sub level",0,100,10},
+    {"PWM depth",0,100,22},
+    {"LFO period",1,60,12},
+    {"LFO cutoff",0,100,0},
+    {"Env amount",-100,100,32},
+    {"Key track",0,100,45},
+    {"Attack",0,100,50},
+    {"Decay",0,100,32},
+    {"Sustain",0,100,75},
+    {"Release",0,100,71},
+    {"Attack",0,100,62},
+    {"Decay",0,100,40},
+    {"Sustain",0,100,58},
+    {"Release",0,100,64},
+    {"VA preset",0,40,0},
 };
+#include "va_presets.inc"
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
 /* the pieces: eight recipes for the whole garden (the FM-1's PRESETS, the web app's cards). Tune and
@@ -163,7 +185,13 @@ static char *itoa_s(int v, char *b)
 }
 
 static float drift_secs(int v) { return 20.0f * fm_exp2f((float)v * 0.039069f); }   /* 20 s .. 5 min */
-static float mod_secs_from_speed(int v) { return 1200.0f * fm_exp2f(-6.321928f * (float)v * 0.01f); }
+static float mod_secs_from_speed(int v)
+{
+    /* Values 0..100 are the original 20 minutes .. 15 seconds. */
+    static const float fast[] = {12,10,8,6,5,4,3,2.5f,2,1.5f,1,.75f,.5f,.375f,.25f};
+    if (v > 100) return fast[v > 115 ? 14 : v-101];
+    return 1200.0f * fm_exp2f(-6.321928f * (float)v * 0.01f);
+}
 
 void en_param_text(int i, int v, char *b)
 {
@@ -185,7 +213,8 @@ void en_param_text(int i, int v, char *b)
             itoa_s(v<0?-v:v,b+3);return;
         }
     }
-    else if (i == P_FMPATCH) s = fm_port_patch_name(v);
+
+    else if (i==P_VAPRESET) s=va_preset_name(v);
     else if ((i == P_FFILTERMODEL || i==P_P2FILTERMODEL)) {
         static const char *const names[]={"Bypass","Clean SVF","SEM","Juno","Polysix","CS-80"};
         s=names[(unsigned)v<6u?v:0];
@@ -235,8 +264,8 @@ void en_param_text(int i, int v, char *b)
         s = N[(unsigned)v < 6u ? v : 0];
     } else if (i == P_M7DEST || i == P_M8DEST || i == P_M9DEST) {
         static const char *const N[] = {"Off", "Struct", "Bright", "Damp", "Position", "Pitch", "Model",
-                                       "R Level", "Pad2 Bright", "Pad2 Body", "Pad Body", "Pad Char", "Rev Size", "Rev Damp", "Exciter"};
-        s = N[(unsigned)v < 15u ? v : 0];
+                                       "R Level", "Pad2 Bright", "Pad2 Body", "Pad Body", "Pad Char", "Rev Size", "Rev Damp", "Exciter", "VA Volume", "VA Cutoff", "VA Res", "VA Env", "VA Track", "VA PWM", "VCF Atk", "VCF Dec", "VCF Sus", "VCF Rel"};
+        s = N[(unsigned)v < sizeof N / sizeof N[0] ? v : 0];
     }
     if (s) {
         int k = 0;
@@ -247,22 +276,17 @@ void en_param_text(int i, int v, char *b)
         b[k] = 0;
         return;
     }
-    if (i == P_EMUTATE || i == P_EDENSITY || i == P_RBURST || i == P_PADCHANCE || i == P_PAD2CHANCE || i == P_RINGCHANCE ||
+    if ((i>=P_VAAMPA && i<=P_VAVCFR) && i!=P_VAAMPS && i!=P_VAVCFS) {
+        b=itoa_s(2+(8*v*v)/10,b); *b++='m'; *b++='s'; *b=0;return;
+    }
+    if (i==P_VALFORATE) { b=itoa_s(v,b); *b++='s'; *b=0;return; }
+    if (i == P_VACUT || i == P_EMUTATE || i == P_EDENSITY || i == P_RBURST || i == P_PADCHANCE || i == P_PAD2CHANCE || i == P_RINGCHANCE ||
         i == P_FMEMUTATE || i == P_FMEDENSITY || i == P_FMDENSITY || i == P_FMBURST || i == P_FMCHANCE || i == P_FMGATE) {
         b = itoa_s(v, b); *b++ = '%'; *b = 0; return;
     }
     if (i == P_ERANGE || i == P_FMERANGE) { b=itoa_s(v,b); *b++=' '; *b++='o'; *b++='c'; *b++='t'; *b=0; return; }
-    if (i == P_RDELAYREPEATS) {
-        if (v <= 0) { b[0]='I'; b[1]='n'; b[2]='f'; b[3]=0; return; }
-        b = itoa_s(v, b); *b = 0; return;
-    }
-    if (i == P_RDELAYTIME) {
-        int ms = v <= 80 ? 20 + (v * 780 + 50) / 100
-                         : 644 + ((v - 80) * 856 + 10) / 20;
-        b = itoa_s(ms, b); *b++ = 'm'; *b++ = 's'; *b = 0;
-        return;
-    }
     if (i == P_M10SPEED || i == P_M11SPEED) {
+        if (!v) {b[0]='O';b[1]='f';b[2]='f';b[3]=0;return;}
         b=itoa_s(v,b); *b++='s'; *b=0;return;
     }
     if ((i == P_FFILTERCUT || i==P_P2FILTERCUT)) {
@@ -275,9 +299,15 @@ void en_param_text(int i, int v, char *b)
     }
     if (i == P_M1SPEED || i == P_M2SPEED || i == P_M3SPEED || i == P_M4SPEED || i == P_M5SPEED || i == P_M6SPEED ||
         i == P_M7SPEED || i == P_M8SPEED || i == P_M9SPEED) {
-        int sec = (int)(mod_secs_from_speed(v) + 0.5f);
+        float period = mod_secs_from_speed(v);
+        if (period < 1.0f) { b=itoa_s((int)(period*1000.0f+0.5f),b); *b++='m'; *b++='s'; *b=0; return; }
+        if (period == 1.5f || period == 2.5f) {
+            b=itoa_s((int)period,b); *b++='.'; *b++='5'; *b++='s'; *b=0; return;
+        }
+        int sec = (int)(period + 0.5f);
         if (sec >= 60) {
             b = itoa_s(sec / 60, b); *b++ = 'm';
+            if (sec%60) {b=itoa_s(sec%60,b); *b++='s';}
         } else {
             b = itoa_s(sec, b); *b++ = 's';
         }
@@ -446,9 +476,11 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 /* ------------------------------------------------------------ commands --- */
 enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_RINGNOTE, C_EVONEW,
        C_FMNOTE, C_FMOFF, C_FMEVONEW, C_FMALLOFF, C_PROTNEW };
-#define QN 192u
+/* A rapid pair of project recalls before the next audio block posts 344
+ * parameter commands, plus transport and routing. Keep this ring in pool RAM. */
+#define QN 512u
 typedef char complete_project_fits_command_queue[(P_NPARAMS + 8 < QN) ? 1 : -1];
-static uint32_t q[QN];
+static uint32_t q[QN] EN_POOL;
 static volatile uint32_t q_w, q_r;
 static void post(uint32_t c, int a, int b)
 {
@@ -545,10 +577,29 @@ static PLAT_HOT float mtof(float n) { return 440.0f * tunefac * fm_exp2f((n - 69
 static float sint[SN + 1];
 static inline __attribute__((always_inline)) float sine(float ph)              /* ph in turns, any value >= 0 */
 {
-    float x = (ph - (float)(int)ph) * (float)SN;
-    int i = (int)x;
-    float f = x - (float)i;
+    float x = ph * (float)SN;
+    unsigned index = (unsigned)x;
+    unsigned i = index & (SN - 1u);
+    float f = x - (float)index;
     return sint[i] + (sint[i + 1] - sint[i]) * f;
+}
+
+/* genAMB: for a phase an oscillator has already wrapped into [0, 1), the
+ * integer part is zero and `ph - (float)(int)ph` is ph exactly, so the
+ * reduction above is two float/int conversions and a subtract for nothing.
+ * This drops them and keeps the same table step and interpolation. The range
+ * test is the contract's guard, not an approximation: anything outside [0, 1)
+ * falls through to the full reduction, so the index cannot leave its bounds. */
+static inline __attribute__((always_inline)) float sine_wrapped(float ph)
+{
+    float x = ph * (float)SN;
+    int i = (int)x;
+    if ((unsigned)i >= (unsigned)SN)
+        return sine(ph);
+    {
+        float f = x - (float)i;
+        return sint[i] + (sint[i + 1] - sint[i]) * f;
+    }
 }
 
 /* ------------------------------------------------- slow random motion --- */
@@ -597,6 +648,7 @@ static float fm_mod_frand(void) {
     return (float)(fm_mod_rng>>8)*(1.0f/16777216.0f);
 }
 static float mod_phase[5];
+static float mod_period[11], mod_phase_step[5];
 static int mod_shape_param(int i) {
     static const int sp[5]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE,P_M10SHAPE,P_M11SHAPE};
     return sp[i-6];
@@ -615,9 +667,7 @@ static void mods_step(uint32_t n)
         int shape=i>=6?par[mod_shape_param(i)]:0;
         if(i>=9 && par[mod_speed_param(i)]==0) {mod[i].v=0.0f;continue;}
         if(i>=6 && shape>=2) {
-            float sec=i>=9?(float)par[mod_speed_param(i)]:mod_secs_from_speed(par[mod_speed_param(i)]);
-            if(sec<0.001f)sec=0.001f;
-            float phase=mod_phase[i-6]+(float)n/(sec*EN_SR);
+            float phase=mod_phase[i-6]+(float)n*mod_phase_step[i-6];
             /* Handle wraps without signed overflow or 64-bit arithmetic. */
             if(phase>=1.0f)phase-=1.0f;
             mod_phase[i-6]=phase;
@@ -625,17 +675,15 @@ static void mods_step(uint32_t n)
             continue;
         }
         if(mod[i].left<=n) {
-            float secs;
-            if(i>=9) secs=(float)par[mod_speed_param(i)];
-            else secs=mod_secs_from_speed(par[mod_speed_param(i)]);
+            float secs=mod_period[i];
             if (i<9)secs*=0.75f+0.5f*frand();
             if(secs<0.001f)secs=0.001f;
             mod[i].tgt=(i>=9?fm_mod_frand():frand())*2.0f-1.0f;
             mod[i].left=(uint32_t)(secs*EN_SR);
-            mod[i].rate=(float)n/(secs*EN_SR*0.55f);
+            mod[i].rate=1.0f/(secs*EN_SR*0.55f);
         } else mod[i].left-=n;
         if(shape==1)mod[i].v=mod[i].tgt;
-        else mod[i].v+=(mod[i].tgt-mod[i].v)*fm_minf(mod[i].rate,1.0f);
+        else mod[i].v+=(mod[i].tgt-mod[i].v)*fm_minf((float)n*mod[i].rate,1.0f);
     }
     mod_trace_samples+=n;
     if(mod_trace_samples>=EN_SR) {
@@ -652,16 +700,15 @@ static void pad2_mods_step(uint32_t n)
     int i;
     for (i = 0; i < NMOD_PAD; i++) {
         if (pad2_mod[i].left <= n) {
-            float sp = (float)par[mod_speed_param(i)] * 0.01f;
-            float secs = 2.0f * 1200.0f * fm_exp2f(-6.321928f * sp); /* Pad 2 = half speed */
+            float secs = 2.0f * mod_period[i]; /* Pad 2 = half speed */
             secs *= 0.75f + 0.5f * pad2_frand();
             pad2_mod[i].tgt = pad2_frand() * 2.0f - 1.0f;
             pad2_mod[i].left = (uint32_t)(secs * EN_SR);
-            pad2_mod[i].rate = (float)n / (secs * EN_SR * 0.55f);
+            pad2_mod[i].rate = 1.0f / (secs * EN_SR * 0.55f);
         } else {
             pad2_mod[i].left -= n;
         }
-        pad2_mod[i].v += (pad2_mod[i].tgt - pad2_mod[i].v) * fm_minf(pad2_mod[i].rate, 1.0f);
+        pad2_mod[i].v += (pad2_mod[i].tgt - pad2_mod[i].v) * fm_minf((float)n * pad2_mod[i].rate, 1.0f);
     }
 }
 
@@ -691,23 +738,28 @@ typedef struct {
     float note, target;                         /* MIDI: the note of this breath, the next one's */
     float t, rate, peak, amp;                   /* t 0..1 through the breath, per 32 samples */
     float ic[4];                                /* the two filters' states */
-    float c1[4], c2[4];                         /* their coefficients: a1, a2, a3, k */
-    float vib, pan;
+    float c1[4];                         /* their coefficients: a1, a2, a3, k */
+    float pan;
     float sub_lp, sub_ph;                     /* octave-down Low Body filter + phase */
     float hf;                                   /* a handoff's fade: 1 normal */
     uint8_t midi_note, hand;                    /* hand: 1 fading out of the old key, 2 into the new */
     int8_t seq_shift;
     uint8_t emitted_note;
+    float amp_target, fm_index;                 /* held until this voice's next control tick */
+    uint8_t control_left;                       /* audio frames remaining before that tick */
     uint8_t voices;                             /* this breath's colour: 0 Rhodes, 1 Vintage Analog */
 } pad_t;
 static pad_t pad[EN_NPAD];
-static fm_filter_state_t pad_filters[2][2];
+static fm_filter_state_t pad_filters[2];
+static fm_filter_history_t pad_filter_right[2];
 static float pad_motion_phase[2][4],pad_motion_wave[2][4],pad_motion_amount;
 static float pad_gate, pad_gain, pad_vol, bright, swell, pad_body, pad_char;
 #define PAD_CHORUS_N 1024
 static int16_t pad_ch_l[PAD_CHORUS_N] EN_POOL, pad_ch_r[PAD_CHORUS_N] EN_POOL;
 static uint32_t pad_ch_w;
 static float pad_ch_phase;
+static int pad_ch_offset;
+static unsigned pad_ch_hold;
 static float pad_chorus = 0.28f;
 
 /* Pad 2 Lite keeps the musically important independence of the second Pad
@@ -737,7 +789,6 @@ static float pad_rev=0.65f, ring_rev=0.75f, pad2_rev=0.45f;
 static const float PAD_PAN[EN_NPAD] = {-0.55f, -0.18f, 0.18f, 0.55f};
 static const float BREATH[EN_NPAD] = {1.0f, 1.21f, 1.43f, 1.67f};    /* unequal cycles, as 2/1's 12..20 s loops */
 static const float START_T[EN_NPAD] = {0.0f, 0.9f, 0.82f, 0.95f};    /* the first breaths overlap */
-static const float VOWEL[4][2] = {{320.0f, 800.0f}, {480.0f, 900.0f}, {730.0f, 1090.0f}, {530.0f, 1840.0f}};
 static float arcm;                              /* the slow arc, -1 sparse .. +1 full, times Motion */
 
 static PLAT_HOT float breath(float t)                    /* rise, hang, fall, a short rest */
@@ -832,8 +883,7 @@ static void pad_leave(void)
  * reported PC 0x0200cc76 / DBG 0x10. Keep both pad control/render paths separate. */
 static __attribute__((noinline)) PLAT_HOT void pad_coefs(pad_t *v, int i)          /* every 32 samples: the breath, pitch, the vowel */
 {
-    float f, vw, f1, f2;
-    int a;
+    float f, f1;
     if (v->hand == 1) {                         /* out of the old key */
         v->hf -= HAND_STEP;
         if (v->hf <= 0.0f) {
@@ -854,9 +904,6 @@ static __attribute__((noinline)) PLAT_HOT void pad_coefs(pad_t *v, int i)       
         v->t -= 1.0f;
         pad_breathe(v, i);
     }
-    v->vib += (4.6f + 0.4f * (float)i) * 32.0f / EN_SR;
-    if (v->vib >= 1.0f)
-        v->vib -= 1.0f;
     f = mtof((float)en_pad_pitch((int)v->note, v->seq_shift, par[P_PADOCT]) + 0.035f * motion * mod_value(i) + 0.04f*pad_motion_amount*pad_motion_wave[0][i]);                          /* a slow drift, as tape */
     if (v->voices) {
         float det = fm_exp2f((1.5f + 7.0f * fm_clampf(mod_pad_char, 0.0f, 1.0f)) * (1.0f / 1200.0f));
@@ -872,15 +919,7 @@ static __attribute__((noinline)) PLAT_HOT void pad_coefs(pad_t *v, int i)       
         float tone = fm_clampf((float)bright * 0.01f + 0.18f * arcm + 0.10f * motion * mod_value((i + 2) % NMOD_PAD) + 0.16f*pad_motion_amount*pad_motion_wave[0][(i+1)&3], 0.0f, 1.0f);
         f1 = 420.0f * fm_exp2f(3.55f * tone) * (0.96f + 0.025f * (float)i);
         svf_coefs(v->c1, fm_clampf(f1, 320.0f, 5200.0f), 0.78f);
-        svf_coefs(v->c2, 900.0f, 0.6f); /* kept initialized for seamless colour handoff */
-    } else {
-        vw = fm_clampf((float)bright * 0.01f + 0.25f * arcm + 0.16f * motion * mod_value((i + 2) % NMOD_PAD) + 0.16f*pad_motion_amount*pad_motion_wave[0][(i+1)&3], 0.0f, 1.0f) * 2.999f;
-        a = (int)vw;
-        vw -= (float)a;
-        f1 = VOWEL[a][0] + (VOWEL[a + 1][0] - VOWEL[a][0]) * vw;
-        f2 = VOWEL[a][1] + (VOWEL[a + 1][1] - VOWEL[a][1]) * vw;
-        svf_coefs(v->c1, f1 * (1.0f + 0.03f * (float)i), 0.45f);
-        svf_coefs(v->c2, f2 * (1.0f - 0.02f * (float)i), 0.3f);
+
     }
 }
 
@@ -1470,6 +1509,11 @@ static uint32_t ud_gate_samples(void);
 static void ud_tick(int layer);
 static void ud_reset(int layer);
 static void ud_init(void);
+static void fm_trigger(int note, int velocity, uint32_t gate)
+{
+    fm_port_trigger(note, velocity, gate);
+}
+
 #include "fm_sequence.c"
 #include "proteus.c"
 #include "unitd.c"
@@ -1755,6 +1799,14 @@ static uint32_t ext_age;
 
 static void tempo_set(void) { step_len = EN_SR * 60.0f / ((float)par[P_TEMPO] * 4.0f); }
 
+/* River and Animals take their saved levels from the piece. Only their
+ * playback targets follow transport; Rain's weather cycle runs on its own. */
+static void nature_apply_level(int p)
+{
+    int gated = p == P_NATURE_WATER || p == P_NATURE_ANIMALS;
+    nature_control(p - P_NATURE_MASTER, gated && !en_playing ? 0 : par[p]);
+}
+
 static void apply(int p, int v)
 {
     const en_param_t *pi = &PARAMS[p];
@@ -1764,16 +1816,25 @@ static void apply(int p, int v)
         v = pi->hi;
     if (p == P_RMODEL)
         v = rings_model_normalize(v);  /* removed Rings models use their retained counterpart */
+    int prev = par[p];
+    int was_enabled = en_fm_enabled(par);
     par[p] = (int16_t)v;
+    if (p >= P_NATURE_MASTER && p <= P_NATURE_DENSITY) {
+        nature_apply_level(p);
+        return;
+    }
     switch (p) {
     case P_MODE:
         if (v == MODE_PIANO) { rings_wait_clear(); fm_seq_stop(); fm_port_all_notes_off(); }
         break;
     case P_FMLEVEL:
         fm_port_set_level(v);
-        if (!v) { fm_seq_stop(); fm_port_all_notes_off(); }
+        /* Fall through: removing the last volume route at zero also releases notes. */
+    case P_M7DEST: case P_M8DEST: case P_M9DEST:
+    case P_M7DEPTH: case P_M8DEPTH: case P_M9DEPTH:
+        if ((was_enabled || p==P_FMLEVEL) && !en_fm_enabled(par)) { fm_seq_stop(); fm_port_all_notes_off(); }
         break;
-    case P_FMPATCH: fm_port_set_patch(v); break;
+
     case P_FMPOLY: fm_port_set_polyphony(v); break;
     case P_FMSEQMODE: case P_FMEPATTERN:
         if (!en_playing) fm_seq_select();
@@ -1809,8 +1870,6 @@ static void apply(int p, int v)
     case P_ETIME: pl_mod_depth = (float)v * 0.01f; break;
     case P_REVERB: rev_send = 0.01f * (float)v; break;
     case P_SIZE: case P_REVSPACE: break;
-    case P_DDIFF: case P_DMOTION: case P_DREV:
-        rings_port_set_ambient(par[P_DDIFF], par[P_DMOTION], par[P_DREV]); break;
     case P_RMODEL: rings_port_set_model(v); break;
     case P_RSTRUCT: rings_port_set_structure(v); break;
     case P_RBRIGHT: rings_port_set_brightness(v); break;
@@ -1824,9 +1883,18 @@ static void apply(int p, int v)
         mod[idx].left=0;mod[idx].v=0;mod_phase[idx-6]=0;
         break;
     }
-    case P_M7DEST: case P_M7DEPTH: case P_M7SPEED:
-    case P_M8DEST: case P_M8DEPTH: case P_M8SPEED:
-    case P_M9DEST: case P_M9DEPTH: case P_M9SPEED: break;
+    case P_M1SPEED: case P_M2SPEED: case P_M3SPEED: case P_M4SPEED: case P_M5SPEED:
+    case P_M6SPEED: case P_M7SPEED: case P_M8SPEED: case P_M9SPEED: case P_M10SPEED: case P_M11SPEED:
+        for (int i=0; i<NMOD; ++i) if (mod_speed_param(i)==p) {
+            mod_period[i] = i<9 ? mod_secs_from_speed(v) : (float)v;
+            if (i>=6) mod_phase_step[i-6] = mod_period[i]>0 ? 1.0f/(mod_period[i]*EN_SR) : 0;
+            if (v!=prev) {
+                mod[i].left=0;   /* new random interval now; retain smooth output and periodic phase */
+                if (i<NMOD_PAD) pad2_mod[i].left=0;
+            }
+            break;
+        }
+        break;
     case P_PADCHAR: pad_char = (float)v * 0.01f; break;
     case P_DRONEVOICE: pad2_handoff(); break;
     case P_REXCITER: rings_port_set_exciter(v); break;
@@ -1837,12 +1905,6 @@ static void apply(int p, int v)
     case P_PAD2CHORUS: pad2_width = (float)v * 0.01f; break;
     case P_PADREV: pad_rev = (float)v * 0.01f; break;
     case P_RINGREV: ring_rev = (float)v * 0.01f; break;
-    case P_RDELAYTIME:
-    case P_RDELAYFB:
-    case P_RDELAYMIX:
-    case P_RDELAYREPEATS:
-        rings_port_set_delay(par[P_RDELAYTIME], par[P_RDELAYFB], par[P_RDELAYMIX], par[P_RDELAYREPEATS]);
-        break;
     case P_RSEQMODE: case P_EPATTERN:
         if (!en_playing) evo_select();
         break;
@@ -1948,6 +2010,7 @@ static void quiet(void)
     for (i = 0; i < EN_NPAD; i++) {
         pad[i].amp = 0.0f;
         pad2[i].amp = 0.0f;
+        pad[i].control_left = pad2[i].control_left = 0;
     }
     notes_off();
 }
@@ -1956,20 +2019,26 @@ void en_init(void)
 {
     int i;
     en_playing=0;
+    nature_init_decoder();
+    nature_reset(0x4e415455u ^ 0x9e3779b9u, 0x4e415455u ^ 0x85ebca6bu);
     pad_movement_init();
     evo_init();
     en_mod_trace_head = en_mod_trace_count = 0;
     mod_trace_samples = 0;
+    memset((void *)va_live,0,sizeof va_live);
+    en_fm_volume_target = 0;
     memset(mod_phase,0,sizeof(mod_phase));
     fm_mod_rng=0x38c62157u;
     for (i = 0; i <= SN; i++)
         sint[i] = fm_sinf((float)i * (FM_TWO_PI / (float)SN));
     rings_port_init();
     fm_port_init();
-    for(int layer=0;layer<2;layer++)for(int ch=0;ch<2;ch++)classic_filter_init(&pad_filters[layer][ch]);
+    memset(pad_filter_right,0,sizeof pad_filter_right);
+    for(int layer=0;layer<2;layer++)classic_filter_init(&pad_filters[layer]);
     rings_wait_clear();
     pad_ch_w = 0;
     pad_ch_phase = 0.0f;
+    pad_ch_hold = 0;
     for (i = 0; i < PAD_CHORUS_N; i++) {
         pad_ch_l[i] = pad_ch_r[i] = 0;
     }
@@ -1984,13 +2053,15 @@ void en_init(void)
         pad2_mod[i].left = 0;
     }
     for (i = 0; i < EN_NPAD; i++) {
+        pad[i].control_left = pad2[i].control_left = 0;
+        pad[i].amp_target = pad2[i].amp_target = 0.0f;
+        pad[i].fm_index = 0.0f;
         pad[i].note = pad[i].target = (float)(50 + 7 * i);
         pad[i].pan = PAD_PAN[i];
         pad[i].amp = 0.0f;
         pad[i].ph[0] = 0.0f;
         pad[i].ph[1] = 0.37f;
         pad[i].sub_ph = 0.19f * (float)(i + 1);
-        pad[i].vib = 0.3f * (float)i;
         pad[i].midi_note = 0;
         pad[i].seq_shift = 0;
         pad[i].hf = 1.0f;
@@ -2004,7 +2075,6 @@ void en_init(void)
         pad2[i].ph[0] = 0.17f * (float)(i + 1);
         pad2[i].ph[1] = 0.37f + 0.11f * (float)i;
         pad2[i].sub_ph = 0.13f * (float)(i + 1);
-        pad2[i].vib = 0.17f + 0.23f * (float)i;
         pad2[i].midi_note = 0;
         pad2[i].seq_shift = 0;
         pad2[i].hf = 1.0f;
@@ -2060,15 +2130,19 @@ static void play_start(int from_top)
     }
     pulse_left = 0.0f;
     en_playing = 1;
+    nature_apply_level(P_NATURE_WATER);
+    nature_apply_level(P_NATURE_ANIMALS);
     pad_gate = pad2_gate = 1.0f;
     for (i = 0; i < EN_NPAD; i++) {              /* both Pad engines start independently */
         if (pad[i].amp < 1e-4f) {
+            pad[i].control_left = 0;
             pad[i].t = START_T[i];
             pad[i].midi_note = 0;
         pad[i].seq_shift = 0;
             pad_breathe(&pad[i], i);
         }
         if (pad2[i].amp < 1e-4f) {
+            pad2[i].control_left = 0;
             pad2[i].t=0.0f;pad2[i].peak=0.0f;
             pad2[i].midi_note=0;pad2[i].seq_shift=12;
             pad2_rest[i]=(2.0f+1.75f*(float)i)*EN_SR;
@@ -2081,6 +2155,10 @@ static void play_start(int from_top)
 static void play_stop(void)
 {
     en_playing = 0;
+    nature_apply_level(P_NATURE_WATER);
+    nature_apply_level(P_NATURE_ANIMALS);
+    nature.scheduling = 0;
+    nature.bird_wait = nature.reply_wait = 0;
     evo_select();
     fm_seq_stop();
     fm_seq_select();
@@ -2102,7 +2180,7 @@ static void drain(void)
         case C_EVONEW: evo_randomize(); break;
         case C_FMEVONEW: fm_evo_randomize(); break;
         case C_PROTNEW: prot_new(a == 1); break;
-        case C_FMNOTE: fm_port_trigger(a, b, 0); midi(0x92, (uint32_t)a, (uint32_t)b); break;
+        case C_FMNOTE: fm_trigger(a, b, 0); midi(0x92, (uint32_t)a, (uint32_t)b); break;
         case C_FMOFF: fm_port_note_off(a); midi(0x82, (uint32_t)a, 0); break;
         case C_FMALLOFF: fm_seq_stop(); fm_port_all_notes_off(); en_midi_out(0xB2, 123, 0); break;
         case C_SET:
@@ -2144,7 +2222,12 @@ static void drain(void)
                 play_stop();
             }
             break;
-        case C_PANIC: quiet(); break;
+        case C_PANIC:
+            quiet();
+            nature_reset(nature.weather_rng, nature.bird_rng);
+            for (int p = P_NATURE_WATER; p <= P_NATURE_DENSITY; ++p)
+                nature_apply_level(p);
+            break;
         case C_REGROW: regrow(); break;
         case C_RINGNOTE:
             /* Direct/manual Rings note. Schedule through the same queue used by
@@ -2167,6 +2250,22 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
 static float padl[BLK], padr[BLK];
 static float plp[4];
 
+static inline int pad_chorus_offset(float phase)
+{
+    if (pad_ch_hold) {
+        --pad_ch_hold;
+        return pad_ch_offset;
+    }
+    float tap = 115.0f * fm_sinf(phase * FM_TWO_PI);
+    pad_ch_offset = (int)tap;
+    float fraction = fm_fabsf(tap - (float)pad_ch_offset);
+    float margin = fm_minf(fraction, 1.0f - fraction);
+    /* At the 0.30 Hz maximum, movement is below .005 samples per
+     * frame. Use 1/128 as the bound, with extra margin for rounding. */
+    if (margin > 0.001f) pad_ch_hold = (unsigned)((margin - 0.001f) * 128.0f);
+    return pad_ch_offset;
+}
+
 static PLAT_HOT void pad_bus(uint32_t n)
 {
     const float fc = fm_clampf(700.0f * fm_exp2f(bright * 0.03f + 0.6f * arcm), 300.0f, 9000.0f);
@@ -2183,9 +2282,9 @@ static PLAT_HOT void pad_bus(uint32_t n)
         l = plp[1];
         r = plp[3];
         if (wet > 1e-5f) {
-            float ss = fm_sinf(pad_ch_phase * FM_TWO_PI);
-            int dl = 650 + (int)(115.0f * ss);
-            int dr = 650 - (int)(115.0f * ss);
+            int offset = pad_chorus_offset(pad_ch_phase);
+            int dl = 650 + offset;
+            int dr = 650 - offset;
             uint32_t il = (pad_ch_w + PAD_CHORUS_N - (uint32_t)dl) & (PAD_CHORUS_N - 1);
             uint32_t ir = (pad_ch_w + PAD_CHORUS_N - (uint32_t)dr) & (PAD_CHORUS_N - 1);
             cl = (float)pad_ch_l[il] * (1.0f / 32767.0f);
@@ -2198,8 +2297,18 @@ static PLAT_HOT void pad_bus(uint32_t n)
             l = l * (1.0f - wet) + cl * wet;
             r = r * (1.0f - wet) + cr * wet;
         }
-        l=classic_filter_sample(&pad_filters[0][0],l);
-        r=classic_filter_sample(&pad_filters[0][1],r);
+        /* genAMB: hand the classic bank the whole block instead of a sample at
+         * a time. Its four control smoothers and its blend ramp then live in
+         * registers, and a bank that is fully dry - the normal state unless a
+         * filter mix is dialled in - is skipped outright. padl/padr are dead
+         * from here (render_pad2 clears them before it writes), so the
+         * pre-filter signal is staged in place with no extra buffer. */
+        padl[j] = l;
+        padr[j] = r;
+    }
+    classic_filter_stereo_block(&pad_filters[0],&pad_filter_right[0],padl,padr,n);
+    for (j = 0; j < n; j++) {
+        float l = padl[j], r = padr[j];
         mixl[j] += l * 0.8f;
         mixr[j] += r * 0.8f;
         rsend[j] += (l + r) * 0.48f * pad_rev;
@@ -2220,75 +2329,125 @@ static __attribute__((noinline)) PLAT_HOT void render_pad(uint32_t n)
     for (i = 0; i < EN_NPAD; i++) {
         pad_t *v = &pad[i];
         float p0 = v->ph[0], p1 = v->ph[1], subph = v->sub_ph, amp = v->amp, sub_lp = v->sub_lp, s0 = v->ic[0], s1 = v->ic[1], s2 = v->ic[2], s3 = v->ic[3],
-              gl, gr, pn, tgt = 0.0f, idx = 0.0f;
+              gl, gr, pn;
         uint32_t j;
         if (amp < 1e-5f && pad_gain < 1e-4f) {
+            v->control_left = 0;
             v->amp = 0.0f;
             continue;
         }
         pn = fm_clampf(v->pan + 0.25f * motion * mod_value((i + 3) % NMOD_PAD) + 0.24f*pad_motion_amount*pad_motion_wave[0][(i+2)&3], -1.0f, 1.0f);
         gl = fm_cosf((pn + 1.0f) * (FM_PI / 4.0f)) * g;
         gr = fm_sinf((pn + 1.0f) * (FM_PI / 4.0f)) * g;
-        for (j = 0; j < n; j++) {
-            float x, v1, v2, v3, b1, l1, b2;
-            if (!(j & 31u)) {
+        j = 0;
+        while (j < n) {
+            if (!v->control_left) {
                 float br;
                 pad_coefs(v, i);
                 br = breath(v->t);
-                tgt = br * v->peak * pad_gain * v->hf * (1.0f+0.12f*pad_motion_amount*pad_motion_wave[0][(i+3)&3]);
+                v->amp_target = br * v->peak * pad_gain * v->hf * (1.0f+0.12f*pad_motion_amount*pad_motion_wave[0][(i+3)&3]);
                 /* the Rhodes blooms: more overtones as the breath swells (index in turns) */
-                idx = (0.04f + 0.1f * bright * 0.01f + 0.1f * br + 0.035f*pad_motion_amount*pad_motion_wave[0][(i+1)&3]) * (1.0f + 0.4f * arcm);
+                v->fm_index = (0.04f + 0.1f * bright * 0.01f + 0.1f * br + 0.035f*pad_motion_amount*pad_motion_wave[0][(i+1)&3]) * (1.0f + 0.4f * arcm);
+                v->control_left = 32;
             }
-            if (!v->voices) {                    /* FM, the modulator at the carrier's pitch: a Rhodes */
-                float m = sine(p0) * idx;
-                x = (sine(p0 + m + 1.0f) + 0.12f * sine(2.0f * p0)) * 1.2f;   /* one carrier: no beating */
-                p0 += v->inc[0];
-                if (p0 >= 1.0f)
-                    p0 -= 1.0f;
-                amp += (tgt - amp) * 0.01f;
-                x *= amp;
-                padl[j] += x * gl;
-                padr[j] += x * gr;
-                {
-                    float sub = sine(subph) * amp;
-                    sub_lp += 0.025f * (sub - sub_lp);
-                    padl[j] += sub_lp * body_g;
-                    padr[j] += sub_lp * body_g;
-                    subph += v->inc[0] * 0.5f;
-                    if (subph >= 1.0f) subph -= 1.0f;
+            uint32_t span = n - j;
+            if (span > v->control_left) span = v->control_left;
+            v->control_left -= (uint8_t)span;
+            uint32_t end = j + span;
+            float tgt = v->amp_target;
+            /* genAMB: when the layer's output gains are both exactly zero its
+             * every contribution to padl/padr is a multiply by zero, so the
+             * oscillators, the warm low-pass and the sub cannot be heard. Run
+             * the cheap part of the sample loop instead: the phases and the
+             * breath envelope still advance exactly, so the meter is right and
+             * the layer is where it would have been when it comes back; only
+             * the low-pass state and the sub's smoother hold still. pad_coefs
+             * above keeps running either way, which matters more than it looks
+             * - pad_breathe() draws from the engine's shared xorshift, so
+             * skipping it would move every other layer's notes. */
+            /* genAMB: Pad 2 already does this (see pad2's loop below, and
+             * TEST7's "resting Pad 2 voices keep their oscillator phase while
+             * skipping inaudible work"); Pad 1 was left out. Same condition,
+             * same guarantee: with the layer's output gain at exactly zero
+             * every contribution here is a multiply by zero, and a voice whose
+             * target is zero and whose envelope has fallen below -360 dB
+             * cannot be heard either. The phases and the envelope still
+             * advance exactly, so the meter stays right and the voice is where
+             * it would have been; only the warm low-pass state and the sub's
+             * smoother hold still. pad_coefs() above keeps running either way,
+             * which matters more than it looks: pad_breathe() draws from the
+             * engine's shared xorshift, so skipping it would move every other
+             * layer's notes. */
+            if (g == 0.0f || (tgt == 0.0f && amp < 1.0e-18f)) {
+                const float hinc = v->inc[0] * 0.5f;
+                for (; j < end; ++j) {
+                    p0 += v->inc[0]; if (p0 >= 1.0f) p0 -= 1.0f;
+                    p1 += v->inc[1]; if (p1 >= 1.0f) p1 -= 1.0f;
+                    subph += hinc;   if (subph >= 1.0f) subph -= 1.0f;
+                    amp += (tgt - amp) * 0.01f;
                 }
                 continue;
             }
-            /* Vintage Analog: two free-running, gently detuned VCOs. A little triangle
-             * rounds the band-limited saws before a 12 dB-ish warm low-pass. */
-            {
+            if (!v->voices) {
+                float idx = v->fm_index;
+                for (; j < end; ++j) {
+                    float x;
+                    x = 0.0f;
+                    if (g != 0.0f) {
+                        float m = sine_wrapped(p0) * idx;
+                        x = (sine(p0 + m + 1.0f) + 0.12f * sine(2.0f * p0)) * 1.2f;
+                    }
+                    p0 += v->inc[0];
+                    if (p0 >= 1.0f)
+                        p0 -= 1.0f;
+                    amp += (tgt - amp) * 0.01f;
+                    x *= amp;
+                    padl[j] += x * gl;
+                    padr[j] += x * gr;
+                    {
+                        float sub = sine_wrapped(subph) * amp;
+                        sub_lp += 0.025f * (sub - sub_lp);
+                        padl[j] += sub_lp * body_g;
+                        padr[j] += sub_lp * body_g;
+                        subph += v->inc[0] * 0.5f;
+                        if (subph >= 1.0f) subph -= 1.0f;
+                    }
+                }
+            } else {
                 float ch = fm_clampf(mod_pad_char, 0.0f, 1.0f);
-                float tri0 = p0 < 0.5f ? 4.0f * p0 - 1.0f : 3.0f - 4.0f * p0;
-                float tri1 = p1 < 0.5f ? 4.0f * p1 - 1.0f : 3.0f - 4.0f * p1;
                 float sawmix = 0.28f + 0.38f * ch;
                 float trimix = 0.34f - 0.18f * ch;
-                float o0 = sawmix * blep_saw(p0, v->inc[0]) + trimix * tri0;
-                float o1 = (sawmix * 0.92f) * blep_saw(p1, v->inc[1]) + (trimix * 0.92f) * tri1;
-                x = (o0 + o1) * (0.72f - 0.10f * ch);
-            }
-            p0 += v->inc[0]; if (p0 >= 1.0f) p0 -= 1.0f;
-            p1 += v->inc[1]; if (p1 >= 1.0f) p1 -= 1.0f;
-            v3 = x - s1;
-            v1 = v->c1[0] * s0 + v->c1[1] * v3;
-            v2 = s1 + v->c1[1] * s0 + v->c1[2] * v3;
-            s0 = 2.0f * v1 - s0;
-            s1 = 2.0f * v2 - s1;
-            amp += (tgt - amp) * 0.01f;
-            x = v2 * amp * 0.82f;
-            padl[j] += x * gl;
-            padr[j] += x * gr;
-            {
-                float sub = sine(subph) * amp;
-                sub_lp += 0.025f * (sub - sub_lp);
-                padl[j] += sub_lp * body_g;      /* Low Body stays centred below the moving pad */
-                padr[j] += sub_lp * body_g;
-                subph += v->inc[0] * 0.5f;
-                if (subph >= 1.0f) subph -= 1.0f;
+                for (; j < end; ++j) {
+                    float x, v1, v2, v3;
+                    /* Vintage Analog: two free-running, gently detuned VCOs. A little triangle
+                     * rounds the band-limited saws before a 12 dB-ish warm low-pass. */
+                    {
+                        float tri0 = p0 < 0.5f ? 4.0f * p0 - 1.0f : 3.0f - 4.0f * p0;
+                        float tri1 = p1 < 0.5f ? 4.0f * p1 - 1.0f : 3.0f - 4.0f * p1;
+                        float o0 = sawmix * blep_saw(p0, v->inc[0]) + trimix * tri0;
+                        float o1 = (sawmix * 0.92f) * blep_saw(p1, v->inc[1]) + (trimix * 0.92f) * tri1;
+                        x = (o0 + o1) * (0.72f - 0.10f * ch);
+                    }
+                    p0 += v->inc[0]; if (p0 >= 1.0f) p0 -= 1.0f;
+                    p1 += v->inc[1]; if (p1 >= 1.0f) p1 -= 1.0f;
+                    v3 = x - s1;
+                    v1 = v->c1[0] * s0 + v->c1[1] * v3;
+                    v2 = s1 + v->c1[1] * s0 + v->c1[2] * v3;
+                    s0 = 2.0f * v1 - s0;
+                    s1 = 2.0f * v2 - s1;
+                    amp += (tgt - amp) * 0.01f;
+                    x = v2 * amp * 0.82f;
+                    padl[j] += x * gl;
+                    padr[j] += x * gr;
+                    {
+                        float sub = sine_wrapped(subph) * amp;
+                        sub_lp += 0.025f * (sub - sub_lp);
+                        padl[j] += sub_lp * body_g;      /* Low Body stays centred below the moving pad */
+                        padr[j] += sub_lp * body_g;
+                        subph += v->inc[0] * 0.5f;
+                        if (subph >= 1.0f) subph -= 1.0f;
+                    }
+                }
             }
         }
         v->ic[0] = fm_flush(s0);
@@ -2331,8 +2490,12 @@ static PLAT_HOT void pad2_bus(uint32_t n)
         l = mid + side;
         r = mid - side;
 
-        l=classic_filter_sample(&pad_filters[1][0],l);
-        r=classic_filter_sample(&pad_filters[1][1],r);
+        padl[j] = l;
+        padr[j] = r;
+    }
+    classic_filter_stereo_block(&pad_filters[1],&pad_filter_right[1],padl,padr,n);
+    for (j = 0; j < n; j++) {
+        float l = padl[j], r = padr[j];
         mixl[j] += l * 0.8f;
         mixr[j] += r * 0.8f;
         rsend[j] += (l + r) * 0.48f * pad2_rev;
@@ -2362,10 +2525,11 @@ static __attribute__((noinline)) PLAT_HOT void render_pad2(uint32_t n)
         for (i = 0; i < EN_NPAD; i++) {
             pad_t *v = &pad2[i];
             float p0 = v->ph[0], p1 = v->ph[1], subph = v->sub_ph, amp = v->amp;
-            float gl, gr, pn, tgt = 0.0f;
+            float gl, gr, pn;
             float glass_air=0.10f+0.055f*pad_motion_amount*pad_motion_wave[1][(i+1)&3];
             uint32_t j;
             if (amp < 1e-5f && pad2_gain < 1e-4f) {
+                v->control_left = 0;
                 v->amp = 0.0f;
                 continue;
             }
@@ -2376,45 +2540,67 @@ static __attribute__((noinline)) PLAT_HOT void render_pad2(uint32_t n)
             gl = (0.72f - 0.28f * pn) * g;
             gr = (0.72f + 0.28f * pn) * g;
 
-            for (j = 0; j < n; j++) {
-                float x, t0, t1;
-                if (!(j & 127u)) {
+            j = 0;
+            while (j < n) {
+                if (!v->control_left) {
                     float br;
                     pad2_coefs_lite(v, i);
                     br = breath(v->t);
-                    tgt = br * v->peak * pad2_gain * v->hf * (1.0f+0.18f*pad_motion_amount*pad_motion_wave[1][(i+3)&3]);
+                    v->amp_target = br * v->peak * pad2_gain * v->hf * (1.0f+0.18f*pad_motion_amount*pad_motion_wave[1][(i+3)&3]);
+                    v->control_left = 128;
                 }
-
-                t0 = pad2_tri(p0);
-                t1 = pad2_tri(p1);
-                if (!v->voices) {
-                    /* Glass: a clean sine body with a light detuned triangle and a
-                     * cheap octave harmonic. Bright and airy, but still Pad-2-Lite. */
-                    float hph = p0 + p0;
-                    if (hph >= 1.0f) hph -= 1.0f;
-                    x = 0.76f * sine(p0) + 0.16f * t1 + glass_air * pad2_tri(hph);
-                } else {
-                    /* Strings: two wider-detuned soft triangles. Character increases
-                     * spread and slightly changes the blend; the bus LP keeps it soft. */
-                    float ch = fm_clampf(pad2_char, 0.0f, 1.0f);
-                    x = (t0 * (0.53f + 0.05f * ch) + t1 * (0.53f - 0.03f * ch)) * 0.76f;
+                uint32_t span = n - j;
+                if (span > v->control_left) span = v->control_left;
+                v->control_left -= (uint8_t)span;
+                uint32_t end = j + span;
+                float tgt = v->amp_target;
+                /* Resting voices keep phase and their phrase clock. Once the
+                 * release falls below -360 dB, its mix contribution is inaudible. */
+                if (g == 0.0f || (tgt == 0.0f && amp < 1.0e-18f)) {
+                    for (; j < end; ++j) {
+                        p0 += v->inc[0]; if (p0 >= 1.0f) p0 -= 1.0f;
+                        p1 += v->inc[1]; if (p1 >= 1.0f) p1 -= 1.0f;
+                        amp += (tgt - amp) * 0.005f;
+                        if (body_g > 1e-6f) {
+                            subph += v->inc[0] * 0.5f;
+                            if (subph >= 1.0f) subph -= 1.0f;
+                        }
+                    }
+                    continue;
                 }
+                for (; j < end; ++j) {
+                    float x, t0, t1;
+                    t0 = pad2_tri(p0);
+                    t1 = pad2_tri(p1);
+                    if (!v->voices) {
+                        /* Glass: a clean sine body with a light detuned triangle and a
+                         * cheap octave harmonic. Bright and airy, but still Pad-2-Lite. */
+                        float hph = p0 + p0;
+                        if (hph >= 1.0f) hph -= 1.0f;
+                        x = 0.76f * sine(p0) + 0.16f * t1 + glass_air * pad2_tri(hph);
+                    } else {
+                        /* Strings: two wider-detuned soft triangles. Character increases
+                         * spread and slightly changes the blend; the bus LP keeps it soft. */
+                        float ch = fm_clampf(pad2_char, 0.0f, 1.0f);
+                        x = (t0 * (0.53f + 0.05f * ch) + t1 * (0.53f - 0.03f * ch)) * 0.76f;
+                    }
 
-                p0 += v->inc[0]; if (p0 >= 1.0f) p0 -= 1.0f;
-                p1 += v->inc[1]; if (p1 >= 1.0f) p1 -= 1.0f;
-                amp += (tgt - amp) * 0.005f;
-                x *= amp;
-                padl[j] += x * gl;
-                padr[j] += x * gr;
+                    p0 += v->inc[0]; if (p0 >= 1.0f) p0 -= 1.0f;
+                    p1 += v->inc[1]; if (p1 >= 1.0f) p1 -= 1.0f;
+                    amp += (tgt - amp) * 0.005f;
+                    x *= amp;
+                    padl[j] += x * gl;
+                    padr[j] += x * gr;
 
-                if (body_g > 1e-6f) {
-                    /* Cheap octave-down body: triangle rather than sine + per-voice LP.
-                     * The Pad 2 bus low-pass softens it immediately afterwards. */
-                    float sub = pad2_tri(subph) * amp * body_g;
-                    padl[j] += sub;
-                    padr[j] += sub;
-                    subph += v->inc[0] * 0.5f;
-                    if (subph >= 1.0f) subph -= 1.0f;
+                    if (body_g > 1e-6f) {
+                        /* Cheap octave-down body: triangle rather than sine + per-voice LP.
+                         * The Pad 2 bus low-pass softens it immediately afterwards. */
+                        float sub = pad2_tri(subph) * amp * body_g;
+                        padl[j] += sub;
+                        padr[j] += sub;
+                        subph += v->inc[0] * 0.5f;
+                        if (subph >= 1.0f) subph -= 1.0f;
+                    }
                 }
             }
 
@@ -2589,6 +2775,7 @@ static void (* volatile const monumatic_reverb_panic_ptr)(void) = monumatic_reve
 static int reverb_asleep;
 static void (* volatile const render_pad_ptr)(uint32_t) = render_pad;
 static void (* volatile const render_pad2_ptr)(uint32_t) = render_pad2;
+static float nature_left[BLK] EN_POOL, nature_right[BLK] EN_POOL;
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
@@ -2603,6 +2790,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     int submitted = dc_submit(dc_render_rings, 0);
     render_pad_ptr(n);
     render_pad2_ptr(n);
+    int nature_on = nature.gain[0].target || nature.gain[0].value || nature.gain[0].remaining;
+    if (nature_on) {
+        nature_render(nature_left, nature_right, n);
+    }
     int ready = 0;
     if (submitted) ready = dc_wait();
     else if (dc_status() != 3) {
@@ -2655,13 +2846,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
         /* Meter the audible wet return rather than the raw tank output. */
         en_reverb_level = fm_maxf(peak * wet_gain, en_reverb_level * 0.92f);
-        if (wet_gain <= 0.0f) for (j = 0; j < n; j++) {
-            float l = clean_peak_guard(mixl[j] * 0.34f * gain);
-            float r = clean_peak_guard(mixr[j] * 0.34f * gain);
-            out[2 * j] = (int32_t)(l * 8388607.0f);
-            out[2 * j + 1] = (int32_t)(r * 8388607.0f);
-        }
-        else for (j = 0; j < n; j++) {
+        if (wet_gain > 0.0f) for (j = 0; j < n; j++) {
             /* Wet/dry crossfade. At zero the original mix is untouched; as
              * REVERB rises the direct path is progressively reduced, reaching
              * fully wet at 100. The clean peak guard below still protects
@@ -2669,14 +2854,16 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             mixl[j] = mixl[j] * dry_gain + rsend[j] * wet_gain;
             mixr[j] = mixr[j] * dry_gain + esend[j] * wet_gain;
 
-        /* The actual overload fix: preserve about 3 dB more headroom than v16
-         * before the hardware-volume gain. Normal material stays perfectly
-         * linear. Only exceptional summed peaks above +/-0.90 touch the smooth
-         * peak guard; there is no hard clipping and no always-on saturation. */
-        float l = clean_peak_guard(mixl[j] * 0.34f * gain);
-        float r = clean_peak_guard(mixr[j] * 0.34f * gain);
-        out[2 * j] = (int32_t)(l * 8388607.0f);
-        out[2 * j + 1] = (int32_t)(r * 8388607.0f);
+        }
+        for (j = 0; j < n; ++j) {
+            if (nature_on) {
+                mixl[j] += nature_left[j];
+                mixr[j] += nature_right[j];
+            }
+            float l = clean_peak_guard(mixl[j] * 0.34f * gain);
+            float r = clean_peak_guard(mixr[j] * 0.34f * gain);
+            out[2*j] = (int32_t)(l * 8388607.0f);
+            out[2*j+1] = (int32_t)(r * 8388607.0f);
         }
     }
 }
@@ -2698,9 +2885,17 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         float cut=mod[9].v*(float)par[P_M10DEPTH]*0.01f;
         float res=mod[10].v*(float)par[P_M11DEPTH]*0.01f;
         cut+=(layer?0.85f:0.65f)*pad_motion_amount*pad_motion_wave[layer][0];
-        for(int ch=0;ch<2;ch++)classic_filter_set(&pad_filters[layer][ch],
+        classic_filter_set(&pad_filters[layer],
             par[id[0]],par[id[1]],par[id[2]],par[id[3]],par[id[4]],cut,res);
     }
+    static const int va_ids[] = {P_FMLEVEL,P_VACUT,P_VARES,P_VAENV,P_VATRACK,
+        P_VAPWM,P_VAVCFA,P_VAVCFD,P_VAVCFS,P_VAVCFR};
+    for (int j=1;j<10;j++) {
+        int id=va_ids[j];
+        va_live[j]=fm_clampf(par[id]+100.0f*route_mod(DEST_FM_VOLUME+j),PARAMS[id].lo,PARAMS[id].hi);
+    }
+    va_live[0]=en_fm_volume_target=fm_port_set_level_modulated(par[P_FMLEVEL],45.0f*route_mod(DEST_FM_VOLUME));
+    va_controls(par,va_live);
     mod_pad2_bright = fm_clampf(pad2_bright + 0.45f * route_mod(8) + 0.22f*pad_motion_amount*pad_motion_wave[1][1], 0.0f, 1.0f);
     mod_pad2_body = fm_clampf(pad2_body + 0.45f * route_mod(9), 0.0f, 1.0f);
     mod_pad_body = fm_clampf(pad_body + 0.45f * route_mod(10), 0.0f, 1.0f);
@@ -2783,5 +2978,6 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
 #include <stdio.h>
 #include "../../tests/hallucigenia/host.h"
 #include "../../tests/dusk/pad_roles_host.h"
+#include "../../tests/nature/pad_timing_host.h"
 #include "../../tests/dusk/pad_movement_host.h"
 #endif

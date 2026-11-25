@@ -16,13 +16,14 @@
 #include "fastmath.h"
 #include "dual_core.h"
 #include "perf.h"
+#include "dsp/nature.h"
 #include "fm_port.h"
 
 /* the pages, one a layer (a button each); page buttons handle navigation directly */
-enum { V_GARDEN, V_PAD, V_PADBODY, V_RINGS, V_RINGTONE, V_RINGEXC, V_RINGDLY, V_MOD, V_MIXER, V_DRONE, V_DRONEVOICE, V_SPACE, V_REVSEND, V_SETUP, V_PADSEQ, V_PAD2SEQ, V_RINGSEQ, V_PERF, V_DAMBIENT, V_ESETUP, V_EPATTERN, V_FM, V_FMMOTION, V_FMSEQ, V_FMESETUP, V_FMEPATTERN, V_REVMIX, V_RPROTOPT, V_FPROTOPT, V_FMFILTER, V_RUNITOPT, V_FUNITOPT, V_ROOTDIV, V_PAD2FILTER, NVIEWS };
-static const char *const VIEW_NAME[NVIEWS] = {"Garden", "Pad 1", "Body", "Rings", "Tone", "Exciter", "Delay", "Mod", "Mixer", "Pad 2", "Body", "Reverb", "Sends", "Setup", "Pad 1 Seq", "Pad 2 Seq", "Rings Seq", "Performance", "Delay 2", "Hallucigenia Setup", "Hallucigenia Pattern", "FM", "FM Motion", "FM Seq", "FM Hallucigenia Setup", "FM Hallucigenia Pattern", "Reverb Mix", "Proteus Options", "FM Proteus Options", "Pad 1 Filter", "Unit-D Options", "FM Unit-D Options", "Root & Note Div", "Pad 2 Filter"};
-static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ENV, B_SEQ, B_SEQ, B_SEQ, B_SEQ, B_LFO, B_GLO, B_ARP, B_ARP, B_FX, B_FX, B_GLO, B_ENV, B_ARP, B_SEQ, B_GLO, B_SEQ, B_SEQ, B_SEQ, B_SEL, B_SEL, B_SEL, B_SEL, B_SEL, B_FX, B_SEQ, B_SEL, B_ENV, B_SEQ, B_SEL, B_HOME, B_ARP};
-static const char *const VIEW_BTN_NAME[NVIEWS] = {"HOME", "PAD 1", "PAD 1", "RINGS", "RINGS", "RINGS", "RINGS", "LFO", "MIXER", "PAD 2", "PAD 2", "REVERB", "REVERB", "MIXER", "PAD 1", "PAD 2", "RINGS", "MIXER", "RINGS", "RINGS", "RINGS", "FM", "FM", "FM", "FM", "FM", "REVERB", "RINGS", "FM", "PAD 1", "FM", "HOME", "PAD 2"};
+enum { V_GARDEN, V_PAD, V_PADBODY, V_RINGS, V_RINGTONE, V_RINGEXC, V_MOD = 7, V_MIXER, V_DRONE, V_DRONEVOICE, V_SPACE, V_REVSEND, V_SETUP, V_PADSEQ, V_PAD2SEQ, V_RINGSEQ, V_PERF, V_ESETUP = 19, V_EPATTERN, V_FM, V_FMMOTION, V_FMSEQ, V_FMESETUP, V_FMEPATTERN, V_REVMIX, V_RPROTOPT, V_FPROTOPT, V_FMFILTER, V_RUNITOPT, V_FUNITOPT, V_ROOTDIV, V_PAD2FILTER, V_NATURE, V_VCF, V_AMPENV, V_VCFENV, V_VAMOD, NVIEWS };
+static const char *const VIEW_NAME[NVIEWS] = {"Garden", "Pad 1", "Body", "Rings", "Tone", "Exciter", "", "Mod", "Mixer", "Pad 2", "Body", "Reverb", "Sends", "Setup", "Pad 1 Seq", "Pad 2 Seq", "Rings Seq", "Performance", "", "Hallucigenia Options", "Hallucigenia Pattern", "VA", "VA Motion", "VA Seq", "VA Hallucigenia Options", "VA Hallucigenia Pattern", "Reverb Mix", "Proteus Options", "VA Proteus Options", "Pad 1 Filter", "Unit-D Options", "VA Unit-D Options", "Root & Note Div", "Pad 2 Filter", "Nature", "VA Filter", "VA Amp ADSR", "VA Filter ADSR", "VA Motion"};
+static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ENV, B_SEQ, B_SEQ, B_SEQ, NB, B_LFO, B_GLO, B_ARP, B_ARP, B_FX, B_FX, B_GLO, B_ENV, B_ARP, B_SEQ, B_GLO, NB, B_SEQ, B_SEQ, B_SEL, B_SEL, B_SEL, B_SEL, B_SEL, B_FX, B_SEQ, B_SEL, B_ENV, B_SEQ, B_SEL, B_HOME, B_ARP, B_GLO, B_SEL, B_SEL, B_SEL, B_SEL};
+static const char *const VIEW_BTN_NAME[NVIEWS] = {"HOME", "PAD 1", "PAD 1", "RINGS", "RINGS", "RINGS", "", "LFO", "MIXER", "PAD 2", "PAD 2", "REVERB", "REVERB", "MIXER", "PAD 1", "PAD 2", "RINGS", "MIXER", "", "RINGS", "RINGS", "VA", "VA", "VA", "VA", "VA", "REVERB", "RINGS", "VA", "PAD 1", "VA", "HOME", "PAD 2", "GLO", "VA", "VA", "VA", "VA"};
 enum { K_LEDS = 192, K_CPU, K_MOD_ROUTE, K_MOD_DEST, K_MOD_DEPTH, K_MOD_SPEED, K_PERF_MODE, K_PERF_RESET, K_PERF_SECS, K_PERF_STATE, K_EVONEW, K_FMEVONEW, K_RPROTNEW, K_FPROTNEW, K_MOD_SHAPE, K_NONE };
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
@@ -31,7 +32,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_RMODEL, P_RBURST, P_RPOLY, K_NONE},
     {P_RSTRUCT, P_RBRIGHT, P_RDAMP, P_RPOS},
     {P_REXCITER, K_NONE, K_NONE, K_NONE},
-    {P_RDELAYTIME, P_RDELAYFB, P_RDELAYMIX, P_RDELAYREPEATS},
+    {K_NONE, K_NONE, K_NONE, K_NONE},
     {K_MOD_ROUTE, K_MOD_DEST, K_MOD_DEPTH, K_MOD_SPEED},
     {P_PAD, P_PULSE, P_BELLS, P_FMLEVEL},
     {P_HITS, P_SWING, P_DRONEVOICE, P_PAD2CHORUS},
@@ -43,13 +44,13 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PAD2OCT, P_PAD2RANGE, P_PAD2CHANCE, K_NONE},
     {P_RSEQMODE, P_BOCT, P_RINGRANGE, P_RINGCHANCE},
     {K_PERF_MODE, K_PERF_RESET, K_PERF_SECS, K_PERF_STATE},
-    {P_DDIFF, P_DMOTION, P_DREV, K_NONE},
-    {P_ELENGTH, P_EMUTATE, P_EDENSITY, P_ERATE},
+    {K_NONE, K_NONE, K_NONE, K_NONE},
+    {P_BOCT, P_RINGRANGE, P_RINGCHANCE, P_RBURST},
     {P_ERANGE, P_EFOLLOW, P_EPATTERN, K_EVONEW},
-    {P_FMPATCH, P_FMLEVEL, P_FMPOLY, P_FMGATE},
+    {P_VAPRESET, P_FMLEVEL, P_FMPOLY, P_FMGATE},
     {K_NONE, P_FMBURST, P_FMREV, K_NONE},
     {P_FMSEQMODE, P_FMOCT, P_FMRANGE, P_FMCHANCE},
-    {P_FMELENGTH, P_FMEMUTATE, P_FMEDENSITY, P_FMERATE},
+    {P_FMOCT, P_FMRANGE, P_FMCHANCE, P_FMBURST},
     {P_FMERANGE, P_FMEFOLLOW, P_FMEPATTERN, K_FMEVONEW},
     {P_SIZE, P_GP5TONE, P_ETIME, P_REVERB},
     {P_RPROTRANGE, K_RPROTNEW, P_BOCT, P_RINGRANGE},
@@ -59,6 +60,11 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_FUDTOL,P_FUDRANGE,P_FUDRATE,P_FUDPOLY},
     {P_ROOT, P_FMDENSITY, P_DENSITY, K_NONE},
     {P_P2FILTERTYPE,P_P2FILTERCUT,P_P2FILTERRES,P_P2FILTERMIX},
+    {P_NATURE_MASTER, P_NATURE_WATER, P_NATURE_RAIN, P_NATURE_ANIMALS},
+    {P_VACUT, P_VARES, P_VAENV, P_VATRACK},
+    {P_VAAMPA, P_VAAMPD, P_VAAMPS, P_VAAMPR},
+    {P_VAVCFA, P_VAVCFD, P_VAVCFS, P_VAVCFR},
+    {P_VASUB, P_VAPWM, P_VALFORATE, P_VALFOCUT},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tempo", "Evolve", "Motion", "Drift"},
@@ -67,25 +73,25 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Model", "Burst", "Polyphony", ""},
     {"Structure", "Brightness", "Damping", "Position"},
     {"Exciter", "", "", ""},
-    {"Time", "Feedback", "Mix", "Repeats"},
+    {"", "", "", ""},
     {"Source", "Destination", "Depth", "Speed"},
-    {"Pad", "Pad 2", "Rings", "FM"},
+    {"Pad", "Pad 2", "Rings", "VA"},
     {"Swell", "Bright", "Colour", "Width"},
     {"Low Body", "Character", "", ""},
     {"Decay", "Tone", "Motion", "Dry/Wet"},
-    {"Pad", "Rings", "Pad 2", "FM"},
+    {"Pad", "Rings", "Pad 2", "VA"},
     {"Tune", "MIDI out", "Lights", ""},
     {"Octave", "Oct Drift", "Change", ""},
     {"Octave", "Oct Drift", "Change", ""},
     {"Mode", "Octave", "Oct Drift", "Chance"},
     {"Mode", "Reset", "Seconds", "Worker"},
-    {"Diffusion", "Motion", "Rev Send", ""},
-    {"Length", "Mutation", "Density", "Rate"},
+    {"", "", "", ""},
+    {"Octave", "Oct Drift", "Oct Chance", "Burst"},
     {"Range", "Follow", "Pattern", "New"},
-    {"Patch", "Level", "Voices", "Gate"},
+    {"Preset", "Level", "Voices", "Gate"},
     {"Density", "Burst", "Rev Send", ""},
     {"Mode", "Octave", "Oct Drift", "Chance"},
-    {"Length", "Mutation", "Density", "Rate"},
+    {"Octave", "Oct Drift", "Oct Chance", "Burst"},
     {"Range", "Follow", "Pattern", "New"},
     {"Decay", "Tone", "Motion", "Dry/Wet"},
     {"Range", "New Melody", "Octave", "Oct Drift"},
@@ -93,8 +99,13 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Type", "Cutoff", "Resonance", "Mix"},
     {"Tolerance", "Range", "Rate", "Polyphony"},
     {"Tolerance", "Range", "Rate", "Polyphony"},
-    {"Root", "FM Density", "Rings Density", ""},
+    {"Root", "VA Density", "Rings Density", ""},
     {"Type", "Cutoff", "Resonance", "Mix"},
+    {"Master", "River", "Rain", "Animals"},
+    {"Cutoff", "Resonance", "Env Amount", "Key Track"},
+    {"Attack", "Decay", "Sustain", "Release"},
+    {"Attack", "Decay", "Sustain", "Release"},
+    {"Sub Level", "PWM Depth", "LFO Period", "Cutoff LFO"},
 };
 
 /* the screen's colours: the cover of Ambient 1: Music for Airports (1978), as the web app and the site.
@@ -149,7 +160,7 @@ static struct {
 /* Track the emitted pitch, not the current octave, until its source releases.
  * A zero entry is idle; MIDI note 0..127 is stored as 1..128. */
 static uint8_t fm_key_note[NKEYS], fm_midi_note[128];
-static int fm_view(int v) { return (v >= V_FM && v <= V_FMEPATTERN) || v == V_FPROTOPT || v == V_FUNITOPT; }
+static int fm_view(int v) { return (v >= V_FM && v <= V_FMEPATTERN) || v == V_FPROTOPT || v == V_FUNITOPT || (v>=V_VCF && v<=V_VAMOD); }
 static int fm_clip_note(int n) { return n < 0 ? 0 : n > 127 ? 127 : n; }
 static void fm_manual_release(void)
 {
@@ -244,7 +255,7 @@ static int fm_filter_knob(int view,int row,int slot) {
 }
 static int mod_view_knob(int row,int slot) {
     if (ui.mod_route < 11) {
-        static const int top[4]={K_MOD_ROUTE,K_MOD_DEST,K_MOD_DEPTH,K_NONE};
+        static const int top[4]={K_MOD_ROUTE,K_MOD_DEST,K_MOD_DEPTH,K_MOD_SPEED};
         static const int bottom[4]={K_MOD_SHAPE,K_NONE,K_MOD_SPEED,K_NONE};
         return row==2?bottom[slot]:top[slot];
     }
@@ -259,8 +270,8 @@ static int grid_page(int v)
     switch(v) {
     case V_GARDEN: case V_ROOTDIV: case V_PAD: case V_PADBODY: case V_PADSEQ:
     case V_DRONE: case V_DRONEVOICE: case V_PAD2SEQ:
-    case V_RINGS: case V_RINGTONE: case V_RINGEXC: case V_RINGDLY:
-    case V_DAMBIENT: case V_RPROTOPT: case V_SPACE: case V_REVSEND: case V_REVMIX:
+    case V_RINGS: case V_RINGTONE: case V_RINGEXC: 
+    case V_RPROTOPT: case V_FPROTOPT: case V_RUNITOPT: case V_FUNITOPT: case V_SPACE: case V_REVSEND: case V_REVMIX:
     case V_SETUP: case V_FM: return 1;
     default: return 0;
     }
@@ -269,20 +280,19 @@ static int wide_grid_page(int view) {
     return view==V_GARDEN || view==V_ROOTDIV || view==V_SETUP || view==V_SPACE || view==V_REVSEND || view==V_REVMIX ||
         view==V_PAD || view==V_PADBODY || view==V_PADSEQ ||
         view==V_DRONE || view==V_DRONEVOICE || view==V_PAD2SEQ ||
-        view==V_RINGS || view==V_RINGTONE || view==V_RINGEXC ||
-        view==V_RINGDLY || view==V_DAMBIENT || view==V_RUNITOPT;
+        view==V_RINGS || view==V_RINGTONE || view==V_RINGEXC;
 }
 static int grid_row(int v) { return ui.grid_row[v] == 2 ? 2 : 1; }
 static int grid_binding(int view,int row,int slot)
 {
     if(row==1)return VIEW_KNOB[view][slot];
+    if (view==V_RPROTOPT || view==V_FPROTOPT)
+        return slot==0 ? (view==V_FPROTOPT ? P_FMCHANCE : P_RINGCHANCE) : K_NONE;
+    if (view==V_RUNITOPT || view==V_FUNITOPT)
+        return slot==0 ? (view==V_FUNITOPT ? P_FMOCT : P_BOCT) : K_NONE;
     if(view==V_GARDEN)return slot==0 ? P_ROOT : K_NONE;
-    if(view==V_RINGDLY) {
-        static const int d[4]={P_DDIFF,P_DMOTION,P_DREV,K_NONE};
-        return d[slot];
-    }
     if(view==V_FM) {
-        static const int f[4]={K_NONE,P_FMBURST,P_FMREV,K_NONE};
+        static const int f[4]={P_VABLEND,P_FMBURST,P_FMREV,P_VARES};
         return f[slot];
     }
     return K_NONE;
@@ -290,16 +300,15 @@ static int grid_binding(int view,int row,int slot)
 static const char *grid_label(int view,int row,int slot)
 {
     if(row==1)return KNOB_LABEL[view][slot];
+    if (view==V_RPROTOPT || view==V_FPROTOPT) return slot==0?"Oct Chance":"";
+    if (view==V_RUNITOPT || view==V_FUNITOPT) return slot==0?"Octave":"";
     if(view==V_GARDEN)return slot==0?"Root":"";
-    if(view==V_RINGDLY){static const char *const d[]={"Diffusion","Motion","Rev Send",""};return d[slot];}
-    if(view==V_FM){static const char *const f[]={"Density","Burst","Rev Send",""};return f[slot];}
+    if(view==V_FM){static const char *const f[]={"Saw/Pulse","Burst","Rev Send","Resonance"};return f[slot];}
     return "";
 }
 static int bound_view_knob(int view,int slot) {
     if(wide_grid_page(view))return VIEW_KNOB[view][slot];
     if(view==V_FMFILTER || view==V_PAD2FILTER)return fm_filter_knob(view,ui.fm_filter_row,slot);
-    if(view==V_RUNITOPT || view==V_FUNITOPT)
-        return ui.unit_row[view==V_FUNITOPT]==1?VIEW_KNOB[view][slot]:K_NONE;
     if(view==V_MOD)return mod_view_knob(ui.mod_row,slot);
     if(grid_page(view))return grid_binding(view,grid_row(view),slot);
     return VIEW_KNOB[view][slot];
@@ -446,8 +455,8 @@ static int seq_binding(int view, int zone, int slot)
     }
     /* Original keeps its existing loop, octave and Burst controls. */
     static const int r[2][8] = {
-        {P_BOCT,P_RINGRANGE,P_RINGCHANCE,P_RBURST,K_NONE,P_BELLS,P_RMODEL,P_RPOLY},
-        {P_FMOCT,P_FMRANGE,P_FMCHANCE,P_FMBURST,K_NONE,P_FMLEVEL,P_FMPATCH,P_FMPOLY}
+        {P_BOCT,P_RINGRANGE,P_RINGCHANCE,P_RBURST,P_DENSITY,P_BELLS,P_RMODEL,P_RPOLY},
+        {P_FMOCT,P_FMRANGE,P_FMCHANCE,P_FMBURST,P_FMDENSITY,P_FMLEVEL,P_VAPRESET,P_FMPOLY}
     };
     return r[fm][(zone-1)*4+slot];
 }
@@ -463,6 +472,7 @@ static const char *seq_binding_label(int view, int zone, int slot)
                                        "Density","Level","Model","Voices"};
     int fm=view==V_FMSEQ;
     int mode=proj.par[fm ? P_FMSEQMODE : P_RSEQMODE];
+    if (mode==0 && fm && zone==2 && slot==2) return "Patch";
     return (mode==3?ud:mode==2?prot:mode==1?hall:orig)[(zone-1)*4+slot];
 }
 
@@ -472,7 +482,7 @@ static void knob_set(int k, int v)
     if (k == K_CPU || k == K_NONE) return;
     knob_range(k, &lo, &hi);
     v = v < lo ? lo : v > hi ? hi : v;
-    if (v == knob_get(k)) return;
+    if (v == knob_get(k) && k != P_VAPRESET) return;
     if (k == K_PERF_MODE) { perf_mode(v); return; }
     if (k == K_MOD_ROUTE) {
         ui.mod_route = (uint8_t)v;
@@ -484,6 +494,7 @@ static void knob_set(int k, int v)
         int p=mod_param(k);if(p>=0){proj.par[p]=(int16_t)v;en_set(p,v);}
     } else if (k < P_NPARAMS) {
         proj.par[k] = (int16_t)v; en_set(k, v);
+        if(k==P_VAPRESET)va_preset_load(v,proj.par);
         if(k==P_FFILTERMODEL || k==P_P2FILTERMODEL) {
             int type=0;
             int param=k==P_P2FILTERMODEL?P_P2FILTERTYPE:P_FFILTERTYPE;proj.par[param]=(int16_t)type;en_set(param,type);
@@ -522,7 +533,7 @@ static void turn(int role, int k, int32_t e)
 {
     int lo, hi;
     if (e && k == K_EVONEW) { en_evo_new(); mark_dirty(); say("PATTERN", "Randomized"); return; }
-    if (e && k == K_FMEVONEW) { en_fmevo_new(); mark_dirty(); say("FM PATTERN", "Randomized"); return; }
+    if (e && k == K_FMEVONEW) { en_fmevo_new(); mark_dirty(); say("VA PATTERN", "Randomized"); return; }
     if (e && (k == K_RPROTNEW || k == K_FPROTNEW)) {
         en_proteus_new(k==K_FPROTNEW);
         mark_dirty();say("PROTEUS", "NEW MELODY");return;
@@ -595,9 +606,11 @@ static void set_piece(int i)                    /* the piece playing kept as it 
 /* ------------------------------------------------------------ buttons --- */
 static void set_view(int v)
 {
+    if ((unsigned)v >= NVIEWS || VIEW_BTN[v] == NB) return;
     ui.view = (uint8_t)v;
     if(v==V_FMFILTER || v==V_PAD2FILTER)ui.fm_filter_row=1;
     if(v==V_RINGSEQ || v==V_FMSEQ)ui.seq_zone[v==V_FMSEQ]=1;
+    if(v==V_RUNITOPT || v==V_FUNITOPT || v==V_RPROTOPT || v==V_FPROTOPT)ui.grid_row[v]=1;
     ui.touched = -1;
 }
 
@@ -612,20 +625,22 @@ static void button(int b)
     if (b == B_ARP) { set_view(ui.view == V_DRONE ? V_DRONEVOICE : ui.view == V_DRONEVOICE ? V_PAD2FILTER : ui.view == V_PAD2FILTER ? V_PAD2SEQ : V_DRONE); return; }
     if (b == B_SEQ) {
         set_view(ui.view == V_RINGS ? V_RINGTONE : ui.view == V_RINGTONE ? V_RINGEXC :
-                 ui.view == V_RINGEXC ? V_RINGDLY : ui.view == V_RINGDLY ? V_DAMBIENT :
-                 ui.view == V_DAMBIENT ? V_RINGSEQ :
+                 ui.view == V_RINGEXC ? V_RINGSEQ :
+                 ui.view == V_RINGSEQ && proj.par[P_RSEQMODE] == 1 ? V_ESETUP :
                  ui.view == V_RINGSEQ && proj.par[P_RSEQMODE] == 2 ? V_RPROTOPT :
                  ui.view == V_RINGSEQ && proj.par[P_RSEQMODE] == 3 ? V_RUNITOPT : V_RINGS);
         return;
     }
     if (b == B_SEL) {
-        set_view(ui.view == V_FM ? V_FMSEQ :
+        set_view(ui.view == V_FM ? V_VCF : ui.view==V_VCF ? V_AMPENV :
+                 ui.view==V_AMPENV ? V_VCFENV : ui.view==V_VCFENV ? V_VAMOD : ui.view==V_VAMOD ? V_FMSEQ :
+                 ui.view == V_FMSEQ && proj.par[P_FMSEQMODE] == 1 ? V_FMESETUP :
                  ui.view == V_FMSEQ && proj.par[P_FMSEQMODE] == 2 ? V_FPROTOPT :
                  ui.view == V_FMSEQ && proj.par[P_FMSEQMODE] == 3 ? V_FUNITOPT : V_FM);
         return;
     }
     if (b == B_FX) { set_view(ui.view == V_SPACE ? V_REVSEND : ui.view == V_REVSEND ? V_SPACE : V_SPACE); return; }
-    if (b == B_GLO) { set_view(ui.view == V_MIXER ? V_SETUP : ui.view == V_SETUP ? V_PERF : V_MIXER); return; }
+    if (b == B_GLO) { set_view(ui.view == V_MIXER ? V_NATURE : ui.view == V_NATURE ? V_SETUP : ui.view == V_SETUP ? V_PERF : V_MIXER); return; }
     for (v = 0; v < NVIEWS; v++)                 /* a page's button: its page */
         if (VIEW_BTN[v] == b) {
             set_view(v);
@@ -658,7 +673,7 @@ static void button(int b)
             const char *name;
             if (ui.view == V_PAD || ui.view == V_PADBODY || ui.view == V_PADSEQ || ui.view==V_FMFILTER) { p = P_PADOCT; name = "PAD OCTAVE"; }
             else if (ui.view == V_DRONE || ui.view == V_DRONEVOICE || ui.view == V_PAD2SEQ || ui.view==V_PAD2FILTER) { p = P_PAD2OCT; name = "PAD 2 OCTAVE"; }
-            else if (fm_view(ui.view)) { p = P_FMOCT; name = "FM OCTAVE"; }
+            else if (fm_view(ui.view)) { p = P_FMOCT; name = "VA OCTAVE"; }
             else { p = P_BOCT; name = "RINGS OCTAVE"; }
             char t[8];
             knob_set(p, proj.par[p] + (b == B_OCTUP ? 1 : -1));
@@ -799,7 +814,12 @@ static void input(void)
         }
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {
-        if(ui.view==V_FMFILTER || ui.view==V_PAD2FILTER) {
+        if (ui.view == V_NATURE) {
+            char value[16];
+            turn(EN_SELECT, P_NATURE_DENSITY, e);
+            knob_text(P_NATURE_DENSITY, value);
+            say("ANIMAL DENSITY", value);
+        } else if(ui.view==V_FMFILTER || ui.view==V_PAD2FILTER) {
             ui.fm_filter_row=(uint8_t)(((int)(ui.fm_filter_row?ui.fm_filter_row:1)-1+e%2+2)%2+1);
             ui.sig[1]=ui.sig[2]=0;
             say("SELECT",ui.fm_filter_row==1?"ROW 1":"ROW 2 MODEL");
@@ -807,13 +827,6 @@ static void input(void)
             ui.mod_row=(uint8_t)(((int)(ui.mod_row?ui.mod_row:1)-1+e%2+2)%2+1);
             ui.sig[1]=ui.sig[2]=0;
             say("SELECT",ui.mod_row==1?"ROW 1":"ROW 2 SHAPE");
-        } else if(ui.view == V_FUNITOPT) {
-            int fi=ui.view==V_FUNITOPT;
-            int row=(int)(ui.unit_row[fi]?ui.unit_row[fi]:1)+e-1;
-            while(row<0)row+=2;
-            ui.unit_row[fi]=(uint8_t)(row%2+1);
-            ui.sig[1]=ui.sig[2]=0;
-            say("SELECT",ui.unit_row[fi]==1?"ROW 1":"ROW 2 RESERVED");
         } else if (ui.view == V_RINGSEQ || ui.view == V_FMSEQ) {
             int fi=ui.view==V_FMSEQ;
             int zone=(int)(ui.seq_zone[fi]==2?2:1)-1+e;
@@ -1044,7 +1057,7 @@ static uint16_t page_colour(int v)
 {
     if (v == V_PAD || v == V_PADBODY || v == V_PADSEQ) return K_PAD;
     if (v == V_RUNITOPT) return K_BELL;
-    if (v == V_RINGS || v == V_RINGTONE || v == V_RINGEXC || v == V_RINGDLY || v == V_DAMBIENT || v == V_RINGSEQ || v == V_ESETUP || v == V_EPATTERN || v == V_RPROTOPT) return K_BELL;
+    if (v == V_RINGS || v == V_RINGTONE || v == V_RINGEXC || v == V_RINGSEQ || v == V_ESETUP || v == V_EPATTERN || v == V_RPROTOPT) return K_BELL;
     if (fm_view(v)) return K_FM;
     if (v == V_MOD) return RGB(40, 224, 112);
     if (v == V_MIXER) return K_ACC;
@@ -1120,8 +1133,7 @@ static void value_box(int32_t x, int32_t y, int32_t w, int32_t h, const char *la
  * separate control band, using cv_oy to keep a seamless 240x240 screen. */
 static int rings_aux_grid_page(void)
 {
-    return ui.view == V_RINGTONE || ui.view == V_RINGEXC ||
-           ui.view == V_RINGDLY || ui.view == V_DAMBIENT;
+    return ui.view == V_RINGTONE || ui.view == V_RINGEXC;
 }
 
 static void rings_aux_grid_box(int x, int y, int w, int h, int slot, uint16_t colour)
@@ -1288,7 +1300,7 @@ static void draw_pulse(void)                     /* right: independent half-spee
 /* a button's card (help_tick): its name, then what it does, in the garden's place. A line starting with a
  * space goes on from the one before (a screen reader joins them: sp_line) */
 #define HELP_LINES 4
-static const char *const BTN_LABEL[NB] = {"REVERB", "FM", "PAD 1", "LFO", "EDIT", "MIXER", "HOME", "SAVE", "PAD 2", "RINGS",
+static const char *const BTN_LABEL[NB] = {"REVERB", "VA", "PAD 1", "LFO", "EDIT", "MIXER", "HOME", "SAVE", "PAD 2", "RINGS",
                                           "PLAY", "REC", "OCT-", "OCT+"};
 static int help_lines(int b, const char *l[HELP_LINES])
 {
@@ -1299,10 +1311,10 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ENV: L("PAD 1"); L("AGAIN: BODY / FILTER / SEQ"); L("LEVEL, OCTAVE, SWELL, BRIGHT"); break;
     case B_ARP: L("PAD 2 - INDEPENDENT"); L("AGAIN: BODY / FILTER / SEQ"); L("HALF-SPEED PAD ENGINE"); break;
     case B_LFO: L("MODULATION"); L("SOURCE, DESTINATION, DEPTH, SPEED"); break;
-    case B_SEQ: L("RINGS"); L("TONE / EXCITER / DELAY"); L("DELAY 2: DIFFUSION / MOTION / SEND"); L("SEQ: ALGO MODE / SELECT BANK"); break;
-    case B_SEL: L("FM - SIX OPERATORS"); L("AGAIN: SEQUENCER"); L("SEQ: ALGO MODE / SELECT BANK"); L("PIANO: KEYS OR MIDI CH 3"); break;
+    case B_SEQ: L("RINGS"); L("TONE / EXCITER"); L("SEQ: ALGO MODE / SELECT BANK"); break;
+    case B_SEL: L("VA - SAW / PULSE"); L("FILTER / AMP / FILTER ENV / LFO"); L("SEQ: ALGO MODE / SELECT BANK"); L("PIANO: KEYS OR MIDI CH 3"); break;
     case B_FX: L("REVERB"); L("MONUMATIC FULL-RATE REVERB"); L("PRESS AGAIN: LAYER SENDS"); break;
-    case B_GLO: L("MIXER"); L("PAD, RINGS, PAD 2, FM"); L("PRESS AGAIN: SETUP"); L("THEN PERFORMANCE"); break;
+    case B_GLO: L("MIXER / NATURE / SETUP / PERF"); L("NATURE: K1 MASTER, K2 RIVER"); L("K3 RAIN, K4 ANIMALS"); L("SELECT: ANIMAL DENSITY"); break;
     case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); break;
     case B_REC: L("FREEZE: THE CHORD HOLDS"); L(" AND THE REVERB RINGS ON"); L("AGAIN: THAW"); break;
     case B_OCTDN: L("CURRENT LAYER OCT DOWN"); L("FOLLOWS THE CURRENT PAGE"); L("WITH OCT+, 5 S: UPDATE MODE"); break;
@@ -1386,7 +1398,7 @@ static int fm_vu_value(void)
                                       0.06309573f, 0.12589254f, 0.25118864f, 0.50118723f};
     float peak = en_fm_level;
     int n = 0;
-    if (proj.par[P_FMLEVEL] <= 0 || dc_status() == 3) return 0;
+    if (!en_fm_enabled(proj.par) || dc_status() == 3) return 0;
     while (n < 8 && peak >= threshold[n]) ++n;
     return (n * 100 + 7) / 8;
 }
@@ -1401,7 +1413,7 @@ static void fm_status_text(char text[40])
         case DC_FAULT_STACK: s = "STACK FAULT: RESTART"; break;
         default: s = "DSP FAULT: RESTART"; break;
         }
-    } else if (proj.par[P_FMLEVEL] <= 0) s = "FM MUTED: RAISE LEVEL";
+    } else if (!en_fm_enabled(proj.par)) s = "VA MUTED: RAISE LEVEL";
     else if (fm_port_active_voices > 0) {
         int n = fm_port_active_voices;
         *text++ = (char)('0' + n); *text++ = ' ';
@@ -1661,10 +1673,10 @@ static void grid_context(int view)
         return;
     }
     if(view==V_PAD||view==V_DRONE||view==V_RINGS||view==V_FM) {
-        int k=view==V_PAD?P_PADTONE:view==V_DRONE?P_DRONEVOICE:view==V_RINGS?P_RMODEL:P_FMPATCH;
-        left=view==V_PAD?"PAD 1 COLOUR":view==V_DRONE?"PAD 2 COLOUR":view==V_RINGS?"RINGS MODEL":"FM PATCH";
+        int k=view==V_PAD?P_PADTONE:view==V_DRONE?P_DRONEVOICE:view==V_RINGS?P_RMODEL:P_VABLEND;
+        left=view==V_PAD?"PAD 1 COLOUR":view==V_DRONE?"PAD 2 COLOUR":view==V_RINGS?"RINGS MODEL":"VA PATCH";
         if(view==V_FM) {
-            const char *name=fm_port_patch_name(proj.par[P_FMPATCH]);
+            const char *name=va_preset_name(proj.par[P_VAPRESET]);
             caps(value,name,sizeof value);
         } else en_param_text(k,proj.par[k],value);
     } else if(view==V_PADBODY||view==V_DRONEVOICE) {
@@ -1673,8 +1685,8 @@ static void grid_context(int view)
     } else if(view==V_PADSEQ||view==V_PAD2SEQ) {
         left=view==V_PADSEQ?"PAD 1 SEQUENCE":"PAD 2 SEQUENCE";
         en_param_text(view==V_PADSEQ?P_PADOCT:P_PAD2OCT,proj.par[view==V_PADSEQ?P_PADOCT:P_PAD2OCT],value);
-    } else if(view==V_RINGTONE||view==V_RINGEXC||view==V_RINGDLY||view==V_DAMBIENT||view==V_RPROTOPT) {
-        left=view==V_RINGTONE?"RINGS TONE":view==V_RINGEXC?"RINGS EXCITER":view==V_RINGDLY?"RINGS DELAY":view==V_DAMBIENT?"RINGS DELAY 2":"PROTEUS OPTIONS";
+    } else if(view==V_RINGTONE||view==V_RINGEXC||view==V_RPROTOPT) {
+        left=view==V_RINGTONE?"RINGS TONE":view==V_RINGEXC?"RINGS EXCITER":"PROTEUS OPTIONS";
         en_param_text(P_RMODEL,proj.par[P_RMODEL],value);
     } else if(view==V_SPACE||view==V_REVSEND||view==V_REVMIX) {
         left=view==V_SPACE?"MONUMATIC REVERB":view==V_REVSEND?"REVERB SENDS":"MONUMATIC REVERB";
@@ -1749,7 +1761,7 @@ static void draw_main(void)
             P_PADTONE, P_DRONEVOICE, P_RMODEL,
             P_PADREV, P_DRONEREV, P_RINGREV,
             P_PADOCT, P_PAD2OCT, P_BOCT,
-            P_PADCHAR, P_PAD2CHAR, P_RDELAYMIX, P_RSEQMODE
+            P_PADCHAR, P_PAD2CHAR, P_REXCITER, P_RSEQMODE
         };
         for (i = 0; i < (int)(sizeof overview_params / sizeof overview_params[0]); ++i)
             h = hash(h, (uint32_t)proj.par[overview_params[i]]);
@@ -1821,7 +1833,7 @@ static void draw_main(void)
         int row=ui.mod_route,rp=mod_param(K_MOD_SHAPE),shape=rp>=0?proj.par[rp]:0;
         uint16_t col=page_colour(V_MOD);
         outline_box(2,1,236,64,col,K_PANEL);
-        cv_text(8,4,&FONT_T,row==0?"M1 MOD SOURCE":row==1?"M2 MOD SOURCE":row==2?"M3 MOD SOURCE":row==3?"M4 MOD SOURCE":row==4?"M5 MOD SOURCE":row==5?"M6 MOD SOURCE":row==9?"M10 FM CUTOFF":row==10?"M11 FM RESONANCE":row==6?"M7 MOD SOURCE":row==7?"M8 MOD SOURCE":"M9 MOD SOURCE",col);
+        cv_text(8,4,&FONT_T,row==0?"M1 MOD SOURCE":row==1?"M2 MOD SOURCE":row==2?"M3 MOD SOURCE":row==3?"M4 MOD SOURCE":row==4?"M5 MOD SOURCE":row==5?"M6 MOD SOURCE":row==9?"M10 VA CUTOFF":row==10?"M11 VA RESONANCE":row==6?"M7 MOD SOURCE":row==7?"M8 MOD SOURCE":"M9 MOD SOURCE",col);
         for(int x=10;x<=230;x+=44)cv_line(x,19,x,45,K_LINE);
         cv_line(10,32,230,32,K_LINE);
         /* Waveform preview; random shapes show a deterministic example contour. */
@@ -1876,7 +1888,7 @@ static void draw_main(void)
         int identity = rings ? P_RMODEL : pad2 ? P_DRONEVOICE : P_PADTONE;
         int send = rings ? P_RINGREV : pad2 ? P_DRONEREV : P_PADREV;
         int octave = rings ? P_BOCT : pad2 ? P_PAD2OCT : P_PADOCT;
-        int detail = rings ? P_RDELAYMIX : pad2 ? P_PAD2CHAR : P_PADCHAR;
+        int detail = rings ? P_REXCITER : pad2 ? P_PAD2CHAR : P_PADCHAR;
         int vu[4];
         uint16_t colour = page_colour(ui.view);
         const char *status;
@@ -1901,7 +1913,7 @@ static void draw_main(void)
         en_param_text(octave,proj.par[octave],t1);
         value_box(82,83,77,35,"OCTAVE",t1,K_LINE,K_PANEL,0);
         num_text(proj.par[detail],t2);
-        value_box(162,83,76,35,rings ? "DELAY MIX" : "CHARACTER",t2,K_LINE,K_PANEL,0);
+        value_box(162,83,76,35,rings ? "EXCITER" : "CHARACTER",t2,K_LINE,K_PANEL,0);
         if (rings && dc_status() == 3) {
             fm_status_text(fault); status = fault;
         } else if (proj.par[level] <= 0) {
@@ -1915,12 +1927,12 @@ static void draw_main(void)
         cv_blit(0,MAIN_Y); return;
     }
     if (ui.view == V_FM) {
-        const char *patch = fm_port_patch_name(proj.par[P_FMPATCH]);
+        const char *patch = va_preset_name(proj.par[P_VAPRESET]);
         char status[40];
         int meter = fm_vu_value();
         chord_now(chord);
-        value_box(2,1,176,38,"SIX-OP FM PATCH",patch,K_FM,K_PANEL,0);
-        draw_mixer_channel(181,1,57,38,"FM",proj.par[P_FMLEVEL],meter,K_FM);
+        value_box(2,1,176,38,"VA VOICE",patch,K_FM,K_PANEL,0);
+        draw_mixer_channel(181,1,57,38,"VA",proj.par[P_FMLEVEL],meter,K_FM);
         value_box(2,42,116,38,"SEQUENCER",
                   en_fm_seq_active_mode==2?"PROTEUS":en_fm_seq_active_mode==1?"HALLUCIGENIA":"ORIGINAL",K_FM,K_PANEL,0);
         value_box(121,42,117,38,"CURRENT CHORD",chord,K_LINE,K_PANEL,0);
@@ -1938,7 +1950,7 @@ static void draw_main(void)
         int fi=ui.view==V_FPROTOPT;
         int b=fi?P_FPROTLEN:P_RPROTLEN;
         chord_now(chord);
-        value_box(2,2,236,32,"PROTEUS OPTIONS",fi?"FM MELODY":"RINGS MELODY",c,K_PANEL,0);
+        value_box(2,2,236,32,"PROTEUS OPTIONS",fi?"VA MELODY":"RINGS MELODY",c,K_PANEL,0);
         value_box(2,38,116,40,"ACTIVE ORIGINAL CHORD",chord,c,K_PANEL,0);
         num_text(proj.par[b],t0);
         value_box(122,38,116,40,"LENGTH",t0,c,K_PANEL,0);
@@ -1957,7 +1969,7 @@ static void draw_main(void)
         int pending=proj.par[pmode]!=active || proj.par[ppattern]!=pattern+1;
         uint16_t colour=isfm?K_FM:K_BELL, dim=isfm?K_FM_T:K_BELL_T;
         chord_now(chord);
-        value_box(2,1,116,30,isfm?"FM SEQUENCER":"SEQUENCER",active?"EVOLVE":"ORIGINAL",colour,K_PANEL,0);
+        value_box(2,1,116,30,isfm?"VA SEQUENCER":"SEQUENCER",active?"EVOLVE":"ORIGINAL",colour,K_PANEL,0);
         value_box(121,1,117,30,proj.par[pfollow]?"CHORD":"SCALE",proj.par[pfollow]?chord:"ROOT + SCALE",K_LINE,K_PANEL,0);
         if(evolving) {
             for(int j=0;j<16;j++) {
@@ -1978,13 +1990,13 @@ static void draw_main(void)
                    ui.view==V_EPATTERN || ui.view==V_FMEPATTERN?"SAVE: KEEP ALL PATTERNS":
                    ui.view==V_ESETUP || ui.view==V_FMESETUP?"MUTATION AT LOOP END":
                    ui.view==V_FMMOTION?"DENSITY: ORIGINAL / BURST: BOTH":
-                   isfm?"SEL: FM EVOLVE SETUP":"RINGS: EVOLVE SETUP",K_DIM);
+                   isfm?"SEL: VA EVOLVE SETUP":"RINGS: EVOLVE SETUP",K_DIM);
         } else {
             value_box(2,36,116,38,"LOOP 1","13 STEPS",colour,K_PANEL,0);
             value_box(121,36,117,38,"LOOP 2","17 STEPS",colour,K_PANEL,0);
             value_box(2,77,116,38,"LOOP 3","23 STEPS",colour,K_PANEL,0);
             value_box(121,77,117,38,"LOOP 4","29 STEPS",colour,K_PANEL,0);
-            text_c(120,119,&FONT_XS,pending?"CHANGE ON NEXT BAR":isfm?"FM LOOPS + BURST":"ORIGINAL LOOPS + YOUR BURST",K_DIM);
+            text_c(120,119,&FONT_XS,pending?"CHANGE ON NEXT BAR":isfm?"VA LOOPS + BURST":"ORIGINAL LOOPS + YOUR BURST",K_DIM);
         }
         cv_blit(0,MAIN_Y); return;
     }
@@ -2020,7 +2032,7 @@ static void draw_main(void)
         draw_mixer_channel(4, 68, 56, 63, "PAD", proj.par[P_PAD], vu[0], K_PAD);
         draw_mixer_channel(63, 68, 56, 63, "RINGS", proj.par[P_BELLS], vu[1], K_BELL);
         draw_mixer_channel(122, 68, 56, 63, "PAD 2", proj.par[P_PULSE], vu[2], K_PULSE);
-        draw_mixer_channel(181, 68, 55, 63, "FM", proj.par[P_FMLEVEL], vu[3], K_FM);
+        draw_mixer_channel(181, 68, 55, 63, "VA", proj.par[P_FMLEVEL], vu[3], K_FM);
     }
     cv_blit(0, MAIN_Y);
 }
@@ -2122,7 +2134,7 @@ static void draw_knobs(void)
                 draw_mixer_channel(4, 4, 56, body_h - 8, "PAD", proj.par[P_PAD], vu[0], K_PAD);
                 draw_mixer_channel(63, 4, 56, body_h - 8, "RINGS", proj.par[P_BELLS], vu[1], K_BELL);
                 draw_mixer_channel(122, 4, 56, body_h - 8, "PAD 2", proj.par[P_PULSE], vu[2], K_PULSE);
-                draw_mixer_channel(181, 4, 55, body_h - 8, "FM", proj.par[P_FMLEVEL], vu[3], K_FM);
+                draw_mixer_channel(181, 4, 55, body_h - 8, "VA", proj.par[P_FMLEVEL], vu[3], K_FM);
             }
             cv_blit(0, HDR_H + (uint32_t)band);
         }
@@ -2178,7 +2190,7 @@ static void draw_knobs(void)
         draw_mixer_channel(4, 4, 56, 64, "PAD", proj.par[P_PAD], vu[0], K_PAD);
         draw_mixer_channel(63, 4, 56, 64, "RINGS", proj.par[P_BELLS], vu[1], K_BELL);
         draw_mixer_channel(122, 4, 56, 64, "PAD 2", proj.par[P_PULSE], vu[2], K_PULSE);
-        draw_mixer_channel(181, 4, 55, 64, "FM", proj.par[P_FMLEVEL], vu[3], K_FM);
+        draw_mixer_channel(181, 4, 55, 64, "VA", proj.par[P_FMLEVEL], vu[3], K_FM);
     } else if (ui.view == V_PAD || ui.view == V_DRONE ||
                ui.view == V_RINGS || ui.view == V_FM || ui.view == V_MOD ||
                ui.view == V_RPROTOPT || ui.view == V_FPROTOPT) {
@@ -2239,7 +2251,7 @@ static void leds(void)
 static void autosave(void)
 {
     uint32_t now = plat_ms();
-    if (!ui.dirty || en_playing || ui.btn || ui.keys || now - ui.act_t < AUTOSAVE_QUIET || en_pad_level > 0.01f || en_fm_level > 0.01f)
+    if (!ui.dirty || en_playing || proj.par[P_NATURE_MASTER] || ui.btn || ui.keys || now - ui.act_t < AUTOSAVE_QUIET || en_pad_level > 0.01f || en_fm_level > 0.01f)
         return;
     if (project_save() == 0) {
         ui.dirty = 0;
@@ -2381,6 +2393,10 @@ static void sp_page(int all)
             sp_knob(ui.view, i);
             first = 0;
         }
+    }
+    if (ui.view == V_NATURE) {
+        sp_cat(", Select animal density ");
+        sp_int((unsigned)proj.par[P_NATURE_DENSITY]);
     }
     if (!all)
         return;
@@ -2601,6 +2617,7 @@ static void speak_dump(void)
     int v, i, x, lo, hi;
     char t[48];
     for (v = 0; v < NVIEWS; v++) {
+        if (VIEW_BTN[v] == NB) continue;
         ui.view = (uint8_t)v;
     if(v==V_FMFILTER || v==V_PAD2FILTER)ui.fm_filter_row=1;
         sp_page(0);
@@ -2682,7 +2699,7 @@ static void speak_dump(void)
         msg_text("RINGS OCTAVE", o, t);
         sp_print("MSG", t);
         en_param_text(P_FMOCT, x, o);
-        msg_text("FM OCTAVE", o, t);
+        msg_text("VA OCTAVE", o, t);
         sp_print("MSG", t);
         en_param_text(P_PADOCT, x, o);
         msg_text("PAD OCTAVE", o, t);

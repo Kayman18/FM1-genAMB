@@ -188,6 +188,10 @@ class Svf {
     state_1_ = state_2_ = 0.0f;
   }
   
+  inline bool silent() const {
+    return state_1_ == 0.0f && state_2_ == 0.0f;
+  }
+
   // Copy settings from another filter.
   inline void set(const Svf& f) {
     g_ = f.g();

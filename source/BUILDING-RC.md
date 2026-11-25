@@ -1,79 +1,60 @@
-# Building genAMB RC
+# Building genAMB Nature VA 1.0
 
-The published RC is built from the corrected TEST3b source, with numeric version **17.99.32**, display label **RC**, and updater identity **FM-1_7179932**. The source includes `base/`, `base/bsp/`, the fonts and the three SDK resources used to package the firmware.
+Set JIELI_TOOLCHAIN to the JieLi Linux toolchain root containing pi32v2/ and common/. From the source directory, run `sh build-rc.sh --buffer-512` for 17.99.47 or `sh build-rc.sh` for 17.99.46. The build uses the included SDK resources and fonts. It requires Python with Pillow on x86-64 Linux or WSL2.
 
-## Prerequisites
+After each build run `python3 tests/nature/package.py VERSION` with its numeric updater version. Run `python3 tests/nature/run-va.py` for host tests and `node tests/nature/editor.cjs` for editor snapshot tests.
 
-- x86-64 Linux or WSL2 for the device build.
-- JieLi Linux toolchain **20260730.1**, containing `pi32v2/` and `common/`. The compiler identifies as clang 4.0.1.
-- Python 3 with Pillow for source and font generation.
-- A host C/C++ compiler and development libraries for the optional desktop simulator and host tests.
-
-Set the toolchain location to its extracted directory:
+The included ADPCM assets are the authoritative build inputs. To regenerate their C arrays:
 
 ```sh
-export JIELI_TOOLCHAIN=/path/to/jieli-linux-toolchains-20260730.1
+python3 assets/nature/generate.py
+python3 assets/nature/generate.py --check
 ```
 
-The build uses `build-deps/sdk/` for `uboot.boot`, `cfg_tool.bin` and `cfg/eq_cfg_hw.bin`, and `build-deps/fonts/` with the DUSK font set. `AC79_SDK`, `X0X_FONT_DIRS`, `X0X_FONTSET` and `PYTHON` can override those defaults. Keep the bundled resources and DUSK font set when reproducing this RC.
+For an edited recording, prepare a 16 kHz mono PCM16 WAV, run `python3 assets/nature/encode.py edited.wav assets/nature/<name>.adpcm`, then update the matching manifest length, size and digest with the values printed by the encoder. Run the generator and rebuild. The manifest's offset records the original app location for provenance. The regenerated arrays compile without an original firmware image.
 
-The toolchain is an external dependency. `base/tools/get_toolchain.sh` downloads the upstream toolchain, but that download URL can advance to a newer release; use **20260730.1** to reproduce the compiler used here.
+The prepared Water and Rain masters and their original conversion metadata are in `assets/nature/masters/`. Those masters describe the original reconstruction. TEST1 normalizes Rain offline. Run `python3 assets/nature/normalize_rain.py` followed by `python3 assets/nature/generate.py` to regenerate the new Rain payload and bank from the saved master. For the birds, the raw source recordings and the final encoded streams are available. The original intermediate bird preprocessing script and its per-recording settings were not recovered.
 
-## Device build
 
-Run from the repository's `source/` directory:
+## External wave partition
+
+The checked-in `assets/nature/animal-wave.bin` is packaged by the normal device build. No external bank uploader or full-flash image is needed to install it. The matching loader writes and verifies the application and 28 animal-bank sectors.
+
+To re-encode the three source WAVs, use Python 3 and FFmpeg, then rebuild. `--check` regenerates the bytes in memory and compares them with the committed bank, asset manifest and generated C layout.
 
 ```sh
-sh build-rc.sh
-python3 tests/validate_built_fwsc_rc.py app/build/amb-17.99.32.fwsc
+python3 assets/nature/animal_wave.py --check
+python3 tests/nature/package.py
 ```
 
-`build-rc.sh` selects `--release 17.99.32 --display-version RC`. `BUILD-FM1-LINUX.sh` is a Linux/WSL2 wrapper for the same entry point. A plain `sh build.sh` also defaults to this RC; use the explicit RC wrapper when following release instructions.
-
-| Build output | Published file | Purpose |
-| --- | --- | --- |
-| `app/build/amb-17.99.32.fwsc` | `../genAMB-RC.fwsc` | Complete installable update package; 610,108 bytes |
-| `app/build/amb.bin` | `../genAMB-RC-app.bin` | Raw app component for developers; 304,860 bytes |
-| `app/build/loader/ota.bin` | Included inside the `.fwsc` | Update-loader component; 6,952 bytes |
-
-`app/build/` contains generated files. The published firmware is copied from the device build; the raw app alone is not a complete installer package.
-
-The normal build checks `.ram_text` call safety, the 64-bit-multiply CPU-erratum pattern, soft-double routines, image and RAM budgets, and MMIO placement. The package validator checks the numeric identity, header/table/payload CRCs, the loader, decrypted application bytes and erased slot padding.
-
-## Preserve the TEST3b configuration
-
-Leave **`PLAT_HOT_ENABLE` undefined**. The earlier TEST3 experiment moved audio code into `.dsp_hot` in executable SRAM and faulted on hardware. Corrected TEST3b and this RC leave that section at zero bytes; the standard flash-driver `.ram_text` remains present.
-
-Keep the default **`GENAMB_REVERB_SLEEP=1`**. At Dry/Wet 0, the inaudible tank sleeps; when the mix rises, the tank is cleared and a fresh reverb tail develops. Changing this option changes the supplied TEST3b behavior. The [TEST3 CPU notes](TEST3-CPU-NOTES.md) record the original comparison and its host-measurement limits.
-
-## Host build and focused checks
-
-These commands run from `source/`:
+Run the loader simulation with paths to TEST6 and TEST7 firmware, in that order, from the source directory:
 
 ```sh
-sh tests/monumatic/run_cpu_gates.sh
-sh tests/monumatic/run_adapter_test.sh
-sh build-rc.sh --host
-mkdir -p app/build/rc-integration
-app/build/host/amb_host tests/monumatic/integration.amb app/build/rc-integration
+cc -O2 -std=c99 -include app/dsp/animal_wave_layout.h base/tests/ldr_test.c -o app/build/ldr_wave_test
+app/build/ldr_wave_test /path/to/genAMB-Nature-TEST6-17.99.39.fwsc app/build/amb-17.99.40.fwsc
 ```
 
-The CPU gates check nine seeded render configurations against `GAGOLDEN 963138e825b936e9` and exercise reverb sleep/wake. The adapter test uses AddressSanitizer and UndefinedBehaviorSanitizer. The full-app scenario checks FX navigation, controls, persistence across reboot, maximum-wet audio and panic silence. Current results are in [`../docs/rc/`](../docs/rc/) and summarized in [RELEASE-RC.md](RELEASE-RC.md).
 
-The older `tests/run_tests.sh` targets historical engine/scenario layouts, including absent `tests/scenarios/*.amb` files. It is retained as history and is not the RC validation command. The focused checks above are the checks run for this release.
+## Repeat the 512-frame checks
 
-## Verify or install the published package
-
-From the repository root, verify the downloaded artifacts with:
+Run from the source directory after building the host dependencies described above.
 
 ```sh
-sha256sum -c SHA256SUMS.txt
+python3 tests/nature/test_capture_512.py
+sh build-rc.sh --buffer-512 --host
+mkdir -p app/build/test512
+for scenario in pad-timing controls seq-pages fm-route-controls migration lfo-speed-seq; do
+    app/build/host/amb_host "tests/nature/$scenario.amb" app/build/test512 || exit 1
+done
+sh tests/fm/run_worker_test.sh
 ```
 
-For the included USB-MIDI installer, install its Python dependencies (`mido` and `python-rtmidi`) and run from `source/`:
+The USB timing test builds the production 44.1 kHz capture ring against a simulated packet clock, verifies both channels frame by frame and checks for underflow and overflow. The worker test uses a virtual timer to verify timeout and wraparound behaviour.
+
+## M-Flasher clean-install image
+
+After building the desired buffer size, use its freshly built app/build/amb.bin and the [1 MiB clean-install reference image](https://raw.githubusercontent.com/Kayman18/FM1-NovationBassStation/main/recovery/FM1-BassStation-1.0-CLEAN-INSTALL-M-Flasher.bin). The packer checks the reference SHA-256, encrypts the application with its flash key, writes the Nature wave bank and verifies both payloads.
 
 ```sh
-python3 base/tools/fm1_install.py ../genAMB-RC.fwsc
+python3 tools/make_nature_mflasher.py /path/to/FM1-BassStation-1.0-CLEAN-INSTALL-M-Flasher.bin app/build/amb.bin genAMB-Nature-M-Flasher.bin
 ```
-
-Physical FM-1 timing, dropouts and listening still need to be evaluated on the device. Host render speed is not an FM-1 CPU measurement.

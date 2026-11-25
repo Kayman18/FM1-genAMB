@@ -1,0 +1,19 @@
+name: Publish Nature 1.0
+on:
+  push:
+    branches: [main]
+    paths: ['firmware/genAMB-Nature-1.0-512.fwsc']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify images and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd firmware && sha256sum -c SHA256SUMS.txt)
+          gh release create v1.0 firmware/*.fwsc firmware/*-M-Flasher.bin firmware/SHA256SUMS.txt --target "$GITHUB_SHA" --title "genAMB Nature 1.0" --notes "FM-1 generative ambient firmware with two pads, Rings, virtual analog synthesis, nature sounds and Monumatic reverb. Use the 512-sample FWSC for more CPU headroom or the 256-sample version for lower latency. M-Flasher binaries are full clean-install images. See the README for installation, controls and screenshots."

@@ -83,7 +83,15 @@ static struct {
  * band: ~5.8 ms). Measured under load (65 % CPU): a 64..112 band started renders at
  * 48..119 with no glitch; one render was once seen 29 frames under the floor: a packet (46) must
  * still be in hand then. */
-#define UA_N 512u                /* ring, frames (16-bit L | R << 16); a power of two */
+#if HALF_FRAMES == 512u
+/* Prime beyond one 512-frame callback and one USB packet. The audio IRQ
+ * still feeds in 256-frame pieces; capture drains at the normal 1-ms rate. */
+#define UA_N 2048u
+#define UA_PRIME 608u
+#define UA_LO 576u
+#define UA_HI 640u
+#else
+#define UA_N 512u
 #if HALF_FRAMES > 128u           /* 256-frame halves: the band X0X measured for them */
 #define UA_PRIME 128u
 #define UA_LO 96u
@@ -93,6 +101,7 @@ static struct {
 #define UA_LO 80u                /* a render may start late: keep a packet and more in hand */
 #define UA_HI 128u
 #endif
+#endif  /* 512-frame DMA */
 #define UAC_RATE 44100u
 #if FELUCCA_UAC_48K
 /* 48 kHz: the same times in 48 kHz frames (x 160 / 147); a render of HALF_FRAMES gives 139..140 frames */

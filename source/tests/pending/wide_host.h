@@ -2,7 +2,7 @@
 static void wide_layout_tests(void){
     project_t saved=proj;plat_host_exact=1;
     int views[]={V_GARDEN,V_ROOTDIV,V_SETUP,V_PAD,V_PADBODY,V_PADSEQ,V_DRONE,V_DRONEVOICE,V_PAD2SEQ,
-        V_SPACE,V_REVSEND,V_REVMIX,V_RINGS,V_RINGTONE,V_RINGEXC,V_RINGDLY,V_DAMBIENT,V_RUNITOPT};
+        V_SPACE,V_REVSEND,V_REVMIX,V_RINGS,V_RINGTONE,V_RINGEXC};
     for(unsigned v=0;v<sizeof views/sizeof views[0];v++)for(int row=1;row<=2;row++){
         int view=views[v];ui.grid_row[view]=row;ui.unit_row[0]=row;
         for(int i=0;i<4;i++){
@@ -19,7 +19,7 @@ static void wide_layout_tests(void){
         ui.mod_route=route;ui.mod_row=1;
         assert(bound_view_knob(V_MOD,0)==K_MOD_ROUTE);
         assert(bound_view_knob(V_MOD,1)==K_MOD_DEST);
-        assert(bound_view_knob(V_MOD,3)==K_NONE);
+        assert(bound_view_knob(V_MOD,3)==K_MOD_SPEED);
         assert(bound_view_knob(V_MOD,2)==K_MOD_DEPTH);
         int lo,hi;knob_range(K_MOD_DEST,&lo,&hi);assert(lo==0 && hi==0);
         knob_set(K_MOD_DEPTH,20);turn(0,bound_view_knob(V_MOD,2),1);assert(knob_get(K_MOD_DEPTH)==21);

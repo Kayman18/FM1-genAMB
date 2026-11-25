@@ -1,0 +1,34 @@
+wait 100
+tap LFO
+expect view 7
+spin K1 6
+spin K2 30
+spin K2 -2
+expect par47 15
+spin K1 1
+spin K2 30
+spin K2 -1
+expect par50 16
+spin K1 1
+spin K2 30
+expect par53 17
+listen
+where
+wait 100
+said FM Algo
+tap SEL
+expect view 21
+spin SELECT 1
+spin K1 -60
+spin K4 30
+expect par172 -60
+expect par173 32
+tap SAVE
+wait 100
+reboot
+wait 100
+expect par47 15
+expect par50 16
+expect par53 17
+expect par172 -60
+expect par173 32

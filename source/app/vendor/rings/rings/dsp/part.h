@@ -66,6 +66,7 @@ class Part {
   
   void Init(uint16_t* unused_reverb_buffer);  // Legacy signature; may be NULL.
   
+  // A null input supplies silence to the external exciter.
   void Process(
       const PerformanceState& performance_state,
       const Patch& patch,
@@ -110,6 +111,7 @@ class Part {
       const Patch& patch,
       float frequency,
       float filter_cutoff,
+      bool has_external_input,
       size_t size);
   void RenderStringVoice(
       int32_t voice,
@@ -117,6 +119,7 @@ class Part {
       const Patch& patch,
       float frequency,
       float filter_cutoff,
+      bool has_external_input,
       size_t size);
 
   inline float Squash(float x) const {

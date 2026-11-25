@@ -4,7 +4,7 @@
  * an update record, with interrupts off: USB is polled from the main loop.
  * It is a USB-MIDI device "Felucca Update" (1209:0002) that answers the
  * M-UPGRADE update protocol as "ota-FM-1_900" (hosts look for "ota-"), and
- * writes the app area only (ldr_core.c). The UBOOT soft key works here too.
+ * writes the app and configured bank sectors (ldr_core.c). The UBOOT soft key works here too.
  * Single compilation unit. */
 #include <stdint.h>
 #define FELUCCA_LOADER 1
@@ -16,9 +16,14 @@
 #define RING_PUBLISH() __asm__ volatile("" ::: "memory")
 #include "fm1_time.h"
 #include "fm1_sys.h"
-/* the loader may write the app area and erase update records; never the head, nor Felucca's store
- * [0x97000, 0xE0000) (user data, never a record: ldr_core.c) */
-#define FL_RANGE_OK(off, n) (FL_IN(off, n, 0x4000u, 0x97000u) || FL_IN(off, n, 0xE0000u, 0xFC000u))
+/* The genAMB bank-enabled build admits only its compiled sector span in
+ * the sample area. Setup/record handling keeps the other original guards. */
+#ifdef ANIMAL_WAVE_BASE
+#define LDR_WAVE_OK(off,n) FL_IN(off,n,ANIMAL_WAVE_BASE,ANIMAL_WAVE_END)
+#else
+#define LDR_WAVE_OK(off,n) 0
+#endif
+#define FL_RANGE_OK(off,n) (FL_IN(off,n,0x4000u,0x97000u) || LDR_WAVE_OK(off,n) || FL_IN(off,n,0xE0000u,0xFC000u))
 #include "fm1_flash.h"
 #include "../chip/libc.c"
 #include "../chip/usb.c"

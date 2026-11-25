@@ -267,6 +267,8 @@ def build_loader():
     LDR.mkdir(parents=True, exist_ok=True)
     src = BSP / "loader"
     flags = [*CFLAGS, *inc(BSP / "chip", BSP / "boards" / "fm1")]
+    if CONF.get("animal_wave"):
+        flags += ["-include", str(APP / "dsp" / "animal_wave_layout.h")]
     tc_all(("cc", "-c", src / "crt0_ldr.S", "-o", LDR / "crt0_ldr.o"),
            ("cc", *flags, "-c", src / "loader.c", "-o", LDR / "loader.o"))
     elf = LDR / "loader.elf"
@@ -419,8 +421,17 @@ def radio_units():
 
 
 
+def audio_block_flags():
+    value = os.environ.get("FM1B_AUDIO_FRAMES")
+    if value is None:
+        return []
+    if value not in ("256", "512"):
+        raise SystemExit("build: FM1B_AUDIO_FRAMES must be 256 or 512")
+    return ["-DAPP_BLOCK=" + value + "u"]
+
+
 def build_app():
-    flags = [*CFLAGS, *FPU, *inc(BSP / "chip", BSP / "boards" / "fm1", SRC / "device", SRC / "include", SRC / "lib", APP, GEN,
+    flags = [*CFLAGS, *FPU, *audio_block_flags(), *inc(BSP / "chip", BSP / "boards" / "fm1", SRC / "device", SRC / "include", SRC / "lib", APP, GEN,
                                  *(APP / d for d in CONF.get("include", []) + CONF.get("device_include", [])))]
     if BLE:
         flags += ["-DFM1B_BLE=1", *inc(SRC / "ble" / "shim")]
@@ -685,7 +696,7 @@ def build_host():
     host_dirs = [d for d in (SRC / "device", SRC / "include", SRC / "lib", APP, GEN,
                             *(APP / d for d in CONF.get("include", [])))
                  if d != APP / "vendor/cxx"]
-    inc_dirs = [f"-I{d}" for d in host_dirs]
+    inc_dirs = [*audio_block_flags(), *[f"-I{d}" for d in host_dirs]]
     o2_objs = o2_objects(os.environ.get("CC", "cc"), ["-O2", "-ffp-contract=off", "-std=c99", "-w", "-DPLAT_HOST", *inc_dirs],
                          out / "o2")
     cmd = [os.environ.get("CC", "cc"), "-O2", "-ffp-contract=off", "-std=c99", "-Wall", "-Wextra",
@@ -818,7 +829,19 @@ def main():
                                             for f in APP.glob("*.h")))]
     print("parts    " + ", ".join(n for n, x in parts if x) + "  (not built in: " +
           (", ".join(n for n, x in parts if not x) or "none") + ")")
-    pkg = fm1pkg_make.ufw(fm1pkg_make.flash_image(img, fm1pkg_make.KEY), ota, PRODUCT)
+    flash = fm1pkg_make.flash_image(img, fm1pkg_make.KEY)
+    if CONF.get("animal_wave"):
+        wave = (APP / CONF["animal_wave"]).read_bytes()
+        wave_base = 0x97000
+        layout = (APP / "dsp" / "animal_wave_layout.h").read_text()
+        values = {k: int(v,0) for k,v in re.findall(r"^#define (ANIMAL_WAVE_\w+) (0x[0-9a-fA-F]+|[0-9]+)u$", layout, re.M)}
+        if (not wave.startswith(b"GNANIM02") or len(wave) % 4096 or
+                values.get("ANIMAL_WAVE_BASE") != wave_base or
+                values.get("ANIMAL_WAVE_END") != wave_base + len(wave) or wave_base + len(wave) > 0xDC000 or
+                values.get("ANIMAL_WAVE_IMAGE_CRC16") != fm1pkg_make.crc16(wave)):
+            raise SystemExit("genAMB animal wave bank and compiled layout disagree")
+        flash = flash.ljust(wave_base, b"\xff") + wave
+    pkg = fm1pkg_make.ufw(flash, ota, PRODUCT)
     (OUT / name).write_bytes(pkg)
     print(f"app      {OUT / (NAME + '.bin')}  {len(img)} B")
     print(f"loader   {LDR / 'ota.bin'}  {len(ota)} B")

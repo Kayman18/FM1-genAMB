@@ -69,7 +69,7 @@ enum {
     P_PADRANGE, P_PADCHANCE, P_PAD2RANGE, P_PAD2CHANCE, P_RINGRANGE, P_RINGCHANCE,
     P_REVSPACE, P_DDIFF, P_DMOTION, P_DREV, /* ambient effects, appended for migration */
     P_RSEQMODE, P_ELENGTH, P_EMUTATE, P_EDENSITY, P_ERATE, P_ERANGE, P_EFOLLOW, P_EPATTERN,
-    P_FMLEVEL, P_FMPATCH, P_FMPOLY, P_FMGATE, P_FMREV,
+    P_FMLEVEL, P_VABLEND, P_FMPOLY, P_FMGATE, P_FMREV,
     P_FMSEQMODE, P_FMOCT, P_FMRANGE, P_FMCHANCE, P_FMDENSITY, P_FMBURST,
     P_FMELENGTH, P_FMEMUTATE, P_FMEDENSITY, P_FMERATE, P_FMERANGE, P_FMEFOLLOW, P_FMEPATTERN,
     /* v19: real Proteus melody engine; separate Rings and FM controls. Append only. */
@@ -91,6 +91,10 @@ enum {
     P_FUDTOL, P_FUDRANGE, P_FUDRATE, P_FUDPOLY,
     /* Full PolyWavetable GP5 reverb controls, append-only for project compatibility. */
     P_GP5TONE, P_GP5RATE,
+    P_NATURE_MASTER, P_NATURE_WATER, P_NATURE_RAIN, P_NATURE_ANIMALS, P_NATURE_DENSITY,
+    P_VACUT, P_VARES,
+    P_VASUB, P_VAPWM, P_VALFORATE, P_VALFOCUT, P_VAENV, P_VATRACK, P_VAAMPA, P_VAAMPD, P_VAAMPS, P_VAAMPR, P_VAVCFA, P_VAVCFD, P_VAVCFS, P_VAVCFR,
+    P_VAPRESET,
     P_NPARAMS
 };
 #define P_BASS P_P2FILTERMODEL /* removed Bass ID, retained for historical migrations */
@@ -107,7 +111,21 @@ const en_param_t *en_param_info(int i);
 void en_param_text(int i, int v, char *buf);   /* the value as the screen shows it (10 bytes) */
 
 /* commands (main loop -> render) */
+const char *va_preset_name(int index);
+void va_preset_load(int index,int16_t *params);
 void en_init(void);
+enum { DEST_FM_VOLUME = 15, DEST_VA_CUT, DEST_VA_RES, DEST_VA_ENV, DEST_VA_TRACK, DEST_VA_PWM, DEST_VA_A, DEST_VA_D, DEST_VA_S, DEST_VA_R };
+/* Display-only. Read the current FM control targets and the last triggered
+ * algorithm; zero means no FM note has been triggered since initialization. */
+extern volatile float en_fm_volume_target;
+extern volatile float va_live[10];
+static inline int en_fm_enabled(const int16_t *p)
+{
+    return p[P_FMLEVEL]>0 ||
+        (p[P_M7DEST]==DEST_FM_VOLUME && p[P_M7DEPTH]!=0) ||
+        (p[P_M8DEST]==DEST_FM_VOLUME && p[P_M8DEPTH]!=0) ||
+        (p[P_M9DEST]==DEST_FM_VOLUME && p[P_M9DEPTH]!=0);
+}
 void en_set(int param, int value);
 void en_pool(uint32_t pool);                   /* the scale, relative to the root (bit 0 always set) */
 void en_play(int on);                          /* the garden grows / rests (the tails ring on) */

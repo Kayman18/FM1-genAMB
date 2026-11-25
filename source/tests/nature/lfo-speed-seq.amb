@@ -1,0 +1,174 @@
+wait 100
+tap LFO
+expect view 7
+spin K4 1
+expect par36 31
+spin SELECT 1
+spin K3 1
+expect par36 32
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par38 31
+spin SELECT 1
+spin K3 1
+expect par38 32
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par40 31
+spin SELECT 1
+spin K3 1
+expect par40 32
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par42 31
+spin SELECT 1
+spin K3 1
+expect par42 32
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par44 31
+spin SELECT 1
+spin K3 1
+expect par44 32
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par46 31
+spin SELECT 1
+spin K3 1
+expect par46 32
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par49 26
+spin SELECT 1
+spin K3 1
+expect par49 27
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par52 26
+spin SELECT 1
+spin K3 1
+expect par52 27
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par55 21
+spin SELECT 1
+spin K3 1
+expect par55 22
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par136 91
+spin SELECT 1
+spin K3 1
+expect par136 92
+spin SELECT 1
+spin K1 1
+spin K4 1
+expect par139 136
+spin SELECT 1
+spin K3 1
+expect par139 137
+spin SELECT 1
+spin K1 -3
+spin K2 13
+expect par50 15
+spin K3 100
+spin K4 180
+spin K4 -6
+expect par52 109
+spin SELECT 1
+spin K1 2
+spin SELECT 1
+spin K1 1
+spin K2 20
+expect par53 17
+spin K3 100
+spin K4 180
+spin K4 -9
+expect par55 106
+spin SELECT 1
+spin K1 3
+spin SELECT 1
+spin K1 -1
+tap GLO
+spin K4 50
+tap SEL
+spin K1 15
+spin SELECT 1
+spin K4 12
+tap LFO
+wait 250
+shot m8-live.png
+wait 750
+shot m8-live-b.png
+spin K1 1
+wait 250
+setpar 20 8
+wait 40
+midi USB 92 3c 64
+wait 200
+shot m9-live.png
+midi USB 82 3c 00
+setpar 20 1
+wait 40
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+expect view 16
+spin SELECT 1
+spin K1 -100
+spin K1 44
+expect par4 44
+spin ALGO 2
+tap SEQ
+expect view 27
+spin SELECT 1
+spin K1 31
+expect par78 31
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+expect view 16
+spin ALGO 1
+tap SEQ
+expect view 30
+spin SELECT 1
+spin K1 -2
+expect par21 -2
+tap SEL
+tap SEL
+expect view 23
+spin SELECT 1
+spin K1 -100
+spin K1 44
+expect par100 44
+spin ALGO 2
+tap SEL
+expect view 28
+spin SELECT 1
+spin K1 31
+expect par99 31
+tap SEL
+tap SEL
+expect view 23
+spin ALGO 1
+tap SEL
+expect view 31
+spin SELECT 1
+spin K1 -2
+expect par97 -2
+tap SAVE
+reboot
+wait 100
+expect par52 109
+expect par55 106

@@ -12,7 +12,12 @@ extern uint32_t _dsp_hot_start[], _dsp_hot_end[], _dsp_hot_load[];
 /* HALF_FRAMES (unity.c, from APP_BLOCK): the I2S half buffer, 256 frames = 5.8 ms at 44.1 kHz by default */
 #define HALF_WORDS (HALF_FRAMES * 2u)
 #define FS 44100u
-#define REND_FRAMES HALF_FRAMES             /* app_render's frames per call */
+#ifdef APP_RENDER_FRAMES
+#define REND_FRAMES APP_RENDER_FRAMES
+#else
+#define REND_FRAMES HALF_FRAMES
+#endif
+_Static_assert(REND_FRAMES > 0 && HALF_FRAMES % REND_FRAMES == 0, "complete DSP quanta per DMA half");
 static int32_t abuf[2u * HALF_WORDS] __attribute__((aligned(4)));
 
 #define DBG_MAGIC 0x44424731u                       /* "DBG1": read with `fm1t memr` */
@@ -34,12 +39,16 @@ static uint32_t wdt_stage __attribute__((section(".noinit")));   /* the main loo
 #include "perf.h"
 static uint32_t perf_peak, perf_work, perf_wait, perf_started;
 static uint32_t perf_cpu0, perf_cpu0_peak;
+static uint32_t worst_total_us, worst_work_us, worst_wait_us;
 void perf_read(perf_stats_t *s)
 {
     uint32_t f = plat_lock();
     s->audio_pct = audio_cpu_pct; s->peak_pct = perf_peak;
     s->worker_us = (perf_work + 128u) >> 8; s->wait_us = (perf_wait + 128u) >> 8;
     s->cpu0_us = (perf_cpu0 + 128u) >> 8; s->cpu0_peak_us = perf_cpu0_peak;
+    s->worst_total_us = worst_total_us;
+    s->worst_work_us = worst_work_us;
+    s->worst_wait_us = worst_wait_us;
     s->dropouts = audio_xruns; s->faults = dc_timeouts;
     s->seconds = (plat_ms() - perf_started) / 1000u; s->jobs = dc_jobs;
     s->dual = dc_mode == 2 && dc_enabled; s->status = dc_mode;
@@ -49,6 +58,7 @@ void perf_reset(void)
 {
     uint32_t f = plat_lock();
     perf_peak = perf_work = perf_wait = perf_cpu0 = perf_cpu0_peak = 0;
+    worst_total_us = worst_work_us = worst_wait_us = 0;
     audio_cpu_pct = audio_xruns = fm1b_dbg.cpu_q8 = fm1b_dbg.max_us = 0;
     dc_jobs = dc_timeouts = dc_max_wait_us = 0;
     perf_started = plat_ms();
@@ -104,8 +114,12 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 #endif
     fm1b_dbg.cpu_q8 = (fm1b_dbg.cpu_q8 * 15u + (us * 256u) / budget) / 16u;
     audio_cpu_pct = (fm1b_dbg.cpu_q8 * 100u) >> 8;
-    { uint32_t pct = us * 100u / budget;
-      if (pct > perf_peak) perf_peak = pct; }
+    if (us > worst_total_us) {
+        worst_total_us = us;
+        worst_work_us = dc_block_work_us;
+        worst_wait_us = dc_block_wait_us;
+        perf_peak = us * 100u / budget;
+    }
     /* CPU0 audio work excludes its blocking worker wait. This is audio IRQ
      * time only, not whole-core utilization (UI/storage are outside it). */
     { uint32_t active = us > dc_block_wait_us ? us - dc_block_wait_us : 0;

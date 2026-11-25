@@ -12,7 +12,7 @@
  *   2b. reads the whole flash.bin once and checks it against the CRC16 of its
  *      UFW entry (the vendor tools' check), keeping each app sector's CRC16:
  *      a damaged or truncated package is refused before anything is erased;
- *   3. writes ONLY the app area [0x4000, 0x93000), sector by sector, skipping
+ *   3. writes the app area [0x4000, 0x93000) and the compiled optional wave bank, skipping
  *      sectors that are already equal, and verifies each one; a sector that
  *      comes in different from the checked pass is read again, never written;
  *      the flash head (SPL, isd_config) is never written;
@@ -34,7 +34,19 @@
 #define LDR_REC_HI 0xFC000u                     /* ... and below Felucca's globals (Felucca's records: 0xE4F00, */
 #define LDR_DATA_LO 0x97000u                    /* the stock firmware's: 0xE8F00), never in Felucca's store, whose */
 #define LDR_DATA_HI 0xE0000u                    /* bytes (user samples) the host writes */
-#define LDR_NSEC ((LDR_APP_HI - LDR_APP_LO) >> 12)
+#ifdef ANIMAL_WAVE_BASE
+#if ANIMAL_WAVE_BASE != 0x97000u || ANIMAL_WAVE_END > 0xDC000u || (ANIMAL_WAVE_END & 0xfffu) || ANIMAL_WAVE_END <= ANIMAL_WAVE_BASE
+#error Invalid genAMB wave sector span
+#endif
+#define LDR_WRITE_HI ANIMAL_WAVE_END
+#define LDR_WRITABLE(off) ((off) < LDR_APP_HI || (off) >= ANIMAL_WAVE_BASE)
+#define LDR_WRITE_BYTES (LDR_APP_HI - LDR_APP_LO + ANIMAL_WAVE_END - ANIMAL_WAVE_BASE)
+#else
+#define LDR_WRITE_HI LDR_APP_HI
+#define LDR_WRITABLE(off) ((off) < LDR_APP_HI)
+#define LDR_WRITE_BYTES (LDR_APP_HI - LDR_APP_LO)
+#endif
+#define LDR_NSEC ((LDR_WRITE_HI - LDR_APP_LO) >> 12)
 #define LDR_FL_MAX 0x100000u                    /* flash.bin: at most the 1 MiB part */
 
 static int ldr_fread(uint32_t off, void *p, uint32_t n);
@@ -92,16 +104,26 @@ static int ldr_chip_key(uint32_t *key)
 static int ldr_check(uint32_t fl_off, uint32_t fl_size, uint32_t want, uint16_t *sc, uint8_t *b)
 {
     uint32_t i, n, crc = 0;
+#ifdef ANIMAL_WAVE_BASE
+    uint32_t wave_crc = 0;
+    if (fl_size != ANIMAL_WAVE_END) return -14;
+#endif
     for (i = 0; i < fl_size; i += n) {
         n = fl_size - i > 512u ? 512u : fl_size - i;
         if (ota_read(fl_off + i, b, n))
             return -7;
         crc = ota_crc16(b, n, crc);
-        if (i >= LDR_APP_LO && i < LDR_APP_HI) {     /* (512-byte reads from 0: never across a sector) */
+#ifdef ANIMAL_WAVE_BASE
+        if (i >= ANIMAL_WAVE_BASE) wave_crc = ota_crc16(b,n,wave_crc);
+#endif
+        if (i >= LDR_APP_LO && i < LDR_WRITE_HI && LDR_WRITABLE(i)) {     /* (512-byte reads from 0: never across a sector) */
             uint32_t k = (i - LDR_APP_LO) >> 12;
             sc[k] = (uint16_t)ota_crc16(b, n, (i & 0xFFFu) ? sc[k] : 0u);
         }
     }
+#ifdef ANIMAL_WAVE_BASE
+    if (wave_crc != ANIMAL_WAVE_IMAGE_CRC16) return -14;
+#endif
     return crc == want ? 0 : -12;
 }
 
@@ -130,9 +152,10 @@ static int ldr_session(void)
     /* 2b. the whole package first: nothing is erased for a damaged one */
     if ((rc = ldr_check(fl_off, fl_size, want, sc, sec)) != 0)
         return rc;
-    /* 3. app area, sector by sector */
-    for (s = LDR_APP_LO; s < LDR_APP_HI; s += 0x1000u) {
+    /* 3. app and configured wave sectors; the reserved gap is never programmed */
+    for (s = LDR_APP_LO; s < LDR_WRITE_HI; s += 0x1000u) {
         uint32_t again;
+        if (!LDR_WRITABLE(s)) continue;
         for (again = 0;; again++) {                      /* as checked in 2b, else read it again */
             for (k = 0; k < 0x1000u; k += 512u)
                 if (ota_read(fl_off + s + k, sec + k, 512))
@@ -161,7 +184,7 @@ static int ldr_session(void)
                 return -11;                              /* verify failed twice */
         }
         done += 0x1000u;
-        ldr_progress(done, LDR_APP_HI - LDR_APP_LO);
+        ldr_progress(done, LDR_WRITE_BYTES);
     }
     /* 4. finish: the host confirms, the record goes, the SPL boots the app */
     for (i = 0; i < 4u; i++)

@@ -655,7 +655,12 @@ static void run_ms(uint32_t ms)
 #endif
         while (audio_due_ms <= (double)now_ms) {      /* APP_BLOCK-frame blocks, as the device renders them */
             double t0 = now_ns(), dt;
+#ifdef APP_RENDER_FRAMES
+            for (k = 0; k < APP_BLOCK; k += APP_RENDER_FRAMES)
+                app_render(blk + 2u * k, APP_RENDER_FRAMES, APP_GAIN(master));
+#else
             app_render(blk, APP_BLOCK, APP_GAIN(master));
+#endif
 #ifdef PLAT_WEB
             web_audio(blk, APP_BLOCK);
 #endif

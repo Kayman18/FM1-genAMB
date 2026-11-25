@@ -7,7 +7,29 @@
  * Tune and MIDI out are global. */
 #include "fm_port/fm_port.h"
 project_t proj;
-typedef char project_fits_flash_object[(sizeof(project_t) <= PLAT_STORE_MAX) ? 1 : -1];
+/* Format 24 uses the complete flash payload. Format 25 keeps the same row
+ * boundaries. The five final 16-bit Nature fields provide ten bytes for
+ * seven signed, byte-range controls. The 167 earlier IDs keep their width. */
+enum { V24_NPARAMS = 172 };
+typedef struct {
+    int16_t par[V24_NPARAMS];
+    uint16_t pool;
+} disk_row_t;
+typedef struct {
+    uint32_t magic, format;
+    disk_row_t active;
+    uint8_t leds, piece, reserved[2];
+    disk_row_t slot[NPIECES];
+    en_evo_bank_t evo, fm_evo;
+    en_proteus_bank_t proteus;
+    en_ud_bank_t unitd;
+} disk_project_t;
+
+typedef char project_fits_flash_object[(sizeof(disk_project_t) == PLAT_STORE_MAX) ? 1 : -1];
+/* IDs 0..39 fit signed bytes, including tempo and tuning. All later
+ * controls keep 16 bits. The active row and eight slots retain their offsets. */
+enum { BYTE_CONTROLS = 40 };
+typedef char compact_controls_fit[(BYTE_CONTROLS+2*(P_NPARAMS-BYTE_CONTROLS)<=sizeof(((disk_row_t*)0)->par))?1:-1];
 
 const char *piece_name(int i) { return en_piece_name(i); }
 
@@ -106,6 +128,8 @@ typedef struct {
     uint8_t leds,piece,rsv0[2];slot_v22_t slot[NPIECES];uint8_t rsv[16];
     en_evo_bank_t evo,fm_evo;en_proteus_bank_t proteus;en_ud_bank_t unitd;
 } project_v22_t;
+typedef char v24_record_size[(sizeof(disk_project_t) == 3840) ? 1 : -1];
+typedef char legacy_record_size[(sizeof(project_v22_t) == 3764) ? 1 : -1];
 static void from_v22(const project_v22_t *old)
 {
     project_defaults();proj.pool=old->pool;proj.leds=old->leds;proj.piece=old->piece;
@@ -488,10 +512,9 @@ static void from_v3(const project_v3_t *o)
         proj.par[p] = p < V3_NPARAMS ? o->par[p] : r.par[p];
 }
 
-int project_load(void)
-{
-    static union {
-        project_t now;
+/* One scratch area for migrations, reading and writing. The UI owns it. */
+static union {
+        disk_project_t now;
         project_v22_t v22;
         project_v20_t v20;
         project_v19_t v19;
@@ -509,11 +532,72 @@ int project_load(void)
         project_v7_t v7;
         project_v6_t v6;
         project_v3_t v3;
-    } buf;
+} buf;
+
+static void unpack_record(const disk_project_t *d)
+{
+    proj.magic = d->magic;
+    proj.format = PROJ_FORMAT;
+    proj.leds = d->leds;
+    proj.piece = d->piece;
+    proj.pool = d->active.pool;
+    for (int i = -1; i < NPIECES; ++i) {
+        const disk_row_t *row = i < 0 ? &d->active : &d->slot[i];
+        int16_t *p = i < 0 ? proj.par : proj.slot[i].par;
+        if (i >= 0) proj.slot[i].pool = row->pool;
+        if (d->format == PROJ_FORMAT) {
+            const signed char *bytes=(const signed char *)row->par;
+            for(int j=0;j<BYTE_CONTROLS;j++)p[j]=bytes[j];
+            memcpy(p+BYTE_CONTROLS,bytes+BYTE_CONTROLS,(P_NPARAMS-BYTE_CONTROLS)*sizeof(*p));
+        } else if (d->format == 24u) {
+            memcpy(p, row->par, sizeof row->par);
+            for (int j = V24_NPARAMS; j < P_NPARAMS; ++j)
+                p[j] = en_param_info(j)->def;
+        } else {
+            memcpy(p, row->par, P_NATURE_MASTER * sizeof(*p));
+            const signed char *tail = (const signed char *)&row->par[P_NATURE_MASTER];
+            for (int j = P_NATURE_MASTER; j < P_VASUB; ++j)
+                p[j] = tail[j - P_NATURE_MASTER];
+        }
+    }
+    proj.evo = d->evo;
+    proj.fm_evo = d->fm_evo;
+    proj.proteus = d->proteus;
+    proj.unitd = d->unitd;
+}
+
+static int write_record(void)
+{
+    disk_project_t *d = &buf.now;
+    memset(d, 0, sizeof *d);
+    d->magic = proj.magic;
+    d->format = PROJ_FORMAT;
+    d->leds = proj.leds;
+    d->piece = proj.piece;
+    for (int i = -1; i < NPIECES; ++i) {
+        disk_row_t *row = i < 0 ? &d->active : &d->slot[i];
+        const int16_t *p = i < 0 ? proj.par : proj.slot[i].par;
+        row->pool = i < 0 ? proj.pool : proj.slot[i].pool;
+        signed char *bytes=(signed char *)row->par;
+        for(int j=0;j<BYTE_CONTROLS;j++){
+            if(p[j]<-128 || p[j]>127)return -1;
+            bytes[j]=(signed char)p[j];
+        }
+        memcpy(bytes+BYTE_CONTROLS,p+BYTE_CONTROLS,(P_NPARAMS-BYTE_CONTROLS)*sizeof(*p));
+    }
+    d->evo = proj.evo;
+    d->fm_evo = proj.fm_evo;
+    d->proteus = proj.proteus;
+    d->unitd = proj.unitd;
+    return plat_store_save(OBJ_PROJ, d, sizeof *d);
+}
+
+int project_load(void)
+{
     int n, i;
     memset(&buf, 0, sizeof buf);
     n = plat_store_load(OBJ_PROJ, &buf, sizeof buf);
-    if(n>=(int)sizeof(project_v22_t) && buf.now.magic==PROJ_MAGIC && (buf.now.format==21u || buf.now.format==22u))from_v22(&buf.v22);
+    if(n>=(int)sizeof(project_v22_t) && buf.now.magic==PROJ_MAGIC && (buf.now.format==21u || buf.now.format==22u || buf.now.format==23u))from_v22(&buf.v22);
     else if (n >= (int)sizeof(project_v20_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 20u)
         from_v20(&buf.v20);
     else if (n >= (int)sizeof(project_v19_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 19u)
@@ -528,26 +612,27 @@ int project_load(void)
         from_v15(&buf.v15);
     else if (n >= (int)sizeof(project_v14_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 14u)
         from_v14(&buf.v14);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 13u)
+    else if (n >= (int)sizeof(project_v13_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 13u)
         from_v13(&buf.v13);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 12u)
+    else if (n >= (int)sizeof(project_v12_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 12u)
         from_v12(&buf.v12);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 11u)
+    else if (n >= (int)sizeof(project_v11_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 11u)
         from_v11(&buf.v11);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 10u)
+    else if (n >= (int)sizeof(project_v10_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 10u)
         from_v10(&buf.v10);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 9u)
+    else if (n >= (int)sizeof(project_v9_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 9u)
         from_v9(&buf.v9);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 8u)
+    else if (n >= (int)sizeof(project_v8_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 8u)
         from_v8(&buf.v8);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 7u)
+    else if (n >= (int)sizeof(project_v7_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 7u)
         from_v7(&buf.v7);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 6u)
+    else if (n >= (int)sizeof(project_v6_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 6u)
         from_v6(&buf.v6);
-    else if (n >= 8 && buf.now.magic == PROJ_MAGIC && buf.now.format == 3u)
+    else if (n >= (int)sizeof(project_v3_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 3u)
         from_v3(&buf.v3);
-    else if (n >= (int)sizeof(project_t))
-        proj = buf.now;
+    else if (n == (int)sizeof(disk_project_t) && buf.now.magic == PROJ_MAGIC &&
+             (buf.now.format == 24u || buf.now.format == 25u || buf.now.format == PROJ_FORMAT))
+        unpack_record(&buf.now);
     else {
         project_defaults();
         return -1;
@@ -571,6 +656,12 @@ int project_load(void)
     if (proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {
         for (i = -1; i < NPIECES; ++i) {
             int16_t *p = i < 0 ? proj.par : proj.slot[i].par;
+            if(buf.now.format<26u){
+                p[P_VABLEND]=en_param_info(P_VABLEND)->def;
+                for(int j=P_VACUT;j<P_NPARAMS;j++)p[j]=en_param_info(j)->def;
+                const int routes[]={P_M7DEST,P_M8DEST,P_M9DEST};
+                for(int j=0;j<3;j++)if(p[routes[j]]==16 || p[routes[j]]==17)p[routes[j]]=0;
+            }
             if (p[P_FMPOLY] > FM_PORT_VOICES && p[P_FMPOLY] <= 10)
                 p[P_FMPOLY] = FM_PORT_VOICES;
         }
@@ -595,7 +686,7 @@ int project_save(void)
     en_fmevo_snapshot(&proj.fm_evo);
     en_proteus_snapshot(&proj.proteus);
     en_unitd_snapshot(&proj.unitd);
-    return plat_store_save(OBJ_PROJ, &proj, sizeof proj);
+    return write_record();
 }
 
 void project_piece(int i)
