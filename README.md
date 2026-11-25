@@ -40,6 +40,34 @@ These are native 240 × 240 framebuffer captures from the 1.0 firmware running i
 |---|---|---|
 | ![LFO modulation page](docs/screens-1.0/lfo.png) | ![Nature controls](docs/screens-1.0/nature.png) | ![Rings controls](docs/screens-1.0/rings.png) |
 
+### Pad pages
+
+Press **ENV** for Pad 1 or **ARP** for Pad 2. Press the same button again to cycle through Body, Filter and Sequence.
+
+| Pad 1 | Pad 1 body | Pad 1 filter |
+|---|---|---|
+| ![Pad 1](docs/screens-1.0/pad-1.png) | ![Pad 1 body](docs/screens-1.0/pad-1-body.png) | ![Pad 1 filter](docs/screens-1.0/pad-1-filter.png) |
+
+| Pad 2 | Pad 2 body | Pad 2 filter |
+|---|---|---|
+| ![Pad 2](docs/screens-1.0/pad-2.png) | ![Pad 2 body](docs/screens-1.0/pad-2-body.png) | ![Pad 2 filter](docs/screens-1.0/pad-2-filter.png) |
+
+### Sequencer pages
+
+Both pad sequencers have octave, octave drift and change controls. Cycle **SEQ** to reach Rings Seq or **SEL** to reach VA Seq. On either page, **ALGO** selects the sequencer mode.
+
+| Pad 1 sequence | Pad 2 sequence |
+|---|---|
+| ![Pad 1 sequence](docs/screens-1.0/pad-1-seq.png) | ![Pad 2 sequence](docs/screens-1.0/pad-2-seq.png) |
+
+| Rings sequence | VA sequence |
+|---|---|
+| ![Rings sequence](docs/screens-1.0/rings-seq.png) | ![VA sequence](docs/screens-1.0/va-seq.png) |
+
+| Hallucigenia pattern | Proteus options | UNIT-D options |
+|---|---|---|
+| ![Hallucigenia pattern](docs/screens-1.0/hallucigenia-pattern.png) | ![Proteus options](docs/screens-1.0/proteus-options.png) | ![UNIT-D options](docs/screens-1.0/unit-d-options.png) |
+
 ## Source and verification
 
 Browse the [firmware source](source/), [DSP](source/app/dsp/), [build instructions](source/BUILDING-RC.md) and [M-Flasher packer](source/tools/make_nature_mflasher.py). Both firmware variants were built and their packaged payloads checked. The host tests cover the VA bank, routing, sequencers, MIDI, keys and save/recall. Physical FM-1 flashing and timing of the 1.0 images remain unverified.
