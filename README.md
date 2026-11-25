@@ -1,6 +1,6 @@
 # genAMB Nature 1.0 for FM-1
 
-Build an ambient piece from two evolving pads, a Rings resonator, a virtual analog synth and a layer of rain, river and animal calls. A stereo mixer feeds the layers into the Monumatic reverb.
+Build an ambient piece from two evolving pads, a Rings resonator, a virtual analog synth and a layer of rain, river and animal calls. A stereo mixer feeds the layers into the Lush reverb.
 
 This Firmware uses both Storage spaces, the core program lies in the main flash, while all the nature sounds are saved on the "Wave" Partition. Use M-Flasher to write to your device. Tested on both a new and old chip model.
 
