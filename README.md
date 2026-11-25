@@ -6,6 +6,8 @@ This Firmware uses both Storage spaces, the core program lies in the main flash,
 
 ## Install
 
+[Download the 1.0 web editor ZIP](https://raw.githubusercontent.com/Kayman18/FM1-genAMB/main/genAMB-Nature-1.0-Web-Editor.zip). Extract it, then launch `start-editor.bat` on Windows or `./start-editor.sh` on Linux or macOS.
+
 Download the firmware from [Releases · genAMB Nature 1.0](https://github.com/Kayman18/FM1-genAMB/releases/tag/v1.0). Both buffer sizes contain the same instruments, patches and editor support.
 
 | Buffer | Normal firmware update | Full M-Flasher image |
