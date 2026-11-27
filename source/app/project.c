@@ -26,9 +26,9 @@ typedef struct {
 } disk_project_t;
 
 typedef char project_fits_flash_object[(sizeof(disk_project_t) == PLAT_STORE_MAX) ? 1 : -1];
-/* IDs 0..39 fit signed bytes, including tempo and tuning. All later
+/* IDs 0..59 fit signed bytes, including tempo and tuning. All later
  * controls keep 16 bits. The active row and eight slots retain their offsets. */
-enum { BYTE_CONTROLS = 40 };
+enum { BYTE_CONTROLS = 60 };
 typedef char compact_controls_fit[(BYTE_CONTROLS+2*(P_NPARAMS-BYTE_CONTROLS)<=sizeof(((disk_row_t*)0)->par))?1:-1];
 
 const char *piece_name(int i) { return en_piece_name(i); }
@@ -549,6 +549,11 @@ static void unpack_record(const disk_project_t *d)
             const signed char *bytes=(const signed char *)row->par;
             for(int j=0;j<BYTE_CONTROLS;j++)p[j]=bytes[j];
             memcpy(p+BYTE_CONTROLS,bytes+BYTE_CONTROLS,(P_NPARAMS-BYTE_CONTROLS)*sizeof(*p));
+        } else if (d->format == 26u) {
+            const signed char *bytes=(const signed char *)row->par;
+            for(int j=0;j<40;j++)p[j]=bytes[j];
+            memcpy(p+40,bytes+40,(P_M12DEST-40)*sizeof(*p));
+            for(int j=P_M12DEST;j<P_NPARAMS;j++)p[j]=en_param_info(j)->def;
         } else if (d->format == 24u) {
             memcpy(p, row->par, sizeof row->par);
             for (int j = V24_NPARAMS; j < P_NPARAMS; ++j)
@@ -631,7 +636,7 @@ int project_load(void)
     else if (n >= (int)sizeof(project_v3_t) && buf.now.magic == PROJ_MAGIC && buf.now.format == 3u)
         from_v3(&buf.v3);
     else if (n == (int)sizeof(disk_project_t) && buf.now.magic == PROJ_MAGIC &&
-             (buf.now.format == 24u || buf.now.format == 25u || buf.now.format == PROJ_FORMAT))
+             (buf.now.format == 24u || buf.now.format == 25u || buf.now.format == 26u || buf.now.format == PROJ_FORMAT))
         unpack_record(&buf.now);
     else {
         project_defaults();

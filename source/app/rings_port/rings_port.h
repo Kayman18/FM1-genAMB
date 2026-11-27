@@ -47,6 +47,8 @@ void rings_port_set_damping(int value_0_100);
 void rings_port_set_position(int value_0_100);
 void rings_port_set_string_fx(int fx_0_5); /* Legacy project field; now a no-op. */
 void rings_port_set_exciter(int value);
+typedef struct { float value; int destination, depth; } rings_mod_route_t;
+void rings_port_mod_routes(const rings_mod_route_t *routes, int count);
 void rings_port_set_modulation(
     float src7, int dest7, int depth7,
     float src8, int dest8, int depth8,

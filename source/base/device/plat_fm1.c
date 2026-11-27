@@ -267,8 +267,8 @@ uint32_t plat_analog_mask(void)
     return m;
 }
 
-int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
-int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }
+int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return store_flash_ok ? st_load(obj, dst, max) : -1; }
+int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return store_flash_ok ? st_save(obj, src, len) : -9; }
 
 static volatile uint32_t audio_cpu_pct, audio_xruns;
 uint32_t plat_cpu_pct(void) { return audio_cpu_pct; }

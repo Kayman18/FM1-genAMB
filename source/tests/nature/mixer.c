@@ -71,9 +71,15 @@ static void test_animal_transport(int external)
     en_set(P_NATURE_ANIMALS,64); en_set(P_NATURE_DENSITY,99);
     for(i=0;i<1800;++i) assert(render(256,4096)==0 && !NATURE_BIRDS(nature_status));
     en_set(P_NATURE_RAIN,100);
+    for(i=0;i<1800;++i) assert(render(256,4096)==0 && NATURE_RAIN_PHASE(nature_status)==NATURE_RAIN_OFF);
+    en_set(P_NATURE_ANIMALS,0);
+    if(external) en_clock(EN_CLK_CONTINUE); else en_play(1);
     unsigned rain=0;
-    for(i=0;i<1800;++i) {rain+=render(256,4096);assert(!NATURE_BIRDS(nature_status));}
+    for(i=0;i<1800;++i) rain+=render(256,4096);
     assert(rain && NATURE_RAIN_PHASE(nature_status)==NATURE_FADE_IN);
+    if(external) en_clock(EN_CLK_STOP); else en_play(0);
+    for(i=0;i<1800;++i) assert(render(256,4096)==0 && NATURE_RAIN_PHASE(nature_status)==NATURE_RAIN_OFF);
+    en_set(P_NATURE_ANIMALS,64);
     if(external) en_clock(EN_CLK_CONTINUE); else en_play(1);
     for(i=0;i<1600 && !NATURE_BIRDS(nature_status);++i) render(256,4096);
     assert(NATURE_BIRDS(nature_status)>0);
@@ -87,5 +93,5 @@ int main(void)
     assert(f && fread(bank,1,sizeof bank,f)==sizeof bank);fclose(f);
     en_nature_mount(bank,sizeof bank);assert(en_nature_calls()==10);
     test_animal_transport(0);test_animal_transport(1);
-    puts("PASS active animal overlaps fade to silence in 50 ms on local and MIDI Stop, no new calls in REST, Rain continues, PLAY/Continue restart Animals");
+    puts("PASS active animal overlaps fade to silence in 50 ms on local and MIDI Stop, no new calls in REST, Rain PCM silent from first stopped block, PLAY/Continue restart Animals");
 }

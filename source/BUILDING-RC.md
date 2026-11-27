@@ -1,6 +1,6 @@
 # Building genAMB Nature VA 1.0
 
-Set JIELI_TOOLCHAIN to the JieLi Linux toolchain root containing pi32v2/ and common/. From the source directory, run `sh build-rc.sh --buffer-512` for 17.99.47 or `sh build-rc.sh` for 17.99.46. The build uses the included SDK resources and fonts. It requires Python with Pillow on x86-64 Linux or WSL2.
+Set JIELI_TOOLCHAIN to the JieLi Linux toolchain root containing pi32v2/ and common/. From the source directory, run `sh build-rc.sh --buffer-512` for 17.99.57 or `sh build-rc.sh` for 17.99.56. The build uses the included SDK resources and fonts. It requires Python with Pillow on x86-64 Linux or WSL2.
 
 After each build run `python3 tests/nature/package.py VERSION` with its numeric updater version. Run `python3 tests/nature/run-va.py` for host tests and `node tests/nature/editor.cjs` for editor snapshot tests.
 

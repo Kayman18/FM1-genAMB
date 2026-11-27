@@ -86,7 +86,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     /* Model 0 is Standard; Type 3=Bypass keeps old v19 projects byte identical. */
     {"Pad 1 model",0,5,1}, {"Filter type",0,3,0}, {"Cutoff",0,100,78},
     {"Resonance",0,100,25}, {"Filter mix",0,100,100},
-    {"M7 shape",0,5,0}, {"M8 shape",0,5,0}, {"M9 shape",0,5,0},
+    {"M7 shape",0,6,0}, {"M8 shape",0,6,0}, {"M9 shape",0,6,0},
     {"M10 depth",-100,100,65}, {"M10 seconds",0,180,90}, {"M10 shape",0,5,2},
     {"M11 depth",-100,100,40}, {"M11 seconds",0,180,135}, {"M11 shape",0,5,4},
     /* UNIT-D: Shape/Traversal/Gates/Options. Both layers have independent values. */
@@ -116,6 +116,9 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Sustain",0,100,58},
     {"Release",0,100,64},
     {"VA preset",0,40,0},
+    {"M12 dest",0,24,0}, {"M12 depth",-100,100,25}, {"M12 speed",0,115,25}, {"M12 shape",0,6,0},
+    {"M13 dest",0,24,0}, {"M13 depth",-100,100,25}, {"M13 speed",0,115,25}, {"M13 shape",0,6,0},
+    {"M14 dest",0,24,0}, {"M14 depth",-100,100,25}, {"M14 speed",0,115,25}, {"M14 shape",0,6,0},
 };
 #include "va_presets.inc"
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
@@ -225,9 +228,9 @@ void en_param_text(int i, int v, char *b)
         if(model==FM_FILTER_BYPASS)s="Bypass";
         if(model==FM_FILTER_JUNO || model==FM_FILTER_POLYSIX)s="Low Pass";
         if(model==FM_FILTER_CS80)s="HP+LP";
-    } else if (i==P_M7SHAPE || i==P_M8SHAPE || i==P_M9SHAPE || i==P_M10SHAPE || i==P_M11SHAPE) {
-        static const char *const nm[]={"Smooth Rnd","Step Rnd","Sine","Pulse","Triangle","Saw"};
-        s=nm[(unsigned)v<6u?v:0];
+    } else if (i==P_M7SHAPE || i==P_M8SHAPE || i==P_M9SHAPE || i==P_M12SHAPE || i==P_M13SHAPE || i==P_M14SHAPE || i==P_M10SHAPE || i==P_M11SHAPE) {
+        static const char *const nm[]={"Smooth Rnd","Step Rnd","Sine","Pulse","Triangle","Saw","Triple Sloth"};
+        s=nm[(unsigned)v<7u?v:0];
     }
     else if (i == P_REVSPACE) {
         s = "Monumatic";
@@ -262,7 +265,7 @@ void en_param_text(int i, int v, char *b)
     } else if (i == P_RFX) {
         static const char *const N[] = {"Formant", "Chorus", "Reverb", "Formant2", "Ensemble", "Reverb2"};
         s = N[(unsigned)v < 6u ? v : 0];
-    } else if (i == P_M7DEST || i == P_M8DEST || i == P_M9DEST) {
+    } else if (i == P_M7DEST || i == P_M8DEST || i == P_M9DEST || i == P_M12DEST || i == P_M13DEST || i == P_M14DEST) {
         static const char *const N[] = {"Off", "Struct", "Bright", "Damp", "Position", "Pitch", "Model",
                                        "R Level", "Pad2 Bright", "Pad2 Body", "Pad Body", "Pad Char", "Rev Size", "Rev Damp", "Exciter", "VA Volume", "VA Cutoff", "VA Res", "VA Env", "VA Track", "VA PWM", "VCF Atk", "VCF Dec", "VCF Sus", "VCF Rel"};
         s = N[(unsigned)v < sizeof N / sizeof N[0] ? v : 0];
@@ -298,7 +301,7 @@ void en_param_text(int i, int v, char *b)
         *b=0;return;
     }
     if (i == P_M1SPEED || i == P_M2SPEED || i == P_M3SPEED || i == P_M4SPEED || i == P_M5SPEED || i == P_M6SPEED ||
-        i == P_M7SPEED || i == P_M8SPEED || i == P_M9SPEED) {
+        i == P_M7SPEED || i == P_M8SPEED || i == P_M9SPEED || i == P_M12SPEED || i == P_M13SPEED || i == P_M14SPEED) {
         float period = mod_secs_from_speed(v);
         if (period < 1.0f) { b=itoa_s((int)(period*1000.0f+0.5f),b); *b++='m'; *b++='s'; *b=0; return; }
         if (period == 1.5f || period == 2.5f) {
@@ -603,10 +606,10 @@ static inline __attribute__((always_inline)) float sine_wrapped(float ph)
 }
 
 /* ------------------------------------------------- slow random motion --- */
-#define NMOD 11                                  /* 0..5 the pads', 6..8 the echo's */
+#define NMOD EN_MOD_COUNT
 #define NMOD_PAD 6
 /* Display-only waveform history; keep normal RAM reserved for time-critical stacks. */
-volatile int8_t en_mod_trace[11][EN_MOD_TRACE] EN_POOL;
+volatile int8_t en_mod_trace[NMOD][EN_MOD_TRACE] EN_POOL;
 volatile uint16_t en_mod_trace_head, en_mod_trace_count;
 static uint32_t mod_trace_samples;
 static struct {
@@ -620,13 +623,13 @@ static struct {
 
 static PLAT_HOT int mod_depth_param(int i)
 {
-    static const uint8_t P[6] = {P_M1DEPTH,P_M2DEPTH,P_M3DEPTH,P_M4DEPTH,P_M5DEPTH,P_M6DEPTH};
-    return i < 6 ? P[i] : i == 6 ? P_M7DEPTH : i == 7 ? P_M8DEPTH : i==8 ? P_M9DEPTH : i==9 ? P_M10DEPTH : P_M11DEPTH;
+    static const uint8_t ids[NMOD]={P_M1DEPTH,P_M2DEPTH,P_M3DEPTH,P_M4DEPTH,P_M5DEPTH,P_M6DEPTH,P_M7DEPTH,P_M8DEPTH,P_M9DEPTH,P_M10DEPTH,P_M11DEPTH,P_M12DEPTH,P_M13DEPTH,P_M14DEPTH};
+    return ids[i];
 }
 static int mod_speed_param(int i)
 {
-    static const uint8_t P[6] = {P_M1SPEED,P_M2SPEED,P_M3SPEED,P_M4SPEED,P_M5SPEED,P_M6SPEED};
-    return i < 6 ? P[i] : i == 6 ? P_M7SPEED : i == 7 ? P_M8SPEED : i==8 ? P_M9SPEED : i==9 ? P_M10SPEED : P_M11SPEED;
+    static const uint8_t ids[NMOD]={P_M1SPEED,P_M2SPEED,P_M3SPEED,P_M4SPEED,P_M5SPEED,P_M6SPEED,P_M7SPEED,P_M8SPEED,P_M9SPEED,P_M10SPEED,P_M11SPEED,P_M12SPEED,P_M13SPEED,P_M14SPEED};
+    return ids[i];
 }
 static PLAT_HOT float mod_value(int i)
 {
@@ -647,10 +650,12 @@ static float fm_mod_frand(void) {
     fm_mod_rng=x?x:1u;
     return (float)(fm_mod_rng>>8)*(1.0f/16777216.0f);
 }
-static float mod_phase[5];
-static float mod_period[11], mod_phase_step[5];
+#include "triple_sloth.h"
+static triple_sloth_t sloth[NMOD-6];
+static float mod_phase[NMOD-6];
+static float mod_period[NMOD], mod_phase_step[NMOD-6];
 static int mod_shape_param(int i) {
-    static const int sp[5]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE,P_M10SHAPE,P_M11SHAPE};
+    static const int sp[NMOD-6]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE,P_M10SHAPE,P_M11SHAPE,P_M12SHAPE,P_M13SHAPE,P_M14SHAPE};
     return sp[i-6];
 }
 static float wave_shape(float p,int sh) {
@@ -664,8 +669,13 @@ static void mods_step(uint32_t n)
 {
     int i;
     for(i=0;i<NMOD;++i) {
+        if (i>=11 && par[lfo_destination_id[i-8]]==0) { mod[i].v=0; continue; }
         int shape=i>=6?par[mod_shape_param(i)]:0;
-        if(i>=9 && par[mod_speed_param(i)]==0) {mod[i].v=0.0f;continue;}
+        if((i==9 || i==10) && par[mod_speed_param(i)]==0) {mod[i].v=0.0f;continue;}
+        if (i>=6 && shape==6) {
+            mod[i].v=sloth_step(&sloth[i-6],(float)n*mod_phase_step[i-6]);
+            continue;
+        }
         if(i>=6 && shape>=2) {
             float phase=mod_phase[i-6]+(float)n*mod_phase_step[i-6];
             /* Handle wraps without signed overflow or 64-bit arithmetic. */
@@ -676,7 +686,7 @@ static void mods_step(uint32_t n)
         }
         if(mod[i].left<=n) {
             float secs=mod_period[i];
-            if (i<9)secs*=0.75f+0.5f*frand();
+            if (i<9 || i>=11)secs*=0.75f+0.5f*(i>=11?fm_mod_frand():frand());
             if(secs<0.001f)secs=0.001f;
             mod[i].tgt=(i>=9?fm_mod_frand():frand())*2.0f-1.0f;
             mod[i].left=(uint32_t)(secs*EN_SR);
@@ -718,11 +728,9 @@ static float mod_pad2_bright, mod_pad2_body, mod_pad_body, mod_pad_char, mod_rev
 static float route_mod(int dest)
 {
     float sum = 0.0f;
-    const int dp[3] = {P_M7DEST, P_M8DEST, P_M9DEST};
-    const int ap[3] = {P_M7DEPTH, P_M8DEPTH, P_M9DEPTH};
-    int k;
-    for (k = 0; k < 3; k++) if (par[dp[k]] == dest)
-        sum += mod[6+k].v * (float)par[ap[k]] * 0.01f;
+    for (int k=0;k<EN_ASSIGNABLE_LFOS;k++)
+        if (par[lfo_destination_id[k]]==dest)
+            sum += mod[lfo_engine_index[k]].v * (float)par[lfo_depth_id[k]] * 0.01f;
     return sum;
 }
 
@@ -1799,11 +1807,10 @@ static uint32_t ext_age;
 
 static void tempo_set(void) { step_len = EN_SR * 60.0f / ((float)par[P_TEMPO] * 4.0f); }
 
-/* River and Animals take their saved levels from the piece. Only their
- * playback targets follow transport; Rain's weather cycle runs on its own. */
+/* Keep the saved mix editable while transport is stopped. */
 static void nature_apply_level(int p)
 {
-    int gated = p == P_NATURE_WATER || p == P_NATURE_ANIMALS;
+    int gated = p == P_NATURE_WATER || p == P_NATURE_RAIN || p == P_NATURE_ANIMALS;
     nature_control(p - P_NATURE_MASTER, gated && !en_playing ? 0 : par[p]);
 }
 
@@ -1830,8 +1837,8 @@ static void apply(int p, int v)
     case P_FMLEVEL:
         fm_port_set_level(v);
         /* Fall through: removing the last volume route at zero also releases notes. */
-    case P_M7DEST: case P_M8DEST: case P_M9DEST:
-    case P_M7DEPTH: case P_M8DEPTH: case P_M9DEPTH:
+    case P_M7DEST: case P_M8DEST: case P_M9DEST: case P_M12DEST: case P_M13DEST: case P_M14DEST:
+    case P_M7DEPTH: case P_M8DEPTH: case P_M9DEPTH: case P_M12DEPTH: case P_M13DEPTH: case P_M14DEPTH:
         if ((was_enabled || p==P_FMLEVEL) && !en_fm_enabled(par)) { fm_seq_stop(); fm_port_all_notes_off(); }
         break;
 
@@ -1877,16 +1884,18 @@ static void apply(int p, int v)
     case P_RPOS: rings_port_set_position(v); break;
     case P_RPOLY: rings_port_set_polyphony(v); break;
     case P_RFX: rings_port_set_string_fx(v); break;
-    case P_M7SHAPE: case P_M8SHAPE: case P_M9SHAPE:
+    case P_M7SHAPE: case P_M8SHAPE: case P_M9SHAPE: case P_M12SHAPE: case P_M13SHAPE: case P_M14SHAPE:
     case P_M10SHAPE: case P_M11SHAPE: {
-        int idx=p==P_M7SHAPE?6:p==P_M8SHAPE?7:p==P_M9SHAPE?8:p==P_M10SHAPE?9:10;
+        int idx=6;
+        while (mod_shape_param(idx)!=p) ++idx;
+        if (v==6 && v!=prev) sloth_reset(&sloth[idx-6]);
         mod[idx].left=0;mod[idx].v=0;mod_phase[idx-6]=0;
         break;
     }
     case P_M1SPEED: case P_M2SPEED: case P_M3SPEED: case P_M4SPEED: case P_M5SPEED:
-    case P_M6SPEED: case P_M7SPEED: case P_M8SPEED: case P_M9SPEED: case P_M10SPEED: case P_M11SPEED:
+    case P_M6SPEED: case P_M7SPEED: case P_M8SPEED: case P_M9SPEED: case P_M12SPEED: case P_M13SPEED: case P_M14SPEED: case P_M10SPEED: case P_M11SPEED:
         for (int i=0; i<NMOD; ++i) if (mod_speed_param(i)==p) {
-            mod_period[i] = i<9 ? mod_secs_from_speed(v) : (float)v;
+            mod_period[i] = (i<9 || i>=11) ? mod_secs_from_speed(v) : (float)v;
             if (i>=6) mod_phase_step[i-6] = mod_period[i]>0 ? 1.0f/(mod_period[i]*EN_SR) : 0;
             if (v!=prev) {
                 mod[i].left=0;   /* new random interval now; retain smooth output and periodic phase */
@@ -2027,6 +2036,7 @@ void en_init(void)
     mod_trace_samples = 0;
     memset((void *)va_live,0,sizeof va_live);
     en_fm_volume_target = 0;
+    for (int i=0;i<NMOD-6;++i) sloth_reset(&sloth[i]);
     memset(mod_phase,0,sizeof(mod_phase));
     fm_mod_rng=0x38c62157u;
     for (i = 0; i <= SN; i++)
@@ -2131,6 +2141,7 @@ static void play_start(int from_top)
     pulse_left = 0.0f;
     en_playing = 1;
     nature_apply_level(P_NATURE_WATER);
+    nature_apply_level(P_NATURE_RAIN);
     nature_apply_level(P_NATURE_ANIMALS);
     pad_gate = pad2_gate = 1.0f;
     for (i = 0; i < EN_NPAD; i++) {              /* both Pad engines start independently */
@@ -2156,7 +2167,13 @@ static void play_stop(void)
 {
     en_playing = 0;
     nature_apply_level(P_NATURE_WATER);
+    nature_apply_level(P_NATURE_RAIN);
     nature_apply_level(P_NATURE_ANIMALS);
+    /* Rain is a dry, continuous bed. Silence it at this transport boundary. */
+    nature.gain[2]=(NatureGain){0};
+    nature.rain[0].asset=nature.rain[1].asset=0;
+    nature.phase=NATURE_RAIN_OFF;
+    nature_status &= ~(7u << 1);
     nature.scheduling = 0;
     nature.bird_wait = nature.reply_wait = 0;
     evo_select();
@@ -2903,10 +2920,13 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     mod_rev_size = fm_clampf((float)par[P_SIZE] * 0.01f + 0.45f * route_mod(12), 0.0f, 1.0f);
     mod_rev_damp = 0.45f * route_mod(13);
     monumatic_reverb_set(mod_rev_size, fm_clampf((float)par[P_GP5TONE] * 0.01f - mod_rev_damp, 0.0f, 1.0f), pl_mod_depth);
-    rings_port_set_modulation(
-        mod[6].v, par[P_M7DEST], par[P_M7DEPTH],
-        mod[7].v, par[P_M8DEST], par[P_M8DEPTH],
-        mod[8].v, par[P_M9DEST], par[P_M9DEPTH]);
+    rings_mod_route_t rings_routes[EN_ASSIGNABLE_LFOS];
+    for (int k=0;k<EN_ASSIGNABLE_LFOS;k++) {
+        rings_routes[k].value=mod[lfo_engine_index[k]].v;
+        rings_routes[k].destination=par[lfo_destination_id[k]];
+        rings_routes[k].depth=par[lfo_depth_id[k]];
+    }
+    rings_port_mod_routes(rings_routes,EN_ASSIGNABLE_LFOS);
     if (arc_left <= n) {
         float r = frand() * 2.0f - 1.0f;
         arc_tgt = r * (0.6f + 0.4f * frand()) + (r > 0.0f ? 0.25f : -0.25f);   /* away from the middle */

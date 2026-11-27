@@ -8,9 +8,9 @@ import sys
 root = Path(__file__).resolve().parents[2]
 assets = root / 'assets/nature'
 app = (root / 'app/build/amb.bin').read_bytes()
-version = sys.argv[1] if len(sys.argv) > 1 else "17.99.46"
-if version not in ("17.99.46", "17.99.47"):
-    raise SystemExit("expected version 17.99.46 (256) or 17.99.47 (512)")
+version = sys.argv[1] if len(sys.argv) > 1 else "17.99.56"
+if version not in ("17.99.56", "17.99.57"):
+    raise SystemExit("expected version 17.99.56 (256) or 17.99.57 (512)")
 subprocess.run([sys.executable, str(root / 'tests/validate_built_fwsc_rc.py'),
                 str(root / f'app/build/amb-{version}.fwsc'), version], check=True)
 rows = json.loads((assets / 'manifest.json').read_text())

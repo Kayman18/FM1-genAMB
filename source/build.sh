@@ -10,7 +10,7 @@ set -e
 cd "$(dirname "$0")"
 if [ "$#" -eq 0 ]; then
     export FM1B_AUDIO_FRAMES=256
-    set -- --release 17.99.46 --display-version 1.0-256
+    set -- --release 17.99.56 --display-version T14-256
 fi
 export JIELI_TOOLCHAIN="${JIELI_TOOLCHAIN:-$HOME/.jieli/toolchain}"
 export AC79_SDK="${AC79_SDK:-$PWD/build-deps/sdk}"

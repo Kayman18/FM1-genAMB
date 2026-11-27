@@ -125,9 +125,13 @@ extern "C" void rings_port_set_position(int v) { g_base_patch.position = norm100
 extern "C" void rings_port_set_string_fx(int v) { (void)v; }
 extern "C" void rings_port_set_exciter(int v) { g_base_exciter = norm100(v); g_exciter = g_base_exciter; }
 extern "C" void rings_port_set_modulation(float s7,int d7,int a7,float s8,int d8,int a8,float s9,int d9,int a9) {
+    const rings_mod_route_t routes[]={{s7,d7,a7},{s8,d8,a8},{s9,d9,a9}};
+    rings_port_mod_routes(routes,3);
+}
+extern "C" void rings_port_mod_routes(const rings_mod_route_t *routes, int count) {
     float model_sum = 0.0f;
     g_patch = g_base_patch; g_pitch_mod = 0.0f; g_level = g_base_level; g_exciter = g_base_exciter;
-    mod_one(s7,d7,a7,&model_sum); mod_one(s8,d8,a8,&model_sum); mod_one(s9,d9,a9,&model_sum);
+    for (int i=0;i<count;i++) mod_one(routes[i].value,routes[i].destination,routes[i].depth,&model_sum);
     /* Quantized Model modulation now spans the three retained models, with the
      * original hysteresis and next-strike commit. Moderate depths must be able
      * to move the model, but slow random motion must not chatter at boundaries. */

@@ -24,15 +24,13 @@ int main(int argc,char **argv)
     va_preset_load(preset,params);
     en_set(P_PAD,0);en_set(P_PULSE,0);en_set(P_BELLS,0);
     en_set(P_REVERB,0);en_set(P_FMLEVEL,78);
-    const int dst[3]={P_M7DEST,P_M8DEST,P_M9DEST};
-    const int depth[3]={P_M7DEPTH,P_M8DEPTH,P_M9DEPTH};
-    const int shape[3]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE};
-    for(int i=0;i<3;i++){
-        en_set(dst[i],route==i?dest:0);
-        en_set(depth[i],35);en_set(shape[i],3);
+    const int shape[]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE,P_M12SHAPE,P_M13SHAPE,P_M14SHAPE};
+    for(int i=0;i<6;i++){
+        en_set(lfo_destination_id[i],route==i?dest:0);
+        en_set(lfo_depth_id[i],35);en_set(shape[i],3);
     }
-    if(route>=3){
-        en_set(P_FMSEQMODE,route-3);en_set(P_TEMPO,120);
+    if(route>=6){
+        en_set(P_FMSEQMODE,route-6);en_set(P_TEMPO,120);
         en_set(P_FMDENSITY,100);en_set(P_FMEDENSITY,100);
         en_set(P_FPROTDENS,100);en_set(P_FUDGDEN,100);
         en_play(1);
@@ -42,7 +40,7 @@ int main(int argc,char **argv)
             for(int j=0;j<256;j++)if(pcm[j]>peak)peak=pcm[j];
         }
         assert(notes && peak>1000);
-        printf("sequencer %d, %u triggers, peak %d\n",route-3,notes,peak);
+        printf("sequencer %d, %u triggers, peak %d\n",route-6,notes,peak);
         return 0;
     }
     en_render(pcm,128,4096);

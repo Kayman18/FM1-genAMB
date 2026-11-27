@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Verify the genAMB RC (17.99.46) package built using the correct FM-1 cross-toolchain.
-Usage: python3 tests/validate_built_fwsc_rc.py app/build/amb-17.99.46.fwsc
+"""Verify the genAMB RC (17.99.56) package built using the correct FM-1 cross-toolchain.
+Usage: python3 tests/validate_built_fwsc_rc.py app/build/amb-17.99.56.fwsc
 """
 from pathlib import Path
 import hashlib
@@ -10,7 +10,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'base/tools'))
 import fm1pkg_make as pkg
-fw=Path(sys.argv[1] if len(sys.argv)>1 else ROOT/'app/build/amb-17.99.46.fwsc')
+fw=Path(sys.argv[1] if len(sys.argv)>1 else ROOT/'app/build/amb-17.99.56.fwsc')
 app=ROOT/'app/build/amb.bin'
 ldr=ROOT/'app/build/loader/ota.bin'
 if not fw.is_file() or not app.is_file() or not ldr.is_file():
@@ -18,8 +18,8 @@ if not fw.is_file() or not app.is_file() or not ldr.is_file():
 r=fw.read_bytes()
 assert len(r) == 20 + 0x400 + 0xB3000 + ldr.stat().st_size, len(r)
 id=''.join(chr((r[i*48+47]-i-1)&255) for i in range(20) if r[i*48+47]!=0x7d)
-version = sys.argv[2] if len(sys.argv)>2 else "17.99.46"
-assert version in ("17.99.46", "17.99.47")
+version = sys.argv[2] if len(sys.argv)>2 else "17.99.56"
+assert version in ("17.99.56", "17.99.57")
 assert id == 'FM-1_7'+version.replace('.',''),id
 p=b''.join(r[i*48:i*48+47] for i in range(20))+r[960:]
 h=bytearray(p[:64]);pkg.enc(h,0,64)

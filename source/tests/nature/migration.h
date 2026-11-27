@@ -67,6 +67,21 @@ static void nature_migration(void)
         assert(p[P_VACUT]==42 && p[P_VARES]==22 && p[P_VAPRESET]==0);
         for(int j=0;j<5;j++)assert(p[P_NATURE_MASTER+j]==31+j);
     }
+    disk_project_t release=v24;
+    release.format=26;
+    for(int i=-1;i<NPIECES;i++){
+        disk_row_t *row=i<0?&release.active:&release.slot[i];
+        int16_t *p=i<0?proj.par:proj.slot[i].par;
+        signed char *bytes=(signed char *)row->par;
+        for(int j=0;j<40;j++)bytes[j]=(signed char)p[j];
+        p[P_M7DEST]=14;
+        memcpy(bytes+40,p+40,(P_M12DEST-40)*sizeof(*p));
+    }
+    assert(plat_store_save(OBJ_PROJ,&release,sizeof release)==0 && project_load()==0);
+    for(int i=-1;i<NPIECES;i++){
+        int16_t *p=i<0?proj.par:proj.slot[i].par;
+        assert(p[P_M7DEST]==14 && !p[P_M12DEST] && !p[P_M13DEST] && !p[P_M14DEST]);
+    }
     assert(!memcmp(&v24.unitd,&proj.unitd,sizeof proj.unitd));
     for (int i=0; i<NPIECES; ++i) {
         project_piece(i);
@@ -88,5 +103,5 @@ static void nature_migration(void)
     assert(write_record()==0 && project_load()!=0);
     assert(plat_store_save(OBJ_PROJ,&old,sizeof old-1)==0 && project_load()!=0);
     project_defaults(); project_apply();
-    puts("PASS v23 layout, all 167 prior values, v24 migration, eight pieces, four banks, v25 migration and v26 round trip, recipe reset and invalid records");
+    puts("PASS v23 layout, all 167 prior values, v24 migration, eight pieces, four banks, v25 and v26 migration and v27 round trip, recipe reset and invalid records");
 }

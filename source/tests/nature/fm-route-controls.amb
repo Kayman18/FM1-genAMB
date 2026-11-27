@@ -1,7 +1,6 @@
 wait 100
 tap LFO
 expect view 7
-spin K1 6
 spin K2 30
 spin K2 -2
 expect par47 15

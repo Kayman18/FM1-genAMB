@@ -21,7 +21,6 @@ expect view 38
 tap SEL
 expect view 23
 tap LFO
-spin K1 6
 spin K2 100
 expect par47 24
 tap SAVE

@@ -1,0 +1,19 @@
+name: Publish Nature 1.1
+on:
+  push:
+    branches: [main]
+    paths: ['firmware/genAMB-Nature-1.1-512.fwsc']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and publish v1.1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha256sum -c SHA256SUMS.txt
+          gh release create v1.1 firmware/*-1.1-*.fwsc firmware/*-1.1-*-M-Flasher.bin genAMB-Nature-1.1-Web-Editor.zip SHA256SUMS.txt --target "$GITHUB_SHA" --title "genAMB Nature 1.1" --notes "Six assignable LFOs with waveform display and Sloth modulation, larger four-knob controls, louder VA, silent rain on Stop and project Save support for B36014. Includes both TEST14 buffer sizes and the offline web editor. See the README for screen captures and installation."

@@ -1,4 +1,5 @@
-bf7b1cfb4be9fb9b05292b4f088a5e2c8485cddf27fe4b38656d8db2927410f7  firmware/genAMB-Nature-1.0-256-M-Flasher.bin
-fef397fae7fc3abb6582637eab6ac87112f7353d8d456780d6c4410ca21bc107  firmware/genAMB-Nature-1.0-512-M-Flasher.bin
-21ac5e90e04656af99158d416713b99daf289831fe66cae5a513c02f0db3be20  firmware/genAMB-Nature-1.0-256.fwsc
-85b1f2fe96baf7a07d4d960e454948abfea349f4566fe1f481c44f07b5bdf2b7  firmware/genAMB-Nature-1.0-512.fwsc
+4e651de4b18b56fae16aff317c8fd2bf43f112c9cb8f338f758551b871885de3  firmware/genAMB-Nature-1.1-256-M-Flasher.bin
+596cd429d40df4471730142d06141355164b724a6552ae5f68fd5ae5fcbbf504  firmware/genAMB-Nature-1.1-256.fwsc
+06a74edb6e7c1e1ce166cb42a08b6553d7191a3394d43d39c09ea943b126f13f  firmware/genAMB-Nature-1.1-512-M-Flasher.bin
+63771b0b689f58896577b8273a1e7ace1a7639b1f71a455f2af95dae6dd46899  firmware/genAMB-Nature-1.1-512.fwsc
+37c089cdf8a222761c308f623059a5aab1643dbfd6d867ea0e46b8fe8a727c78  genAMB-Nature-1.1-Web-Editor.zip

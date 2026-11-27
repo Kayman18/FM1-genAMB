@@ -10,10 +10,10 @@ keys=[]
 for k in re.findall(r'\b(P_[A-Z0-9_]+)\b',body):
     if k not in keys: keys.append(k)
 params=json.loads(re.search(r'const PARAMS=(\[.*?\]);\nconst PIECES=',html,re.S).group(1))
-assert len(keys)==189==len(params)
-assert [p['id'] for p in params]==list(range(189))
+assert len(keys)==201==len(params)
+assert [p['id'] for p in params]==list(range(201))
 assert [p['key'] for p in params]==keys
-assert len({p['key'] for p in params})==189
+assert len({p['key'] for p in params})==201
 for p in params:
     assert p['lo'] <= p['def'] <= p['hi'],p
 assert '#define GA_PARAM_CHUNK 32u' in app
@@ -24,4 +24,4 @@ assert "format:'genAMB-FM1-Preset'" in html
 assert 'SAVE .GENAMB' in html and 'LOAD .GENAMB' in html
 assert 'start+=32' in html and 'Math.min(32' in html
 assert 'if(stateWait)return stateWait.promise' in html
-print('PASS web editor metadata: 189/189 exact parameter IDs, 32-param SysEx chunks, snapshot save/load present')
+print('PASS web editor metadata: 201/201 exact parameter IDs, 32-param SysEx chunks, snapshot save/load present')

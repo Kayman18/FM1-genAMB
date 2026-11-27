@@ -130,7 +130,8 @@ void fm_port_set_polyphony(int count)
 float fm_port_set_level_modulated(int base,float offset)
 {
     float level=fm_clampf(base+offset,0,100);
-    target_gain=0.0001f*level*level;
+    /* +6 dB VA bus trim, applied to both the dry signal and its reverb send. */
+    target_gain=0.0002f*level*level;
     return level;
 }
 void fm_port_set_level(int level){fm_port_set_level_modulated(level,0);}

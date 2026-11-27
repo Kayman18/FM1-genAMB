@@ -712,7 +712,9 @@ static void fm1_main(void)
                                                     /* then 1.38 V (fm1_sys.h). At the boot loader's, flash fetches
                                                      * come back corrupted under load: the radio's trim crashed
                                                      * CTL-1 0.6 s into most Bluetooth starts */
-        flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;   /* the expected 1 MiB part, else RAM only */
+        uint32_t flash_id = FL_FAR(fl_jedec_ram)();
+        flash_ok = flash_id == 0x856014u;
+        store_flash_ok = flash_ok || flash_id == 0xB36014u;
         irq_restore(f);
         if (flash_ok) {
             ota_boot_cleanup();

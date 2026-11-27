@@ -1,0 +1,36 @@
+wait 100
+tap LFO
+expect view 7
+spin K1 4
+expect par132 4
+spin K2 7
+expect par47 14
+spin SELECT 3
+spin K1 6
+spin K2 8
+spin K3 -50
+spin K4 90
+expect par189 14
+expect par190 -25
+expect par191 115
+expect par192 6
+spin SELECT 1
+spin K1 2
+spin K2 16
+expect par193 16
+spin SELECT 1
+spin K1 3
+spin K2 24
+expect par197 24
+tap SAVE
+wait 200
+reboot
+wait 200
+expect par189 14
+expect par192 6
+expect par193 16
+expect par197 24
+tap LFO
+spin SELECT 4
+wait 200
+shot LFO-six.png

@@ -24,7 +24,9 @@ enum { V_GARDEN, V_PAD, V_PADBODY, V_RINGS, V_RINGTONE, V_RINGEXC, V_MOD = 7, V_
 static const char *const VIEW_NAME[NVIEWS] = {"Garden", "Pad 1", "Body", "Rings", "Tone", "Exciter", "", "Mod", "Mixer", "Pad 2", "Body", "Reverb", "Sends", "Setup", "Pad 1 Seq", "Pad 2 Seq", "Rings Seq", "Performance", "", "Hallucigenia Options", "Hallucigenia Pattern", "VA", "VA Motion", "VA Seq", "VA Hallucigenia Options", "VA Hallucigenia Pattern", "Reverb Mix", "Proteus Options", "VA Proteus Options", "Pad 1 Filter", "Unit-D Options", "VA Unit-D Options", "Root & Note Div", "Pad 2 Filter", "Nature", "VA Filter", "VA Amp ADSR", "VA Filter ADSR", "VA Motion"};
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ENV, B_SEQ, B_SEQ, B_SEQ, NB, B_LFO, B_GLO, B_ARP, B_ARP, B_FX, B_FX, B_GLO, B_ENV, B_ARP, B_SEQ, B_GLO, NB, B_SEQ, B_SEQ, B_SEL, B_SEL, B_SEL, B_SEL, B_SEL, B_FX, B_SEQ, B_SEL, B_ENV, B_SEQ, B_SEL, B_HOME, B_ARP, B_GLO, B_SEL, B_SEL, B_SEL, B_SEL};
 static const char *const VIEW_BTN_NAME[NVIEWS] = {"HOME", "PAD 1", "PAD 1", "RINGS", "RINGS", "RINGS", "", "LFO", "MIXER", "PAD 2", "PAD 2", "REVERB", "REVERB", "MIXER", "PAD 1", "PAD 2", "RINGS", "MIXER", "", "RINGS", "RINGS", "VA", "VA", "VA", "VA", "VA", "REVERB", "RINGS", "VA", "PAD 1", "VA", "HOME", "PAD 2", "GLO", "VA", "VA", "VA", "VA"};
-enum { K_LEDS = 192, K_CPU, K_MOD_ROUTE, K_MOD_DEST, K_MOD_DEPTH, K_MOD_SPEED, K_PERF_MODE, K_PERF_RESET, K_PERF_SECS, K_PERF_STATE, K_EVONEW, K_FMEVONEW, K_RPROTNEW, K_FPROTNEW, K_MOD_SHAPE, K_NONE };
+/* The panel exposes the assignable routes using their original engine indices. */
+enum { MOD_ROUTE_M7 = 6, MOD_ROUTE_M14 = 13 };
+enum { K_LEDS = P_NPARAMS, K_CPU, K_MOD_ROUTE, K_MOD_DEST, K_MOD_DEPTH, K_MOD_SPEED, K_PERF_MODE, K_PERF_RESET, K_PERF_SECS, K_PERF_STATE, K_EVONEW, K_FMEVONEW, K_RPROTNEW, K_FPROTNEW, K_MOD_SHAPE, K_NONE };
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_SWELL, P_BRIGHT, P_PADTONE, P_PADCHORUS},
@@ -134,6 +136,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static struct {
     uint8_t view;
     uint8_t mod_route;
+    uint8_t perf_bank;
     uint8_t mod_row, fm_filter_row; /* SELECT row 1/2 for M7..M11 and FM Filter */
     uint8_t seq_zone[2]; /* SELECT: mode (0), upper four (1), lower four (2) */
     uint8_t unit_row[2]; /* UNIT-D options: SELECT Row 1/2, blank slots reserved */
@@ -254,12 +257,9 @@ static int fm_filter_knob(int view,int row,int slot) {
     return row==2 ? slot==0?P_FFILTERMODEL:K_NONE : upper[slot];
 }
 static int mod_view_knob(int row,int slot) {
-    if (ui.mod_route < 11) {
-        static const int top[4]={K_MOD_ROUTE,K_MOD_DEST,K_MOD_DEPTH,K_MOD_SPEED};
-        static const int bottom[4]={K_MOD_SHAPE,K_NONE,K_MOD_SPEED,K_NONE};
-        return row==2?bottom[slot]:top[slot];
-    }
-    return VIEW_KNOB[V_MOD][slot];
+    static const int knobs[]={K_MOD_SHAPE,K_MOD_DEST,K_MOD_DEPTH,K_MOD_SPEED};
+    (void)row;
+    return knobs[slot];
 }
 /* Standard two-by-four pages. Old single-row pages still retain exactly the
  * same parameter IDs, while the extra four positions are visible blank slots.
@@ -307,6 +307,7 @@ static const char *grid_label(int view,int row,int slot)
     return "";
 }
 static int bound_view_knob(int view,int slot) {
+    if(view==V_PERF && ui.perf_bank)return K_NONE;
     if(wide_grid_page(view))return VIEW_KNOB[view][slot];
     if(view==V_FMFILTER || view==V_PAD2FILTER)return fm_filter_knob(view,ui.fm_filter_row,slot);
     if(view==V_MOD)return mod_view_knob(ui.mod_row,slot);
@@ -316,17 +317,16 @@ static int bound_view_knob(int view,int slot) {
 
 static int mod_param(int pseudo)
 {
-    static const uint8_t A[11]={P_M1DEPTH,P_M2DEPTH,P_M3DEPTH,P_M4DEPTH,P_M5DEPTH,P_M6DEPTH,
-                  P_M7DEPTH,P_M8DEPTH,P_M9DEPTH,P_M10DEPTH,P_M11DEPTH};
-    static const uint8_t S[11]={P_M1SPEED,P_M2SPEED,P_M3SPEED,P_M4SPEED,P_M5SPEED,P_M6SPEED,
-                  P_M7SPEED,P_M8SPEED,P_M9SPEED,P_M10SPEED,P_M11SPEED};
-    static const uint8_t D[3]={P_M7DEST,P_M8DEST,P_M9DEST};
-    static const uint8_t SH[5]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE,P_M10SHAPE,P_M11SHAPE};
-    int r=ui.mod_route<11?ui.mod_route:0;
+    static const uint8_t A[EN_MOD_COUNT]={P_M1DEPTH,P_M2DEPTH,P_M3DEPTH,P_M4DEPTH,P_M5DEPTH,P_M6DEPTH,
+                  P_M7DEPTH,P_M8DEPTH,P_M9DEPTH,P_M10DEPTH,P_M11DEPTH,P_M12DEPTH,P_M13DEPTH,P_M14DEPTH};
+    static const uint8_t S[EN_MOD_COUNT]={P_M1SPEED,P_M2SPEED,P_M3SPEED,P_M4SPEED,P_M5SPEED,P_M6SPEED,
+                  P_M7SPEED,P_M8SPEED,P_M9SPEED,P_M10SPEED,P_M11SPEED,P_M12SPEED,P_M13SPEED,P_M14SPEED};
+    static const uint8_t SH[EN_MOD_COUNT-6]={P_M7SHAPE,P_M8SHAPE,P_M9SHAPE,P_M10SHAPE,P_M11SHAPE,P_M12SHAPE,P_M13SHAPE,P_M14SHAPE};
+    int r=ui.mod_route<EN_MOD_COUNT?ui.mod_route:0;
     if(pseudo==K_MOD_DEPTH)return A[r];
     if(pseudo==K_MOD_SPEED)return S[r];
     if(pseudo==K_MOD_SHAPE)return r>=6?SH[r-6]:-1;
-    return r>=6&&r<9 ? D[r-6] : -1;
+    return r>=11 ? lfo_destination_id[r-8] : r>=6 && r<=8 ? lfo_destination_id[r-6] : -1;
 }
 
 static int knob_get(int k)
@@ -355,7 +355,7 @@ static void knob_range(int k, int *lo, int *hi)
         *lo = en_param_info(k)->lo;
         *hi = en_param_info(k)->hi;
     } else if (k == K_MOD_ROUTE) {
-        *lo = 0; *hi = 10;
+        *lo = MOD_ROUTE_M7; *hi = MOD_ROUTE_M14;
     } else if (k == K_MOD_DEST) {
         int mp=mod_param(k); if(mp<0){*lo=0;*hi=0;} else {const en_param_t *p=en_param_info(mp);*lo=p->lo;*hi=p->hi;}
     } else if (k == K_MOD_DEPTH || k == K_MOD_SPEED || k == K_MOD_SHAPE) {
@@ -402,7 +402,7 @@ static void knob_text(int k, char *b)
         else{b[1]='1';b[2]=(char)('0'+v-9);b[3]=0;}
     } else if (k == K_MOD_DEST) {
         int mp=mod_param(k);
-        if(ui.mod_route>=9) {const char *x=ui.mod_route==9?"Pad Cut":"Pad Res";while((*b++=*x++));}
+        if(ui.mod_route==9 || ui.mod_route==10) {const char *x=ui.mod_route==9?"Pad Cut":"Pad Res";while((*b++=*x++));}
         else if(mp<0){ const char *x="Pad fixed"; while((*b++=*x++)); } else en_param_text(mp,v,b);
     } else if (k == K_MOD_DEPTH || k == K_MOD_SPEED || k == K_MOD_SHAPE) {
         int mp=mod_param(k);if(mp>=0)en_param_text(mp,v,b);else if(k==K_MOD_SHAPE && ui.mod_route<6){const char *x="Smooth Rnd";while((*b++=*x++)){} }else b[0]=0;
@@ -542,6 +542,23 @@ static void turn(int role, int k, int32_t e)
     if (k == K_PERF_SECS || k == K_PERF_STATE) return;
     if (!e || k == K_NONE || k == K_CPU)
         return;
+    if (k==K_MOD_ROUTE) {
+        int pos=ui.mod_route>=11 ? ui.mod_route-8 : ui.mod_route-6;
+        pos+=accel(role,e,EN_ASSIGNABLE_LFOS-1);
+        if (pos<0) pos=0;
+        if (pos>=EN_ASSIGNABLE_LFOS) pos=EN_ASSIGNABLE_LFOS-1;
+        knob_set(k,lfo_engine_index[pos]);
+        return;
+    }
+    if (k==K_MOD_DEST) {
+        /* Knob order groups Exciter with Rings. Presets and SysEx keep stable IDs. */
+        static const uint8_t ordered[]={0,1,2,3,4,5,6,7,14,8,9,10,11,12,13,15,16,17,18,19,20,21,22,23,24};
+        int pos=0, current=knob_get(k);
+        while (pos<24 && ordered[pos]!=current) ++pos;
+        pos+=accel(role,e,24);
+        knob_set(k,ordered[pos<0?0:pos>24?24:pos]);
+        return;
+    }
     if (k == P_RMODEL) {
         /* Supported choices only; saved model IDs keep their original numbers. */
         int index = rings_model_index(knob_get(k));
@@ -682,14 +699,25 @@ static void button(int b)
             ui.msg_until = plat_ms() + 2500u;
         }
         break;
-    case B_SAVE:
-        if (project_save() == 0) {
+    case B_SAVE: {
+        int rc = project_save();
+        if (rc == 0) {
             ui.dirty = 0;
             say("SAVED", 0);
         } else {
-            warn("NOT SAVED", "FLASH ERROR");
+            const char *reason;
+            switch (rc) {
+            case -9: reason = "FLASH ID"; break;
+            case -7: reason = "VERIFY FAILED"; break;
+            case -4: reason = "FLASH TIMEOUT"; break;
+            case -3: reason = "WRITE DISABLED"; break;
+            case -2: reason = "FLASH BUSY"; break;
+            default: reason = "FLASH ERROR"; break;
+            }
+            warn("NOT SAVED", reason);
         }
         break;
+    }
     default: break;
     }
 }
@@ -814,7 +842,9 @@ static void input(void)
         }
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {
-        if (ui.view == V_NATURE) {
+        if (ui.view == V_PERF) {
+            ui.perf_bank=(ui.perf_bank+e%4+4)%4;
+        } else if (ui.view == V_NATURE) {
             char value[16];
             turn(EN_SELECT, P_NATURE_DENSITY, e);
             knob_text(P_NATURE_DENSITY, value);
@@ -823,10 +853,9 @@ static void input(void)
             ui.fm_filter_row=(uint8_t)(((int)(ui.fm_filter_row?ui.fm_filter_row:1)-1+e%2+2)%2+1);
             ui.sig[1]=ui.sig[2]=0;
             say("SELECT",ui.fm_filter_row==1?"ROW 1":"ROW 2 MODEL");
-        } else if(ui.view==V_MOD && ui.mod_route<11) {
-            ui.mod_row=(uint8_t)(((int)(ui.mod_row?ui.mod_row:1)-1+e%2+2)%2+1);
-            ui.sig[1]=ui.sig[2]=0;
-            say("SELECT",ui.mod_row==1?"ROW 1":"ROW 2 SHAPE");
+        } else if(ui.view==V_MOD && ui.mod_route<EN_MOD_COUNT) {
+            turn(EN_SELECT,K_MOD_ROUTE,e);
+            ui.sig[0]=0;
         } else if (ui.view == V_RINGSEQ || ui.view == V_FMSEQ) {
             int fi=ui.view==V_FMSEQ;
             int zone=(int)(ui.seq_zone[fi]==2?2:1)-1+e;
@@ -1579,10 +1608,6 @@ static void mod_shape_cell(int slot,int row,int y,int ht) {
     if(k==K_NONE)return;
     char val[20];knob_text(k,val);
     if(ui.mod_route<6 && k==K_MOD_SHAPE){const char *src="Smooth Rnd";char *dst=val;while((*dst++=*src++)){} }
-    if(k==K_MOD_SHAPE && ui.mod_route>=6) {
-        static const char *const names[]={"Smooth Rnd","Step Rnd","Sine","Pulse","Triangle","Saw"};
-        int shape=knob_get(k);if(shape>=0&&shape<6) { const char *src=names[shape];char *dst=val;while((*dst++=*src++)){} }
-    }
     const char *label=k==K_MOD_SHAPE?"Shape":k==K_MOD_SPEED?"Speed":k==K_MOD_DEPTH?"Depth":k==K_MOD_DEST?"Destination":"Mod";
     panel_text(x,y,w,ht,label,val,(ui.mod_route<6 && (k==K_MOD_SHAPE || k==K_MOD_DEST))?"Fixed":slot==0?"K1":slot==1?"K2":slot==2?"K3":"K4",active?col:K_DIM,active?K_TEXT:K_DIM);
 
@@ -1787,7 +1812,7 @@ static void draw_main(void)
     }
     if (ui.view == V_MOD) {
         h = hash(h, ui.mod_row);
-        if(ui.mod_route<11) {
+        if(ui.mod_route<EN_MOD_COUNT) {
             for(int i=0;i<4;i++)h=hash(h,(uint32_t)knob_get(mod_view_knob(1,i)));
             h=hash(h,(uint32_t)knob_get(K_MOD_SHAPE));
         }
@@ -1829,11 +1854,11 @@ static void draw_main(void)
         for(int i=0;i<4;i++)fm_filter_cell(i,1,70,59);
         cv_blit(0,MAIN_Y);return;
     }
-    if(ui.view==V_MOD && ui.mod_route<11) {
+    if(ui.view==V_MOD && ui.mod_route<EN_MOD_COUNT) {
         int row=ui.mod_route,rp=mod_param(K_MOD_SHAPE),shape=rp>=0?proj.par[rp]:0;
         uint16_t col=page_colour(V_MOD);
         outline_box(2,1,236,64,col,K_PANEL);
-        cv_text(8,4,&FONT_T,row==0?"M1 MOD SOURCE":row==1?"M2 MOD SOURCE":row==2?"M3 MOD SOURCE":row==3?"M4 MOD SOURCE":row==4?"M5 MOD SOURCE":row==5?"M6 MOD SOURCE":row==9?"M10 VA CUTOFF":row==10?"M11 VA RESONANCE":row==6?"M7 MOD SOURCE":row==7?"M8 MOD SOURCE":"M9 MOD SOURCE",col);
+        cv_text(8,4,&FONT_T,row==0?"M1 MOD SOURCE":row==1?"M2 MOD SOURCE":row==2?"M3 MOD SOURCE":row==3?"M4 MOD SOURCE":row==4?"M5 MOD SOURCE":row==5?"M6 MOD SOURCE":row==9?"M10 VA CUTOFF":row==10?"M11 VA RESONANCE":row==11?"M12 MOD SOURCE":row==12?"M13 MOD SOURCE":row==13?"M14 MOD SOURCE":row==6?"M7 MOD SOURCE":row==7?"M8 MOD SOURCE":"M9 MOD SOURCE",col);
         for(int x=10;x<=230;x+=44)cv_line(x,19,x,45,K_LINE);
         cv_line(10,32,230,32,K_LINE);
         /* Waveform preview; random shapes show a deterministic example contour. */
@@ -1848,7 +1873,11 @@ static void draw_main(void)
             else if(shape==2) y=32-(int)(19.0f*fm_sinf(ph*FM_TWO_PI));
             else if(shape==3) y=32-(ph<0.25f?19:-19);
             else if(shape==4) y=32-(int)(19.0f*(ph<0.5f?4.0f*ph-1.0f:3.0f-4.0f*ph));
-            else y=32-(int)(19.0f*(2.0f*ph-1.0f));
+            else if(shape==6) {
+                int count=en_mod_trace_count;
+                int index=(en_mod_trace_head+EN_MOD_TRACE-count+(count?q*(count-1)/218:0))%EN_MOD_TRACE;
+                y=count?32-19*en_mod_trace[row][index]/127:32;
+            } else y=32-(int)(19.0f*(2.0f*ph-1.0f));
             cv_line(lastx,lasty,x,y,col);lastx=x;lasty=y;
         }
         text_c(120,49,&FONT_T,ui.mod_row==1?"SELECT: ROW 1  KNOBS 1-4":(ui.mod_route<6?"SELECT: ROW 2  K3 SPEED":"SELECT: ROW 2  SHAPE / SPEED"),K_DIM);
@@ -2078,7 +2107,7 @@ static void draw_knobs(void)
     uint16_t c = page_colour(ui.view);
     int32_t knob_y = KNB_Y;
     for (i = 0; i < 4; i++) h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
-    if(ui.view==V_MOD && ui.mod_route<11) {h=hash(h,ui.mod_row);h=hash(h,(uint32_t)knob_get(K_MOD_SHAPE));}
+    if(ui.view==V_MOD && ui.mod_route<EN_MOD_COUNT) {h=hash(h,ui.mod_row);h=hash(h,(uint32_t)knob_get(K_MOD_SHAPE));}
     if(ui.view==V_FMFILTER){h=hash(h,ui.fm_filter_row);h=hash(h,proj.par[P_FFILTERMODEL]);}
     if(ui.view==V_RUNITOPT || ui.view==V_FUNITOPT)h=hash(h,ui.unit_row[ui.view==V_FUNITOPT]);
     if (ui.view==V_RINGSEQ || ui.view==V_FMSEQ) {
@@ -2159,7 +2188,7 @@ static void draw_knobs(void)
         for(int i=0;i<4;i++)fm_filter_cell(i,2,4,64);
         cv_blit(0,knob_y);return;
     }
-    if(ui.view==V_MOD && ui.mod_route<11) {
+    if(ui.view==V_MOD && ui.mod_route<EN_MOD_COUNT) {
         for(int i=0;i<4;i++)mod_shape_cell(i,2,4,66);
         cv_blit(0,knob_y);return;
     }
@@ -2731,6 +2760,7 @@ void ui_init(void)
 {
     memset(&ui, 0, sizeof ui);
     ui.unit_row[0]=ui.unit_row[1]=1;
+    ui.mod_route=MOD_ROUTE_M7;
     ui.mod_row=1; ui.fm_filter_row=1;
     memset(fm_key_note, 0, sizeof fm_key_note);
     memset(fm_midi_note, 0, sizeof fm_midi_note);

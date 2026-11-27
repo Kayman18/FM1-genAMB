@@ -95,6 +95,9 @@ enum {
     P_VACUT, P_VARES,
     P_VASUB, P_VAPWM, P_VALFORATE, P_VALFOCUT, P_VAENV, P_VATRACK, P_VAAMPA, P_VAAMPD, P_VAAMPS, P_VAAMPR, P_VAVCFA, P_VAVCFD, P_VAVCFS, P_VAVCFR,
     P_VAPRESET,
+    P_M12DEST, P_M12DEPTH, P_M12SPEED, P_M12SHAPE,
+    P_M13DEST, P_M13DEPTH, P_M13SPEED, P_M13SHAPE,
+    P_M14DEST, P_M14DEPTH, P_M14SPEED, P_M14SHAPE,
     P_NPARAMS
 };
 #define P_BASS P_P2FILTERMODEL /* removed Bass ID, retained for historical migrations */
@@ -119,12 +122,16 @@ enum { DEST_FM_VOLUME = 15, DEST_VA_CUT, DEST_VA_RES, DEST_VA_ENV, DEST_VA_TRACK
  * algorithm; zero means no FM note has been triggered since initialization. */
 extern volatile float en_fm_volume_target;
 extern volatile float va_live[10];
+enum { EN_ASSIGNABLE_LFOS = 6, EN_MOD_COUNT = 14 };
+static const uint8_t lfo_destination_id[EN_ASSIGNABLE_LFOS] = {P_M7DEST,P_M8DEST,P_M9DEST,P_M12DEST,P_M13DEST,P_M14DEST};
+static const uint8_t lfo_depth_id[EN_ASSIGNABLE_LFOS] = {P_M7DEPTH,P_M8DEPTH,P_M9DEPTH,P_M12DEPTH,P_M13DEPTH,P_M14DEPTH};
+static const uint8_t lfo_engine_index[EN_ASSIGNABLE_LFOS] = {6,7,8,11,12,13};
 static inline int en_fm_enabled(const int16_t *p)
 {
-    return p[P_FMLEVEL]>0 ||
-        (p[P_M7DEST]==DEST_FM_VOLUME && p[P_M7DEPTH]!=0) ||
-        (p[P_M8DEST]==DEST_FM_VOLUME && p[P_M8DEPTH]!=0) ||
-        (p[P_M9DEST]==DEST_FM_VOLUME && p[P_M9DEPTH]!=0);
+    if (p[P_FMLEVEL]>0) return 1;
+    for (int i=0;i<EN_ASSIGNABLE_LFOS;i++)
+        if (p[lfo_destination_id[i]]==DEST_FM_VOLUME && p[lfo_depth_id[i]]!=0) return 1;
+    return 0;
 }
 void en_set(int param, int value);
 void en_pool(uint32_t pool);                   /* the scale, relative to the root (bit 0 always set) */
@@ -150,7 +157,7 @@ void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2);
 
 /* state for the screen (UI) */
 #define EN_MOD_TRACE 224
-extern volatile int8_t en_mod_trace[11][EN_MOD_TRACE];
+extern volatile int8_t en_mod_trace[EN_MOD_COUNT][EN_MOD_TRACE];
 extern volatile uint16_t en_mod_trace_head, en_mod_trace_count;
 extern volatile uint8_t en_playing, en_frozen, en_ext;
 extern volatile uint8_t en_chord[EN_NPAD];     /* the chord's notes (MIDI), pad voices' targets */
