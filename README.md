@@ -6,6 +6,7 @@ Build an ambient piece from two evolving pads, a Rings resonator, a virtual anal
 
 - Settings pages use four brushed-aluminum knobs, larger labels and values, and a half-height top info bar.
 - The LFO page shows a waveform and four controls. Turn **SELECT** to choose one of six assignable slots. **K1** selects the shape (including Sloth), **K2** the destination, **K3** the depth and **K4** the speed. Fixed pad modulation continues in the background.
+- Triple Sloths added as a Modulation Source.
 - The VA output is 6 dB louder. Rain falls silent when the sequencer stops, including on MIDI Stop.
 - SAVE recognizes flash ID `B36014` for project storage and gives more specific feedback when a write fails. Save and recall passed in simulation. Persistence on this chip still needs a hardware power-cycle check.
 
