@@ -4,7 +4,7 @@ Build an ambient piece from two evolving pads, a Rings resonator, a virtual anal
 
 256 Buffers - This may peak and clip every now and then depending on what you enable, but live playing with no lag in Piano Scale mode is possible on this with lower latency.
 
-512 Buffers - Pure generative non playing, More headroom, shouldn't peak or clip, but lower latency if you want to play live.
+512 Buffers - Pure generative non playing, More headroom, shouldn't peak or clip, but higher latency if you want to play live.
 
 ## Changes in 1.1
 
