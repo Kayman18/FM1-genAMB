@@ -2,6 +2,9 @@
 
 Build an ambient piece from two evolving pads, a Rings resonator, a virtual analog synth and a layer of rain, river and animal calls. A stereo mixer feeds the layers into the Lush reverb.
 
+256 Buffers - This may peak and clip every now and then depending on what you enable, but live playing with no lag in Piano Scale mode is possible on this with lower latency.
+512 Buffers - I would use this for the pure generative non playing, More headroom, shouldn't peak of clip, but lower latency if you want to play live.
+
 ## Changes in 1.1
 
 - Settings pages use four brushed-aluminum knobs, larger labels and values, and a half-height top info bar.
