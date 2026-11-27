@@ -27,8 +27,6 @@ Download the firmware from [Releases · genAMB Nature 1.1](https://github.com/Ka
 
 Use the FWSC package with the FM-1 firmware updater. For a clean install with M-Flasher, back up the device first. Each BIN writes the full 1 MiB flash, including the settings and calibration region from the clean-install reference. The device updater IDs are 17.99.56 (256) and 17.99.57 (512).
 
-The release packages use the TEST14 firmware bytes. The on-device build label is T14-256 or T14-512.
-
 ## Playing a piece
 
 | Layer or control | What it does |
